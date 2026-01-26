@@ -23,7 +23,9 @@ app.get("/", async (c) => {
 	// 로그인 상태면 프로필 페이지로
 	if (did) {
 		return c.render(
-			<div style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
+			<div
+				style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}
+			>
 				<h1>🖼️ jjalcloud</h1>
 				<p>AT Protocol 기반 탈중앙화 GIF 공유 플랫폼</p>
 
