@@ -1,6 +1,35 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "jjalcloud",
-  "compatibility_date": "2025-08-03",
-  "main": "./src/index.tsx"
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "jjalcloud",
+	"compatibility_date": "2025-08-03",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": "./src/index.tsx",
+	// KV 네임스페이스 바인딩
+	"kv_namespaces": [
+		{
+			"binding": "DID_CACHE",
+			"id": "7a58f1e438c14dc4a6f1ebb7945de0d7",
+			"remote": true,
+		},
+		{
+			"binding": "HANDLE_CACHE",
+			"id": "109ad295763744f98b6ca1459c04560e",
+			"remote": true,
+		},
+		{
+			"binding": "STATE_STORE",
+			"id": "18391baebf3b4c34a68a6f7bdd7b1692",
+			"remote": true,
+		},
+		{
+			"binding": "SESSION_STORE",
+			"id": "655a18b4b5504380a1e113a08648c954",
+			"remote": true,
+		},
+	],
+	// 환경 변수 (시크릿은 `wrangler secret put` 사용)
+	// PRIVATE_KEY_JWK: wrangler secret put PRIVATE_KEY_JWK 로 설정
+	"vars": {
+		"PUBLIC_URL": "", // 배포 후 실제 URL로 설정 (예: https://jjalcloud.com)
+	},
 }
