@@ -42,11 +42,10 @@
 ```mermaidjs
 graph TD
     %% 사용자 및 프론트엔드
-    User["Users / Clients"] -->|HTTPS| Pages["Cloudflare Pages (Hono SSR)"]
+    User["Users / Clients"] -->|HTTPS| Worker["Cloudflare Workers (Hono SSR & API)"]
     User -->|WebSocket| DO["Durable Objects (Real-time)"]
     
     %% 백엔드 API (Hono)
-    Pages -->|"API & Auth"| Worker["Cloudflare Workers (Hono)"]
     Worker -->|"Meta Data"| D1[("Cloudflare D1 (SQLite)")]
     Worker -->|"Session/Cache"| KV[("Cloudflare KV")]
     
@@ -63,7 +62,7 @@ graph TD
 ### 3.1. 기술 스택
 
 * **언어:** TypeScript (Frontend/Backend 통일)
-* **프론트엔드/백엔드:** **Cloudflare Pages & Workers** (**Hono** 프레임워크 기반 SSR 및 API)
+* **프론트엔드/백엔드:** **Cloudflare Workers** (**Hono** 프레임워크 기반 SSR 및 API)
 * **데이터베이스:** **Cloudflare D1** (SQLite 기반 Edge DB)
 * **상태 관리 및 실시간성:** **Cloudflare Durable Objects** (인덱싱 커서 관리 및 WebSocket 브로드캐스트)
 * **캐시 및 세션:** **Cloudflare KV** (DID 캐시 및 세션 저장)
@@ -72,18 +71,18 @@ graph TD
 
 ### 3.2. 시스템 구조
 
-* **Hono on Pages (SSR & API):** 단일 코드베이스에서 UI 렌더링(JSX)과 API 로직을 처리하여 초기 로딩 속도와 개발 효율성을 극대화합니다.
+* **Hono on Workers (SSR & API):** 단일 코드베이스에서 UI 렌더링(JSX)과 API 로직을 처리하여 초기 로딩 속도와 개발 효율성을 극대화합니다.
 * **Durable Objects (Coordinator):** Jetstream 인덱싱을 위한 마지막 커서(Cursor)를 유지하며, 연결된 클라이언트들에게 실시간 업데이트를 전달합니다.
 * **Scheduled Indexer (Cron Worker):** 1분 주기로 실행되어 Jetstream에서 새로운 `com.jjalcloud.gifs` 레코드를 폴링하고 D1 데이터베이스와 동기화합니다.
 * **PDS Storage Strategy:** GIF 파일을 외부 스토리지에 미러링하지 않고 사용자의 PDS에 Blob으로 업로드하여 데이터 주권을 유지하고 스토리지 비용을 제거합니다.
 
 ## 4. 데이터 모델 (Lexicon 설계)
 
-| 종류 | Lexicon ID | 설명 |
-|----|----|----|
-| **Gifs 레코드** | `com.jjalcloud.gifs` | `title` , `file(blob)` , `tags` , `createdAt` |
-| **좋아요** | `com.jjalcloud.like` | `subject(strongRef)` , `createdAt` |
-| **팔로우** | `com.jjalcloud.follow` | `subject(did)` , `createdAt` |
+| 종류            | Lexicon ID             | 설명                                          |
+| --------------- | ---------------------- | --------------------------------------------- |
+| **Gifs 레코드** | `com.jjalcloud.gifs`   | `title` , `file(blob)` , `tags` , `createdAt` |
+| **좋아요**      | `com.jjalcloud.like`   | `subject(strongRef)` , `createdAt`            |
+| **팔로우**      | `com.jjalcloud.follow` | `subject(did)` , `createdAt`                  |
 
 ## 5. UI/UX 디자인 가이드
 
@@ -95,7 +94,7 @@ graph TD
 
 1. **1단계 (Infra & Auth):**
 
-* Cloudflare(Pages, D1, KV, Durable Objects) 환경 설정 (`wrangler.toml`).
+* Cloudflare(Workers, D1, KV, Durable Objects) 환경 설정 (`wrangler.toml`).
 * **Hono** 기반의 **Bluesky OAuth** 인증 및 Stateless 세션 관리 구현.
 
 
