@@ -7,13 +7,16 @@
 		"preview": "$npm_execpath run build && vite preview",
 		"deploy": "$npm_execpath run build && wrangler deploy",
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
-		"lexgen": "lex gen-server ./src/lexicon ./lexicons/*"
+		"lexgen": "lex gen-server ./src/lexicon ./lexicons/**/**/**/*.json"
 	},
 	"dependencies": {
 		"@atproto/api": "^0.18.17",
 		"@atproto/jwk-jose": "^0.1.11",
+		"@atproto/lexicon": "^0.6.1",
+		"@atproto/xrpc-server": "^0.10.10",
 		"atproto-oauth-client-cloudflare-workers": "^0.2.2",
-		"hono": "^4.11.5"
+		"hono": "^4.11.5",
+		"multiformats": "^13.4.2"
 	},
 	"devDependencies": {
 		"@atproto/lex-cli": "^0.9.8",
