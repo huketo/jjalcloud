@@ -15,6 +15,7 @@
     "hono": "^4.11.5"
   },
   "devDependencies": {
+    "@atproto/lex-cli": "^0.9.8",
     "@cloudflare/vite-plugin": "^1.2.3",
     "vite": "^6.3.5",
     "vite-ssr-components": "^0.5.2",
