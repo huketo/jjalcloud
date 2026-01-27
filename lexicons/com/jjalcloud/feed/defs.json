@@ -1,0 +1,28 @@
+{
+	"lexicon": 1,
+	"id": "com.jjalcloud.feed.defs",
+	"defs": {
+		"gifView": {
+			"type": "object",
+			"required": [
+				"uri",
+				"cid",
+				"author",
+				"value",
+				"likeCount",
+				"indexedAt"
+			],
+			"properties": {
+				"uri": { "type": "string", "format": "at-uri" },
+				"cid": { "type": "string", "format": "cid" },
+				"author": {
+					"type": "ref",
+					"ref": "app.bsky.actor.defs#profileViewBasic"
+				},
+				"value": { "type": "unknown" },
+				"likeCount": { "type": "integer" },
+				"indexedAt": { "type": "string", "format": "datetime" }
+			}
+		}
+	}
+}
