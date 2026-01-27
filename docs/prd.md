@@ -94,7 +94,7 @@ graph TD
 
 1. **1단계 (Infra & Auth):**
 
-* Cloudflare(Workers, D1, KV, Durable Objects) 환경 설정 (`wrangler.toml`).
+* Cloudflare(Workers, D1, KV, Durable Objects) 환경 설정 (`wrangler.jsonc`).
 * **Hono** 기반의 **Bluesky OAuth** 인증 및 Stateless 세션 관리 구현.
 
 
