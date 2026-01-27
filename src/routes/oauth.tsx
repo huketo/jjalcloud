@@ -3,6 +3,18 @@ import { setCookie, getCookie, deleteCookie } from "hono/cookie";
 import { createOAuthClient, createClientMetadata } from "../lib/auth";
 import type { HonoEnv } from "../lib/auth";
 
+// app.bsky.actor.getProfile API 응답 타입
+interface ProfileResponse {
+	did: string;
+	handle: string;
+	displayName?: string;
+	avatar?: string;
+	description?: string;
+	followersCount?: number;
+	followsCount?: number;
+	postsCount?: number;
+}
+
 const oauth = new Hono<HonoEnv>();
 
 // 세션 쿠키 이름
@@ -186,7 +198,7 @@ oauth.get("/profile", async (c) => {
 			throw new Error(`Failed to fetch profile: ${response.status}`);
 		}
 
-		const profile = await response.json();
+		const profile = (await response.json()) as ProfileResponse;
 
 		return c.json({
 			did: profile.did,
