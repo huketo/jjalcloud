@@ -63,7 +63,7 @@ graph TD
 
 * **언어:** TypeScript (Frontend/Backend 통일)
 * **프론트엔드/백엔드:** **Cloudflare Workers** (**Hono** 프레임워크 기반 SSR 및 API)
-* **데이터베이스:** **Cloudflare D1** (SQLite 기반 Edge DB)
+* **데이터베이스 (Read Layer):** **Cloudflare D1** (SQLite) + **Drizzle ORM**. Type-safe한 쿼리 작성 및 스키마 관리를 위해 **Drizzle ORM**을 사용합니다. PDS에 흩어진 데이터의 메타데이터를 모아 인덱싱하여 전역 피드 조회, 태그 검색, 정렬 기능을 제공하는 **조회 전용 저장소**입니다.
 * **상태 관리 및 실시간성:** **Cloudflare Durable Objects** (인덱싱 커서 관리 및 WebSocket 브로드캐스트)
 * **캐시 및 세션:** **Cloudflare KV** (DID 캐시 및 세션 저장)
 * **스토리지:** **AT Protocol PDS** (GIF Blob 저장)
@@ -74,6 +74,7 @@ graph TD
 * **Hono on Workers (SSR & API):** 단일 코드베이스에서 UI 렌더링(JSX)과 API 로직을 처리하여 초기 로딩 속도와 개발 효율성을 극대화합니다.
 * **Durable Objects (Coordinator):** Jetstream 인덱싱을 위한 마지막 커서(Cursor)를 유지하며, 연결된 클라이언트들에게 실시간 업데이트를 전달합니다.
 * **Scheduled Indexer (Cron Worker):** 1분 주기로 실행되어 Jetstream에서 새로운 `com.jjalcloud.gifs` 레코드를 폴링하고 D1 데이터베이스와 동기화합니다.
+* **Indexing Strategy (Write/Read Separation):** 원본 데이터는 **PDS**에 저장(Write)하고, 이를 **Jetstream** 등을 통해 감지하여 **D1**에 메타데이터를 인덱싱(Sync)합니다. 클라이언트는 조회 시 **D1**을 쿼리하여 빠른 응답 속도와 전역 검색 기능을 활용합니다.
 * **PDS Storage Strategy:** GIF 파일을 외부 스토리지에 미러링하지 않고 사용자의 PDS에 Blob으로 업로드하여 데이터 주권을 유지하고 스토리지 비용을 제거합니다.
 
 ## 4. 데이터 모델 (Lexicon 설계)
@@ -86,15 +87,29 @@ graph TD
 
 ## 5. UI/UX 디자인 가이드
 
-* **Auto-Play with Placeholder:** 로딩 완료 전까지 플레이스홀더를 노출하며, 완료 시 자동 재생됩니다.
-* **API Discovery:** 개발자들이 **jjalcloud** 의 API를 테스트하고 자신의 서비스에 연동할 수 있는 가이드를 제공합니다.
+### 5.1. 레이아웃 및 스타일
+* **Masonry Layout:** 다양한 비율(가로형/세로형)의 GIF가 자연스럽게 배치되도록 Pinterest 스타일의 메이슨리 그리드 시스템을 메인 피드에 적용합니다.
+* **Minimalistic Theme:** 콘텐츠(GIF) 자체에 집중할 수 있도록 흑백 위주의 미니멀한 UI를 지향하며, 다크 모드를 기본으로 지원합니다.
+* **Auto-Play with Placeholder:** 피드 스크롤 시 화면 중앙에 위치한 GIF는 자동 재생되며, 로딩 중에는 사이트 테마의 랜덤 색상 이미지를 플레이스홀더로 표시합니다.
+
+### 5.2. 인터랙션
+* **Micro-Interactions:** 좋아요 클릭 시 하트 애니메이션, 복사 성공 시 토스트 메시지 등 즉각적인 피드백을 제공합니다.
+* **Infinite Scroll:** 페이지네이션 대신 무한 스크롤을 적용하여 끊김 없는 탐색 경험을 제공합니다.
+
+### 5.3. 사이트맵 (Sitemap)
+
+* **Home (`/`)**: 메인 피드 (전체/팔로잉 탭), 검색창, 로그인/로그아웃 버튼
+* **Profile (`/profile/:did`)**: 유저 프로필 정보, 업로드한 GIF 목록, 좋아요한 GIF 목록 (Grid View)
+* **Detail (`/gif/:rkey`)**: GIF 상세 보기, 메타데이터(제목, 태그, 작성자), 좋아요 버튼, 공유 링크
+* **Upload (`/upload`)**: GIF 파일 업로드 및 메타데이터 입력 폼 (로그인 필요)
+* **Auth (`/oauth/*`)**: OAuth 로그인 리다이렉션 처리 페이지
 
 ## 6. 개발 로드맵
 
 
 1. **1단계 (Infra & Auth):**
 
-* Cloudflare(Workers, D1, KV, Durable Objects) 환경 설정 (`wrangler.jsonc`).
+* Cloudflare(Workers, D1, KV, Durable Objects) 환경 설정 (`wrangler.jsonc`) 및 **Drizzle ORM** 설정.
 * **Hono** 기반의 **Bluesky OAuth** 인증 및 Stateless 세션 관리 구현.
 
 

@@ -25,9 +25,10 @@
   - [ ] 팔로우 (Follow)
 
 ### 3단계: Indexing & Real-time (❌ 예정)
-- [ ] **Jetstream Indexer**: 전체 네트워크의 `jjalcloud` 레코드 수집 (Cron Worker)
+- [ ] **Jetstream Indexer**: 전체 네트워크의 `jjalcloud` 레코드 수집/동기화 (Cron Worker)
 - [ ] **Durable Objects**: 인덱싱 커서 관리 및 실시간 상태 동기화
-- [ ] **Cloudflare D1**: 메타데이터 인덱싱 및 검색 최적화
+- [ ] **Cloudflare D1 활용**: PDS 데이터의 전역 인덱싱 및 캐싱 레이어 (Read Model) 구축
+- [ ] **Global Feed & Search**: D1 기반의 최신순 정렬, 태그 필터링, 검색 API 구현
 
 ### 4단계: Frontend (🚧 진행 중)
 - [x] **Hono JSX Renderer**: 기본 레이아웃 및 SSR 설정
