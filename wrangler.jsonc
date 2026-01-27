@@ -4,7 +4,6 @@
 	"compatibility_date": "2025-08-03",
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "./src/index.tsx",
-	// KV 네임스페이스 바인딩
 	"kv_namespaces": [
 		{
 			"binding": "DID_CACHE",
@@ -27,9 +26,8 @@
 			"remote": true,
 		},
 	],
-	// 환경 변수 (시크릿은 `wrangler secret put` 사용)
-	// PRIVATE_KEY_JWK: wrangler secret put PRIVATE_KEY_JWK 로 설정
+	// PRIVATE_KEY_JWK: wrangler secret put PRIVATE_KEY_JWK
 	"vars": {
-		"PUBLIC_URL": "", // 배포 후 실제 URL로 설정 (예: https://jjalcloud.com)
+		"PUBLIC_URL": "",
 	},
 }
