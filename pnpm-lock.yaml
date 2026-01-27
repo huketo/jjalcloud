@@ -11,6 +11,9 @@ importers:
       '@atproto/api':
         specifier: ^0.18.17
         version: 0.18.17
+      '@atproto/common-web':
+        specifier: ^0.4.13
+        version: 0.4.13
       '@atproto/jwk-jose':
         specifier: ^0.1.11
         version: 0.1.11

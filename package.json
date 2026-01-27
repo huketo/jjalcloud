@@ -11,6 +11,7 @@
 	},
 	"dependencies": {
 		"@atproto/api": "^0.18.17",
+		"@atproto/common-web": "^0.4.13",
 		"@atproto/jwk-jose": "^0.1.11",
 		"@atproto/lexicon": "^0.6.1",
 		"@atproto/xrpc-server": "^0.10.10",
