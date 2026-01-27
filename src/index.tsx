@@ -3,7 +3,7 @@ import { getCookie } from "hono/cookie";
 import { renderer } from "./renderer";
 import oauthRoutes from "./routes/oauth";
 import gifRoutes from "./routes/gif";
-import type { HonoEnv } from "./lib/auth";
+import type { HonoEnv } from "./auth";
 
 const app = new Hono<HonoEnv>();
 

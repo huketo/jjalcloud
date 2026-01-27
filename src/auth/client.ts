@@ -6,7 +6,7 @@ import {
 	StateStoreKV,
 	SessionStoreKV,
 } from "atproto-oauth-client-cloudflare-workers";
-import type { CloudflareBindings } from "./types";
+import type { CloudflareBindings } from "../types";
 
 /**
  * 로컬 개발 환경인지 확인합니다.

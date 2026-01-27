@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { setCookie, getCookie, deleteCookie } from "hono/cookie";
-import { createOAuthClient, createClientMetadata } from "../lib/auth";
-import type { HonoEnv } from "../lib/auth";
+import { createOAuthClient, createClientMetadata } from "../auth";
+import type { HonoEnv } from "../auth";
 
 // app.bsky.actor.getProfile API 응답 타입
 interface ProfileResponse {

@@ -1,7 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import { getCookie } from "hono/cookie";
-import { createOAuthClient } from "./client";
-import type { HonoEnv } from "./types";
+import { createOAuthClient } from "../auth/client";
+import type { HonoEnv } from "../types";
 
 // 세션 쿠키 이름
 const SESSION_COOKIE = "jjalcloud_session";

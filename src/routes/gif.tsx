@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { requireAuth, type AuthenticatedEnv } from "../lib/auth/middleware";
+import { requireAuth, type AuthenticatedEnv } from "../middleware";
 import { TID } from "@atproto/common-web";
 
 const gif = new Hono<AuthenticatedEnv>();
