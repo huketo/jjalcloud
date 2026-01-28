@@ -22,7 +22,6 @@
   - [x] GIF 삭제
 - [ ] **소셜 인터랙션 API**:
   - [ ] 좋아요 (Like)
-  - [ ] 팔로우 (Follow)
 
 ### 3단계: Indexing & Real-time (❌ 예정)
 - [ ] **Jetstream Indexer**: 전체 네트워크의 `jjalcloud` 레코드 수집/동기화 (Cron Worker)

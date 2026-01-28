@@ -10,6 +10,9 @@
 		"lexgen": "lex gen-server ./src/lexicon ./lexicons/**/**/**/*.json"
 	},
 	"dependencies": {
+		"@atcute/atproto": "^3.1.10",
+		"@atcute/client": "^4.2.1",
+		"@atcute/lexicons": "^1.2.6",
 		"@atproto/api": "^0.18.17",
 		"@atproto/common-web": "^0.4.13",
 		"@atproto/jwk-jose": "^0.1.11",

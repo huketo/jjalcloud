@@ -7,29 +7,7 @@ import {
 	SessionStoreKV,
 } from "atproto-oauth-client-cloudflare-workers";
 import type { CloudflareBindings } from "../types";
-
-/**
- * 로컬 개발 환경인지 확인합니다.
- */
-function isLocalDevelopment(publicUrl: string | undefined): boolean {
-	return (
-		!publicUrl ||
-		publicUrl.includes("localhost") ||
-		publicUrl.includes("127.0.0.1")
-	);
-}
-
-/**
- * URL에서 포트 번호를 추출합니다.
- */
-function extractPort(url: string): string {
-	try {
-		const parsed = new URL(url);
-		return parsed.port || "5173";
-	} catch {
-		return "5173";
-	}
-}
+import { isLocalDevelopment, extractPort } from "../utils";
 
 /**
  * OAuth 클라이언트 인스턴스를 생성합니다.

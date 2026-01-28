@@ -2,6 +2,12 @@ import { Hono } from "hono";
 import { setCookie, getCookie, deleteCookie } from "hono/cookie";
 import { createOAuthClient, createClientMetadata } from "../auth";
 import type { HonoEnv } from "../auth";
+import { SESSION_COOKIE, SESSION_MAX_AGE, BSKY_PUBLIC_API } from "../constants";
+import {
+	isLocalDevelopment,
+	getRedirectUrl,
+	extractErrorMessage,
+} from "../utils";
 
 // app.bsky.actor.getProfile API 응답 타입
 interface ProfileResponse {
@@ -16,9 +22,6 @@ interface ProfileResponse {
 }
 
 const oauth = new Hono<HonoEnv>();
-
-// 세션 쿠키 이름
-const SESSION_COOKIE = "jjalcloud_session";
 
 /**
  * OAuth 클라이언트 메타데이터 엔드포인트
@@ -58,8 +61,7 @@ oauth.get("/login", async (c) => {
 		return c.json(
 			{
 				error: "Failed to start login",
-				message:
-					error instanceof Error ? error.message : "Unknown error",
+				message: extractErrorMessage(error),
 			},
 			500,
 		);
@@ -80,39 +82,23 @@ oauth.get("/callback", async (c) => {
 		// 콜백 처리
 		const { session, state } = await client.callback(params);
 
-		// 로컬 개발 환경인지 확인
-		const isLocal =
-			!c.env.PUBLIC_URL ||
-			c.env.PUBLIC_URL.includes("localhost") ||
-			c.env.PUBLIC_URL.includes("127.0.0.1");
+		const isLocal = isLocalDevelopment(c.env.PUBLIC_URL);
 
 		// 세션 쿠키 설정 (DID 저장)
 		setCookie(c, SESSION_COOKIE, session.did, {
 			httpOnly: true,
-			secure: !isLocal, // 로컬에서는 secure 비활성화
+			secure: !isLocal,
 			sameSite: "Lax",
-			maxAge: 60 * 60 * 24 * 7, // 7일
+			maxAge: SESSION_MAX_AGE,
 			path: "/",
 		});
 
-		// 메인 페이지로 리다이렉트 (로컬은 127.0.0.1 사용)
-		const redirectUrl = isLocal
-			? "http://127.0.0.1:5173"
-			: c.env.PUBLIC_URL;
-		return c.redirect(redirectUrl);
+		return c.redirect(getRedirectUrl(c.env.PUBLIC_URL));
 	} catch (error) {
 		console.error("Callback error:", error);
-		const isLocal =
-			!c.env.PUBLIC_URL ||
-			c.env.PUBLIC_URL.includes("localhost") ||
-			c.env.PUBLIC_URL.includes("127.0.0.1");
-		const redirectUrl = isLocal
-			? "http://127.0.0.1:5173"
-			: c.env.PUBLIC_URL;
+		const redirectUrl = getRedirectUrl(c.env.PUBLIC_URL);
 		return c.redirect(
-			`${redirectUrl}?error=auth_failed&message=${encodeURIComponent(
-				error instanceof Error ? error.message : "Unknown error",
-			)}`,
+			`${redirectUrl}?error=auth_failed&message=${encodeURIComponent(extractErrorMessage(error))}`,
 		);
 	}
 });
@@ -130,20 +116,12 @@ oauth.post("/logout", async (c) => {
 			await client.revoke(did);
 		} catch (error) {
 			console.error("Revoke error:", error);
-			// 토큰 취소 실패해도 쿠키는 삭제
 		}
 	}
 
-	deleteCookie(c, SESSION_COOKIE, {
-		path: "/",
-	});
+	deleteCookie(c, SESSION_COOKIE, { path: "/" });
 
-	const isLocal =
-		!c.env.PUBLIC_URL ||
-		c.env.PUBLIC_URL.includes("localhost") ||
-		c.env.PUBLIC_URL.includes("127.0.0.1");
-	const redirectUrl = isLocal ? "http://127.0.0.1:5173" : c.env.PUBLIC_URL;
-	return c.redirect(redirectUrl);
+	return c.redirect(getRedirectUrl(c.env.PUBLIC_URL));
 });
 
 /**
@@ -189,9 +167,8 @@ oauth.get("/profile", async (c) => {
 		const client = await createOAuthClient(c.env);
 		const session = await client.restore(did);
 
-		// ATProto API로 프로필 정보 가져오기
 		const response = await session.fetchHandler(
-			`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`,
+			`${BSKY_PUBLIC_API}/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`,
 		);
 
 		if (!response.ok) {
@@ -215,8 +192,7 @@ oauth.get("/profile", async (c) => {
 		return c.json(
 			{
 				error: "Failed to fetch profile",
-				message:
-					error instanceof Error ? error.message : "Unknown error",
+				message: extractErrorMessage(error),
 			},
 			500,
 		);

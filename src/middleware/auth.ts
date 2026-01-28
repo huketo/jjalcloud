@@ -2,9 +2,7 @@ import { createMiddleware } from "hono/factory";
 import { getCookie } from "hono/cookie";
 import { createOAuthClient } from "../auth/client";
 import type { HonoEnv } from "../types";
-
-// 세션 쿠키 이름
-const SESSION_COOKIE = "jjalcloud_session";
+import { SESSION_COOKIE } from "../constants";
 
 /**
  * OAuth 세션 타입 (restore 메서드 반환 타입 추론)

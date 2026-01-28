@@ -4,6 +4,7 @@ import { renderer } from "./renderer";
 import oauthRoutes from "./routes/oauth";
 import gifRoutes from "./routes/gif";
 import type { HonoEnv } from "./auth";
+import { SESSION_COOKIE } from "./constants";
 
 const app = new Hono<HonoEnv>();
 
@@ -14,9 +15,6 @@ app.route("/oauth", oauthRoutes);
 
 // GIF API 라우트 등록
 app.route("/api/gif", gifRoutes);
-
-// 세션 쿠키 이름
-const SESSION_COOKIE = "jjalcloud_session";
 
 // 메인 페이지
 app.get("/", async (c) => {
