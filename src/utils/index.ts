@@ -7,4 +7,5 @@ export {
 	createErrorResponse,
 	createSuccessResponse,
 	type OAuthSession,
+	fetchProfile,
 } from "./helpers";

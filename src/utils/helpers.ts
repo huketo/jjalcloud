@@ -90,3 +90,33 @@ export function createSuccessResponse<T extends Record<string, unknown>>(
 ) {
 	return c.json(data, statusCode as any);
 }
+
+import { BSKY_PUBLIC_API } from "../constants";
+
+/**
+ * Fetch user profile from Bluesky Public API
+ */
+export async function fetchProfile(did: string) {
+	try {
+		const response = await fetch(
+			`${BSKY_PUBLIC_API}/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`,
+		);
+
+		if (!response.ok) {
+			console.error(`Failed to fetch profile for ${did}: ${response.status}`);
+			return null;
+		}
+
+		const data = await response.json();
+		return {
+			did: data.did,
+			handle: data.handle,
+			displayName: data.displayName || data.handle,
+			avatar: data.avatar,
+			description: data.description,
+		};
+	} catch (error) {
+		console.error("Fetch profile helper error:", error);
+		return null;
+	}
+}
