@@ -29,7 +29,7 @@ const UploadIcon = () => (
 	</svg>
 );
 
-const UserIcon = () => (
+const UserIcon = (props: any) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill="none"
@@ -37,6 +37,7 @@ const UserIcon = () => (
 		stroke-width="2"
 		stroke-linecap="round"
 		stroke-linejoin="round"
+		{...props}
 	>
 		<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
 		<circle cx="12" cy="7" r="4" />
@@ -51,13 +52,13 @@ const ChevronDownIcon = () => (
 		stroke-width="2"
 		stroke-linecap="round"
 		stroke-linejoin="round"
-		style={{ width: "16px", height: "16px" }}
+		class="w-4 h-4"
 	>
 		<path d="m6 9 6 6 6-6" />
 	</svg>
 );
 
-const LogoutIcon = () => (
+const LogoutIcon = (props: any) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill="none"
@@ -65,7 +66,7 @@ const LogoutIcon = () => (
 		stroke-width="2"
 		stroke-linecap="round"
 		stroke-linejoin="round"
-		style={{ width: "18px", height: "18px" }}
+		{...props}
 	>
 		<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
 		<polyline points="16 17 21 12 16 7" />
@@ -88,12 +89,12 @@ export const Header: FC<HeaderProps> = ({
 	avatarUrl,
 }) => {
 	return (
-		<header class="header">
-			<div class="header-inner">
+		<header class="fixed top-0 left-0 right-0 h-[60px] bg-bg-glass backdrop-blur-xl border-b border-border-light z-100">
+			<div class="flex items-center justify-between h-full max-w-[1200px] mx-auto px-4">
 				{showBack ? (
 					<a
 						href="/"
-						class="btn btn-ghost btn-icon"
+						class="inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium rounded-md transition-all bg-transparent text-text-secondary hover:bg-brand-primary-pale hover:text-brand-primary p-2 rounded-full"
 						aria-label="뒤로가기"
 					>
 						<svg
@@ -103,51 +104,43 @@ export const Header: FC<HeaderProps> = ({
 							stroke-width="2"
 							stroke-linecap="round"
 							stroke-linejoin="round"
-							style={{ width: "24px", height: "24px" }}
+							class="w-6 h-6"
 						>
 							<path d="m12 19-7-7 7-7" />
 							<path d="M19 12H5" />
 						</svg>
 					</a>
 				) : (
-					<a href="/" class="header-logo">
-						<CloudIcon />
+					<a href="/" class="flex items-center gap-2 text-xl font-bold text-brand-primary no-underline">
+						<div class="w-8 h-8 text-brand-primary">
+							<CloudIcon />
+						</div>
 						<span>jjalcloud</span>
 					</a>
 				)}
 
 				{title && (
 					<span
-						style={{
-							fontSize: "var(--font-size-lg)",
-							fontWeight: 600,
-							color: "var(--color-primary)",
-							position: "absolute",
-							left: "50%",
-							transform: "translateX(-50%)",
-						}}
+						class="text-lg font-semibold text-brand-primary absolute left-1/2 -translate-x-1/2"
 					>
 						{title}
 					</span>
 				)}
 
-				<div class="header-actions">
+				<div class="flex items-center gap-2">
 					{isLoggedIn ? (
 						<>
 							<a
 								href="/upload"
-								class="btn btn-primary"
-								style={{
-									borderRadius: "9999px",
-								}}
+								class="inline-flex items-center justify-center gap-2 px-6 h-10 text-base font-medium transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90 rounded-full no-underline leading-none"
 							>
 								<span>Upload</span>
 							</a>
 
-							<div class="profile-dropdown">
+							<div class="relative flex items-center group">
 								<button
 									type="button"
-									class="profile-dropdown-trigger"
+									class="inline-flex items-center gap-[2px] p-0 pr-1 border-none bg-transparent rounded-full cursor-pointer transition-colors duration-150 h-10 hover:opacity-70"
 									aria-label="프로필 메뉴"
 									aria-haspopup="true"
 								>
@@ -155,39 +148,37 @@ export const Header: FC<HeaderProps> = ({
 										<img
 											src={avatarUrl}
 											alt="Profile"
-											class="profile-avatar"
+											class="w-10 h-10 min-w-10 min-h-10 max-w-10 max-h-10 rounded-full bg-transparent border-2 border-brand-primary-light flex items-center justify-center text-brand-primary overflow-hidden object-cover"
 										/>
 									) : (
-										<div class="profile-avatar">
-											<UserIcon />
+										<div class="w-10 h-10 min-w-10 min-h-10 max-w-10 max-h-10 rounded-full bg-transparent border-2 border-brand-primary-light flex items-center justify-center text-brand-primary overflow-hidden object-cover">
+											<UserIcon class="w-6 h-6" />
 										</div>
 									)}
-									<ChevronDownIcon />
+									<div class="text-text-secondary">
+										<ChevronDownIcon />
+									</div>
 								</button>
 
-								<div class="profile-dropdown-menu">
+								<div class="absolute top-full right-0 mt-2 min-w-[160px] bg-bg-surface/80 backdrop-blur-md border border-border rounded-md shadow-lg p-1 opacity-0 invisible -translate-y-2 transition-all duration-150 z-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0">
 									<a
 										href="/profile"
-										class="profile-dropdown-item"
+										class="flex items-center gap-2 px-4 py-2 rounded-sm text-text no-underline text-sm transition-colors hover:bg-bg-surface-hover w-full box-border"
 									>
-										<UserIcon />
-										<span>Profile</span>
+										<div class="w-5 h-5 text-text-secondary flex items-center justify-center">
+											<UserIcon class="w-full h-full" />
+										</div>
+										<span class="mt-1">Profile</span>
 									</a>
-									<div class="profile-dropdown-divider" />
-									<form action="/oauth/logout" method="post" style={{ margin: 0 }}>
+									<div class="h-px bg-border-light my-1" />
+									<form action="/oauth/logout" method="post" class="m-0 w-full">
 										<button
 											type="submit"
-											class="profile-dropdown-item profile-dropdown-item-danger"
-											style={{
-												width: "100%",
-												border: "none",
-												background: "none",
-												cursor: "pointer",
-												fontSize: "inherit",
-												fontFamily: "inherit",
-											}}
+											class="flex items-center gap-2 px-4 py-2 rounded-sm text-sm transition-colors hover:bg-bg-surface-hover w-full border-none bg-transparent cursor-pointer text-status-error"
 										>
-											<LogoutIcon />
+											<div class="w-5 h-5 text-status-error flex items-center justify-center">
+												<LogoutIcon class="w-full h-full" />
+											</div>
 											<span>Logout</span>
 										</button>
 									</form>
@@ -195,7 +186,7 @@ export const Header: FC<HeaderProps> = ({
 							</div>
 						</>
 					) : (
-						<a href="/login" class="btn btn-primary btn-sm">
+						<a href="/login" class="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90 text-sm rounded-sm">
 							Login
 						</a>
 					)}

@@ -3,7 +3,7 @@ import type { FC } from "hono/jsx";
 // Heart Icons
 const HeartOutlineIcon = () => (
 	<svg
-		class="like-icon"
+		class="like-icon w-full h-full"
 		viewBox="0 0 24 24"
 		fill="none"
 		stroke="currentColor"
@@ -17,7 +17,7 @@ const HeartOutlineIcon = () => (
 
 const HeartFilledIcon = () => (
 	<svg
-		class="like-icon"
+		class="like-icon w-full h-full"
 		viewBox="0 0 24 24"
 		fill="currentColor"
 		stroke="currentColor"
@@ -35,6 +35,7 @@ interface LikeButtonProps {
 	size?: "sm" | "md" | "lg";
 	showCount?: boolean;
 	gifUri?: string;
+	variant?: "default" | "glass";
 }
 
 export const LikeButton: FC<LikeButtonProps> = ({
@@ -43,30 +44,47 @@ export const LikeButton: FC<LikeButtonProps> = ({
 	size = "md",
 	showCount = true,
 	gifUri,
+	variant = "default",
 }) => {
-	const sizeStyles: Record<string, { icon: string; font: string }> = {
-		sm: { icon: "16px", font: "var(--font-size-xs)" },
-		md: { icon: "20px", font: "var(--font-size-sm)" },
-		lg: { icon: "28px", font: "var(--font-size-base)" },
+	const sizeClasses = {
+		sm: { icon: "w-4 h-4", font: "text-xs" },
+		md: { icon: "w-5 h-5", font: "text-sm" },
+		lg: { icon: "w-7 h-7", font: "text-base" },
 	};
 
-	const { icon, font } = sizeStyles[size];
+	const { icon: iconClass, font: fontClass } = sizeClasses[size];
+
+	if (variant === "glass") {
+		return (
+			<button
+				type="button"
+				class={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-150 backdrop-blur-md border border-white/20 bg-black/30 hover:scale-105 active:scale-95 ${
+					isLiked ? "text-status-like" : "text-white"
+				} like-btn`}
+				data-gif-uri={gifUri}
+				aria-label={isLiked ? "좋아요 취소" : "좋아요"}
+			>
+				<span class="flex items-center justify-center w-5 h-5">
+					<HeartFilledIcon />
+				</span>
+			</button>
+		);
+	}
 
 	return (
 		<button
 			type="button"
-			class={`like-btn ${isLiked ? "liked" : ""}`}
+			class={`flex items-center gap-1 px-1.5 py-1 rounded-full transition-all duration-150 hover:text-status-like hover:bg-status-like/10 ${
+				isLiked ? "text-status-like-active" : "text-text-muted"
+			} like-btn`}
 			data-gif-uri={gifUri}
 			aria-label={isLiked ? "좋아요 취소" : "좋아요"}
-			style={{
-				"--icon-size": icon,
-			}}
 		>
-			<span style={{ width: icon, height: icon, display: "flex" }}>
+			<span class={`flex items-center justify-center ${iconClass}`}>
 				{isLiked ? <HeartFilledIcon /> : <HeartOutlineIcon />}
 			</span>
 			{showCount && (
-				<span class="like-count" style={{ fontSize: font }}>
+				<span class={`font-medium ${fontClass}`}>
 					{formatCount(count)}
 				</span>
 			)}

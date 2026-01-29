@@ -329,25 +329,4 @@ app.get("/upload", async (c) => {
 	);
 });
 
-// ================================
-// 탐색 페이지 (Placeholder)
-// ================================
-app.get("/explore", async (c) => {
-	const did = getCookie(c, SESSION_COOKIE);
-	return c.redirect("/?tab=trending");
-});
-
-// ================================
-// 저장된 GIF 페이지 (Placeholder)
-// ================================
-app.get("/saved", async (c) => {
-	const did = getCookie(c, SESSION_COOKIE);
-
-	if (!did) {
-		return c.redirect("/login");
-	}
-
-	return c.redirect("/profile?tab=favorites");
-});
-
 export default app;

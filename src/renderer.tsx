@@ -16,7 +16,7 @@ export const renderer = jsxRenderer(({ children }) => {
 				/>
 				<title>jjalcloud</title>
 				<ViteClient />
-				<Link href="/src/style.css" rel="stylesheet" />
+				<Link href="/src/uno.css" rel="stylesheet" />
 			</head>
 			<body>
 				{children}

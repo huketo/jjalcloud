@@ -39,68 +39,79 @@ export const DetailPage: FC<DetailPageProps> = ({
 			isLoggedIn={isLoggedIn}
 			showBack
 			title="jjalcloud"
-			showFooter={false}
 			avatarUrl={avatarUrl}
 		>
 			{/* Breadcrumb */}
-			<nav class="detail-breadcrumb">
-				<a href="/">← Feed</a>
+			<nav class="flex items-center gap-2 text-sm text-text-muted mb-6">
+				<a href="/" class="hover:text-brand-primary transition-colors">← Feed</a>
 				<span>•</span>
 				<span>Detail View</span>
 			</nav>
 
 			{/* Main Card */}
-			<article class="detail-card">
-				<div class="detail-main-layout">
+			<article class="bg-transparent shadow-none rounded-none overflow-visible">
+				<div class="flex flex-col gap-6 md:grid md:grid-cols-[1fr_240px] md:gap-8 md:items-start">
 					{/* GIF Image */}
-					<div class="detail-image-container">
+					<div class="flex items-start justify-center w-full md:justify-center bg-transparent">
 						<img
 							src={gifUrl}
 							alt={gif.alt || gif.title || "GIF"}
-							class="detail-image"
+							class="max-w-full max-h-[70vh] object-contain block rounded-2xl shadow-lg"
 						/>
 					</div>
 
 					{/* Action Buttons (Right Sidebar) */}
-					<div class="detail-actions-sidebar">
+					<div class="flex flex-row items-center justify-start gap-4 py-4 bg-transparent border-b border-border-light md:flex-col md:w-full md:border-none md:p-0 md:sticky md:top-[calc(60px+1.5rem)]">
 						<button
 							type="button"
-							class={`detail-action-btn ${gif.isLiked ? "liked" : ""}`}
+							class={`flex items-center gap-2 px-6 py-2 font-medium rounded-full transition-all shadow-sm hover:text-brand-primary md:w-full md:justify-start md:shadow-none md:rounded-xl md:p-4 md:hover:bg-bg-surface md:hover:shadow-sm md:hover:-translate-y-px ${
+								gif.isLiked 
+								? "text-status-like-active bg-bg-surface md:bg-transparent" 
+								: "text-text-secondary bg-bg-surface hover:bg-bg-surface-hover md:bg-transparent"
+							}`}
 							id="like-btn"
 							data-gif-uri={gif.uri}
 						>
-							<HeartIcon filled={gif.isLiked} />
+							<HeartIcon filled={gif.isLiked} className="w-5 h-5" />
 							<span>Favorite</span>
 						</button>
 
-						<button type="button" class="detail-action-btn" id="copy-link-btn">
-							<LinkIcon />
+						<button 
+							type="button" 
+							class="flex items-center gap-2 px-6 py-2 text-text-secondary font-medium rounded-full transition-all bg-bg-surface shadow-sm hover:text-brand-primary hover:bg-bg-surface-hover md:w-full md:justify-start md:bg-transparent md:shadow-none md:rounded-xl md:p-4 md:hover:bg-bg-surface md:hover:shadow-sm md:hover:-translate-y-px" 
+							id="copy-link-btn"
+						>
+							<LinkIcon className="w-5 h-5" />
 							<span>Copy Link</span>
 						</button>
 
-						<button type="button" class="detail-action-btn" id="download-btn">
-							<DownloadIcon />
+						<button 
+							type="button" 
+							class="flex items-center gap-2 px-6 py-2 text-text-secondary font-medium rounded-full transition-all bg-bg-surface shadow-sm hover:text-brand-primary hover:bg-bg-surface-hover md:w-full md:justify-start md:bg-transparent md:shadow-none md:rounded-xl md:p-4 md:hover:bg-bg-surface md:hover:shadow-sm md:hover:-translate-y-px" 
+							id="download-btn"
+						>
+							<DownloadIcon className="w-5 h-5" />
 							<span>Download</span>
 						</button>
 					</div>
 				</div>
 
 				{/* Content */}
-				<div class="detail-content">
+				<div class="p-6">
 					{/* Title */}
-					<h1 class="detail-title">{gif.title || "Untitled"}</h1>
+					<h1 class="text-2xl font-bold text-text mb-2">{gif.title || "Untitled"}</h1>
 
 					{/* Description */}
-					{gif.alt && <p class="detail-description">{gif.alt}</p>}
+					{gif.alt && <p class="text-base text-text-secondary leading-relaxed mb-6">{gif.alt}</p>}
 
 					{/* Tags */}
 					{gif.tags && gif.tags.length > 0 && (
-						<div class="tags" style={{ marginBottom: "var(--spacing-md)" }}>
+						<div class="flex flex-wrap gap-1 mb-4">
 							{gif.tags.map((tag) => (
 								<a
 									key={tag}
 									href={`/search?q=${encodeURIComponent(tag)}`}
-									class="tag"
+									class="px-3 py-1 bg-brand-primary-pale text-brand-primary rounded-full text-xs font-medium transition-colors hover:bg-brand-primary-light hover:text-text-inverse"
 								>
 									#{tag}
 								</a>
@@ -109,30 +120,20 @@ export const DetailPage: FC<DetailPageProps> = ({
 					)}
 
 					{/* Author */}
-					<div class="detail-author">
+					<div class="flex items-center gap-2 mb-4">
 						{gif.authorAvatar ? (
 							<img
 								src={gif.authorAvatar}
 								alt={gif.authorHandle || "User"}
-								class="detail-author-avatar"
+								class="w-8 h-8 rounded-full object-cover"
 							/>
 						) : (
-							<div
-								class="detail-author-avatar"
-								style={{
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
-									background: "var(--color-primary-pale)",
-									color: "var(--color-primary)",
-									fontSize: "14px",
-								}}
-							>
+							<div class="w-8 h-8 rounded-full bg-brand-primary-pale flex items-center justify-center text-brand-primary text-sm">
 								👤
 							</div>
 						)}
-						<div class="detail-author-info">
-							<a href={profileUrl} class="detail-author-name">
+						<div class="flex items-center gap-2">
+							<a href={profileUrl} class="text-sm font-medium text-brand-primary hover:underline">
 								@{gif.authorHandle || "unknown"}
 							</a>
 						</div>
@@ -142,27 +143,20 @@ export const DetailPage: FC<DetailPageProps> = ({
 
 			{/* Related GIFs */}
 			{relatedGifs.length > 0 && (
-				<section class="related-section">
-					<div class="related-header">
-						<h2 class="related-title">More Soft Vibes</h2>
-						<a href="/" class="related-more">
+				<section class="mt-8">
+					<div class="flex items-center justify-between mb-4">
+						<h2 class="text-lg font-semibold text-text">More Soft Vibes</h2>
+						<a href="/" class="text-sm font-medium text-brand-primary hover:text-brand-primary-dark">
 							VIEW ALL
 						</a>
 					</div>
 
-					<div
-						style={{
-							display: "grid",
-							gridTemplateColumns: "repeat(2, 1fr)",
-							gap: "var(--spacing-md)",
-						}}
-					>
+					<div class="grid grid-cols-2 gap-4">
 						{relatedGifs.slice(0, 4).map((relatedGif) => (
 							<a
 								key={relatedGif.rkey}
 								href={`/gif/${relatedGif.rkey}`}
-								class="card card-interactive"
-								style={{ overflow: "hidden" }}
+								class="bg-bg-surface rounded-xl overflow-hidden shadow-card transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
 							>
 								<img
 									src={getGifUrl(relatedGif)}
@@ -171,29 +165,14 @@ export const DetailPage: FC<DetailPageProps> = ({
 										relatedGif.title ||
 										"GIF"
 									}
-									style={{
-										width: "100%",
-										aspectRatio: "1",
-										objectFit: "cover",
-									}}
+									class="w-full aspect-square object-cover"
 									loading="lazy"
 								/>
-								<div style={{ padding: "var(--spacing-sm)" }}>
-									<div
-										style={{
-											fontSize: "var(--font-size-sm)",
-											fontWeight: 500,
-											color: "var(--color-text)",
-										}}
-									>
+								<div class="p-2">
+									<div class="text-sm font-medium text-text truncate">
 										{relatedGif.title || "Untitled"}
 									</div>
-									<div
-										style={{
-											fontSize: "var(--font-size-xs)",
-											color: "var(--color-text-muted)",
-										}}
-									>
+									<div class="text-xs text-text-muted truncate">
 										@{relatedGif.authorHandle || "unknown"}
 									</div>
 								</div>
@@ -282,7 +261,7 @@ function formatNumber(num: number): string {
 
 
 // Icons
-const HeartIcon: FC<{ filled?: boolean }> = ({ filled }) => (
+const HeartIcon: FC<{ filled?: boolean; className?: string }> = ({ filled, className }) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill={filled ? "currentColor" : "none"}
@@ -290,12 +269,13 @@ const HeartIcon: FC<{ filled?: boolean }> = ({ filled }) => (
 		stroke-width="2"
 		stroke-linecap="round"
 		stroke-linejoin="round"
+		class={className}
 	>
 		<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
 	</svg>
 );
 
-const LinkIcon = () => (
+const LinkIcon: FC<{ className?: string }> = ({ className }) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill="none"
@@ -303,13 +283,14 @@ const LinkIcon = () => (
 		stroke-width="2"
 		stroke-linecap="round"
 		stroke-linejoin="round"
+		class={className}
 	>
 		<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
 		<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
 	</svg>
 );
 
-const DownloadIcon = () => (
+const DownloadIcon: FC<{ className?: string }> = ({ className }) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill="none"
@@ -317,6 +298,7 @@ const DownloadIcon = () => (
 		stroke-width="2"
 		stroke-linecap="round"
 		stroke-linejoin="round"
+		class={className}
 	>
 		<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
 		<polyline points="7 10 12 15 17 10" />

@@ -22,44 +22,49 @@ export const ProfileCard: FC<ProfileCardProps> = ({
 	isFollowing = false,
 }) => {
 	return (
-		<div class="profile-card">
+		<div class="flex flex-col items-center p-8 text-center bg-bg-surface rounded-2xl shadow-card">
 			{/* Avatar */}
-			<div class={isVerified ? "profile-verified" : ""}>
+			<div class="relative mb-4">
 				{avatar ? (
 					<img
 						src={avatar}
 						alt={displayName || handle}
-						class="profile-avatar"
+						class="w-24 h-24 rounded-full object-cover border-[3px] border-brand-primary-light shadow-md block"
 					/>
 				) : (
-					<div class="profile-avatar-placeholder">👤</div>
+					<div class="w-24 h-24 rounded-full bg-gradient-to-br from-brand-primary-pale to-brand-primary-light flex items-center justify-center text-3xl mb-4 border-[3px] border-brand-primary-light">👤</div>
+				)}
+				{isVerified && (
+					<div class="absolute bottom-0 right-0 w-6 h-6 bg-brand-primary text-text-inverse rounded-full flex items-center justify-center text-xs border-2 border-bg-surface">
+						✓
+					</div>
 				)}
 			</div>
 
 			{/* Name & Handle */}
-			<h1 class="profile-name">{displayName || handle}</h1>
+			<h1 class="text-2xl font-bold text-text mb-1 mt-0">{displayName || handle}</h1>
 			<a
 				href={`https://bsky.app/profile/${handle}`}
 				target="_blank"
 				rel="noopener noreferrer"
-				class="profile-handle"
-				style={{
-					textDecoration: "none",
-					display: "inline-block",
-				}}
+				class="text-brand-primary font-medium hover:text-brand-primary-dark mb-4 text-sm no-underline inline-block"
 			>
 				@{handle}
 			</a>
 
 			{/* Bio */}
-			{description && <p class="profile-bio">{description}</p>}
+			{description && <p class="text-sm text-text-secondary max-w-xs mb-6 leading-normal">{description}</p>}
 
-			{/* Actions */
-			!isOwnProfile && (
-				<div class="profile-actions">
+			{/* Actions */}
+			{!isOwnProfile && (
+				<div class="flex gap-2 w-full max-w-xs">
 					<button
 						type="button"
-						class={`btn ${isFollowing ? "btn-secondary" : "btn-primary"}`}
+						class={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-md transition-all shadow-sm hover:shadow-md hover:opacity-90 ${
+							isFollowing 
+							? "bg-bg-surface text-text border border-border hover:bg-bg-surface-hover hover:border-brand-primary-light" 
+							: "bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse"
+						}`}
 						data-did={did}
 					>
 						{isFollowing ? (
@@ -74,7 +79,10 @@ export const ProfileCard: FC<ProfileCardProps> = ({
 							</>
 						)}
 					</button>
-					<button type="button" class="btn btn-secondary">
+					<button 
+						type="button" 
+						class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-md transition-all bg-bg-surface text-text border border-border hover:bg-bg-surface-hover hover:border-brand-primary-light"
+					>
 						<MessageIcon />
 						Message
 					</button>

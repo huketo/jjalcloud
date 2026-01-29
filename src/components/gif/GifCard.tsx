@@ -45,24 +45,24 @@ export const GifCard: FC<GifCardProps> = ({
 	// A better UX is copying the full link. I'll leave the data attribute for a handler to use `window.location.origin + ...`
 	
 	return (
-		<article class="gif-card">
-			<a href={detailUrl} class="gif-card-link">
+		<article class="group relative bg-bg-surface rounded-xl overflow-hidden shadow-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+			<a href={detailUrl} class="block w-full relative z-1">
 				<img
 					src={gifUrl}
 					alt={alt || title || "GIF"}
-					class="gif-card-image"
+					class="w-full block h-auto object-cover bg-brand-primary-pale"
 					loading="lazy"
 				/>
 			</a>
 
 			{isTrending && (
-				<div class="gif-card-badge">
+				<div class="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/90 backdrop-blur px-2 py-0.5 text-xs font-medium text-brand-primary shadow-sm z-10">
 					<svg
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
 						stroke-width="2"
-						style={{ width: "12px", height: "12px" }}
+						class="w-3 h-3"
 					>
 						<polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
 						<polyline points="16 7 22 7 22 13" />
@@ -71,26 +71,26 @@ export const GifCard: FC<GifCardProps> = ({
 				</div>
 			)}
 
-			<div class="gif-card-overlay">
-				<div class="gif-card-overlay-content">
+			<div class="absolute inset-0 z-5 bg-gradient-to-t from-brand-primary-dark/60 via-transparent to-transparent p-4 opacity-0 transition-opacity duration-300 flex flex-col justify-end pointer-events-none group-hover:opacity-100 backdrop-blur-[2px]">
+				<div class="flex items-center justify-between w-full gap-2">
 					{showAuthor && (
-						<div class="gif-card-uploader">
-							<a href={profileUrl} class="uploader-link">
+						<div class="pointer-events-auto">
+							<a href={profileUrl} class="flex items-center gap-2 text-text-inverse no-underline font-medium text-sm transition-opacity duration-150 hover:opacity-80 drop-shadow-md">
 								{authorAvatar ? (
 									<img
 										src={authorAvatar}
 										alt={authorHandle || "User"}
-										class="uploader-avatar"
+										class="w-6 h-6 rounded-full object-cover border border-white/70"
 									/>
 								) : (
-									<div class="uploader-avatar-placeholder">👤</div>
+									<div class="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-xs text-white">👤</div>
 								)}
-								<span class="uploader-name">{authorHandle || "Unknown"}</span>
+								<span class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap pt-[2px]">{authorHandle || "Unknown"}</span>
 							</a>
 						</div>
 					)}
 					
-					<div class="gif-card-interactions">
+					<div class="flex items-center gap-1 pointer-events-auto">
 						{showActions && (
 							<>
 								<LikeButton
@@ -98,11 +98,12 @@ export const GifCard: FC<GifCardProps> = ({
 									isLiked={isLiked}
 									size="sm"
 									gifUri={`at://${authorDid}/com.jjalcloud.feed.gif/${rkey}`}
-									showCount={true} 
+									showCount={false}
+									variant="glass"
 								/>
 								<button 
 									type="button" 
-									class="action-btn copy-btn"
+									class="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-150 backdrop-blur-md border border-white/20 bg-black/30 hover:scale-105 active:scale-95 text-white copy-btn"
 									data-link={gifUrl}
 									aria-label="링크 복사"
 									onclick={`
@@ -130,7 +131,7 @@ const CopyIcon = () => (
 		stroke-width="2" 
 		stroke-linecap="round" 
 		stroke-linejoin="round"
-		style={{ width: "18px", height: "18px" }}
+		class="w-4.5 h-4.5"
 	>
 		<rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
 		<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />

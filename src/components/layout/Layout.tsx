@@ -24,18 +24,19 @@ export const Layout: FC<LayoutProps> = ({
 	avatarUrl,
 }) => {
 	return (
-		<div class="app">
+		<div class="flex flex-col min-h-screen pb-[72px]">
 			{showHeader && (
 				<Header
 					isLoggedIn={isLoggedIn}
-					showSearch={showSearch}
 					showBack={showBack}
 					title={title}
 					avatarUrl={avatarUrl}
 				/>
 			)}
 
-			<main class="main-content">{children}</main>
+			<main class="flex-1 w-full max-w-[1200px] mx-auto p-4 pt-[calc(60px+1rem)]">
+				{children}
+			</main>
 		</div>
 	);
 };

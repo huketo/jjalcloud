@@ -18,13 +18,13 @@ export const UploadPage: FC<UploadPageProps> = ({
 	if (!isLoggedIn) {
 		return (
 			<Layout isLoggedIn={false} activeTab="upload">
-				<div class="empty-state">
+				<div class="flex flex-col items-center justify-center p-12 text-center">
 					<LockIcon />
-					<h3 class="empty-state-title">Sign in Required</h3>
-					<p class="empty-state-text">
+					<h3 class="text-lg font-semibold text-text mb-1">Sign in Required</h3>
+					<p class="text-sm text-text-muted mb-6">
 						Please sign in to upload GIFs to the cloud.
 					</p>
-					<a href="/login" class="btn btn-primary">
+					<a href="/login" class="inline-flex items-center justify-center gap-2 px-6 py-2 text-base font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90">
 						Sign In
 					</a>
 				</div>
@@ -41,25 +41,18 @@ export const UploadPage: FC<UploadPageProps> = ({
 			avatarUrl={avatarUrl}
 		>
 			{/* Page Title */}
-			<div class="text-center mb-lg">
-				<h1
-					style={{
-						fontSize: "var(--font-size-2xl)",
-						fontWeight: 700,
-						color: "var(--color-text)",
-						marginBottom: "var(--spacing-xs)",
-					}}
-				>
+			<div class="text-center mb-6">
+				<h1 class="text-3xl font-bold text-text mb-1">
 					Upload to the Cloud
 				</h1>
-				<p style={{ color: "var(--color-text-secondary)" }}>
+				<p class="text-text-secondary">
 					Share your favorite GIFs with the decentralized world.
 				</p>
 			</div>
 
 			{/* Messages */}
-			{error && <div class="alert alert-error mb-lg">{error}</div>}
-			{success && <div class="alert alert-success mb-lg">{success}</div>}
+			{error && <div class="mb-6 p-4 rounded-md text-sm bg-status-error/10 border border-status-error text-status-error">{error}</div>}
+			{success && <div class="mb-6 p-4 rounded-md text-sm bg-status-success/10 border border-status-success text-status-success">{success}</div>}
 
 			{/* Upload Form */}
 			<form
@@ -69,56 +62,36 @@ export const UploadPage: FC<UploadPageProps> = ({
 				enctype="multipart/form-data"
 			>
 				{/* Upload Zone */}
-				<div class="mb-lg">
+				<div class="mb-6">
 					<UploadZone id="gif-upload" />
 				</div>
 
 				{/* Preview */}
 				<div
 					id="preview-container"
-					class="mb-lg"
-					style={{ display: "none" }}
+					class="mb-6 hidden"
 				>
-					<div
-						class="card"
-						style={{
-							padding: "var(--spacing-md)",
-							display: "flex",
-							alignItems: "center",
-							gap: "var(--spacing-md)",
-						}}
-					>
+					<div class="bg-bg-surface rounded-xl shadow-card overflow-hidden p-4 flex items-center gap-4">
 						<img
 							id="preview-image"
 							src=""
 							alt="Preview"
-							style={{
-								width: "80px",
-								height: "80px",
-								objectFit: "cover",
-								borderRadius: "var(--radius-md)",
-							}}
+							class="w-20 h-20 object-cover rounded-md"
 						/>
-						<div style={{ flex: 1 }}>
+						<div class="flex-1">
 							<div
 								id="preview-name"
-								style={{
-									fontWeight: 500,
-									marginBottom: "var(--spacing-xs)",
-								}}
+								class="font-medium mb-1"
 							></div>
 							<div
 								id="preview-size"
-								style={{
-									fontSize: "var(--font-size-sm)",
-									color: "var(--color-text-muted)",
-								}}
+								class="text-sm text-text-muted"
 							></div>
 						</div>
 						<button
 							type="button"
 							id="remove-file-btn"
-							class="btn btn-ghost btn-icon"
+							class="p-2 rounded-full hover:bg-bg-primary-pale hover:text-brand-primary text-text-secondary bg-transparent transition-colors"
 							aria-label="Remove file"
 						>
 							<XIcon />
@@ -127,66 +100,55 @@ export const UploadPage: FC<UploadPageProps> = ({
 				</div>
 
 				{/* GIF Title */}
-				<div class="form-group">
-					<label class="form-label" for="title">
+				<div class="mb-6">
+					<label class="block text-sm font-medium text-brand-primary mb-2" for="title">
 						GIF Title
 					</label>
 					<input
 						type="text"
 						id="title"
 						name="title"
-						class="form-input"
+						class="w-full p-4 text-base text-text bg-bg-surface border border-border rounded-md transition-all focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_3px_theme('colors.brand.primary-pale')] placeholder:text-text-muted"
 						placeholder="Give it a catchy name..."
 						maxLength={100}
 					/>
 				</div>
 
 				{/* Tags */}
-				<div class="form-group">
-					<label class="form-label" for="tags">
+				<div class="mb-6">
+					<label class="block text-sm font-medium text-brand-primary mb-2" for="tags">
 						Tags
 					</label>
-					<div style={{ position: "relative" }}>
-						<span
-							style={{
-								position: "absolute",
-								left: "var(--spacing-md)",
-								top: "50%",
-								transform: "translateY(-50%)",
-								color: "var(--color-text-muted)",
-							}}
-						>
+					<div class="relative">
+						<span class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
 							#
 						</span>
 						<input
 							type="text"
 							id="tags"
 							name="tags"
-							class="form-input"
+							class="w-full p-4 pl-8 text-base text-text bg-bg-surface border border-border rounded-md transition-all focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_3px_theme('colors.brand.primary-pale')] placeholder:text-text-muted"
 							placeholder="funny, cat, reaction..."
-							style={{
-								paddingLeft: "calc(var(--spacing-md) + 16px)",
-							}}
 						/>
 					</div>
-					<p class="form-hint">
+					<p class="text-xs text-text-muted mt-1">
 						Separate tags with commas (max 10 tags)
 					</p>
 				</div>
 
 				{/* Description */}
-				<div class="form-group">
-					<label class="form-label" for="alt">
+				<div class="mb-6">
+					<label class="block text-sm font-medium text-brand-primary mb-2" for="alt">
 						Description (Optional)
 					</label>
 					<textarea
 						id="alt"
 						name="alt"
-						class="form-input form-textarea"
+						class="w-full p-4 text-base text-text bg-bg-surface border border-border rounded-md transition-all focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_3px_theme('colors.brand.primary-pale')] placeholder:text-text-muted min-h-[100px] resize-y"
 						placeholder="Add some context..."
 						maxLength={300}
 					></textarea>
-					<p class="form-hint">
+					<p class="text-xs text-text-muted mt-1">
 						Also used as alt text for accessibility
 					</p>
 				</div>
@@ -195,23 +157,16 @@ export const UploadPage: FC<UploadPageProps> = ({
 				<button
 					type="submit"
 					id="upload-btn"
-					class="btn btn-primary btn-lg"
-					style={{ width: "100%" }}
+					class="w-full flex items-center justify-center gap-2 py-3 text-lg font-medium rounded-lg bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:opacity-90"
 				>
 					<CloudUploadIcon />
 					Upload GIF
 				</button>
 
 				{/* Terms */}
-				<p
-					class="text-center mt-md"
-					style={{
-						fontSize: "var(--font-size-xs)",
-						color: "var(--color-text-muted)",
-					}}
-				>
+				<p class="text-center mt-4 text-xs text-text-muted">
 					By uploading, you agree to our{" "}
-					<a href="/terms" style={{ color: "var(--color-primary)" }}>
+					<a href="/terms" class="text-brand-primary hover:underline">
 						Terms of Service
 					</a>
 					.
@@ -347,7 +302,7 @@ export const UploadPage: FC<UploadPageProps> = ({
 // Icons
 const LockIcon = () => (
 	<svg
-		class="empty-state-icon"
+		class="w-16 h-16 text-text-muted mb-4"
 		viewBox="0 0 24 24"
 		fill="none"
 		stroke="currentColor"

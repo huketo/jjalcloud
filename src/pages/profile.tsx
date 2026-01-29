@@ -52,7 +52,7 @@ export const ProfilePage: FC<ProfilePageProps> = ({
 			avatarUrl={isOwnProfile ? profile.avatar : undefined}
 		>
 			{/* Profile Card */}
-			<div class="card mb-lg">
+			<div class="bg-bg-surface rounded-xl shadow-card overflow-hidden mb-6">
 				<ProfileCard
 					did={profile.did}
 					handle={profile.handle}
@@ -81,10 +81,10 @@ const GifCollectionTab: FC<{
 }> = ({ gifs, profile, emptyText = "No GIFs uploaded yet" }) => {
 	if (gifs.length === 0) {
 		return (
-			<div class="empty-state">
+			<div class="flex flex-col items-center justify-center p-12 text-center">
 				<EmptyIcon />
-				<h3 class="empty-state-title">{emptyText}</h3>
-				<p class="empty-state-text">
+				<h3 class="text-lg font-semibold text-text mb-1">{emptyText}</h3>
+				<p class="text-sm text-text-muted mb-6">
 					Start uploading to build your collection.
 				</p>
 			</div>
@@ -128,7 +128,7 @@ function getGifUrl(gif: GifView): string {
 // Icons
 const EmptyIcon = () => (
 	<svg
-		class="empty-state-icon"
+		class="w-16 h-16 text-text-muted mb-4"
 		viewBox="0 0 24 24"
 		fill="none"
 		stroke="currentColor"

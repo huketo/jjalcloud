@@ -9,89 +9,43 @@ interface LoginPageProps {
 export const LoginPage: FC<LoginPageProps> = ({ error, errorMessage }) => {
 	return (
 		<Layout isLoggedIn={false} showFooter={false}>
-			<div
-				style={{
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					justifyContent: "center",
-					minHeight:
-						"calc(100vh - var(--header-height) - var(--spacing-xl))",
-					padding: "var(--spacing-xl)",
-				}}
-			>
+			<div class="flex flex-col items-center justify-center min-h-[calc(100vh-60px-2rem)] p-8">
 				{/* Logo */}
-				<div
-					style={{
-						marginBottom: "var(--spacing-xl)",
-						textAlign: "center",
-					}}
-				>
-					<div
-						style={{
-							width: "80px",
-							height: "80px",
-							margin: "0 auto var(--spacing-md)",
-							color: "var(--color-primary)",
-						}}
-					>
+				<div class="mb-8 text-center">
+					<div class="w-20 h-20 mx-auto mb-4 text-brand-primary">
 						<CloudIcon />
 					</div>
-					<h1
-						style={{
-							fontSize: "var(--font-size-3xl)",
-							fontWeight: 700,
-							color: "var(--color-primary)",
-							marginBottom: "var(--spacing-xs)",
-						}}
-					>
+					<h1 class="text-3xl font-bold text-brand-primary mb-1">
 						jjalcloud
 					</h1>
-					<p style={{ color: "var(--color-text-secondary)" }}>
+					<p class="text-text-secondary">
 						AT Protocol 기반 탈중앙화 GIF 공유 플랫폼
 					</p>
 				</div>
 
 				{/* Error Message */}
 				{error && (
-					<div
-						class="alert alert-error mb-lg"
-						style={{ width: "100%", maxWidth: "360px" }}
-					>
+					<div class="w-full max-w-[360px] mb-6 p-4 rounded-md text-sm bg-status-error/10 border border-status-error text-status-error">
 						<strong>로그인 실패:</strong> {errorMessage || error}
 					</div>
 				)}
 
 				{/* Login Card */}
-				<div
-					class="card"
-					style={{
-						width: "100%",
-						maxWidth: "360px",
-						padding: "var(--spacing-xl)",
-					}}
-				>
-					<h2
-						style={{
-							fontSize: "var(--font-size-xl)",
-							fontWeight: 600,
-							textAlign: "center",
-							marginBottom: "var(--spacing-lg)",
-						}}
-					>
+				<div class="w-full max-w-[360px] p-8 bg-bg-surface/60 backdrop-blur-sm rounded-3xl shadow-card border border-white/50">
+					<h2 class="text-xl font-semibold text-center mb-6">
 						Bluesky로 로그인
 					</h2>
 
 					<form action="/oauth/login" method="get">
-						<div class="form-group">
-							<label class="form-label" for="handle">
+						<div class="mb-6">
+							<label class="block text-sm font-medium text-brand-primary mb-2" for="handle">
 								Bluesky Handle
 							</label>
 							<input
 								type="text"
 								id="handle"
 								name="handle"
-								class="form-input"
+								class="w-full p-4 text-base text-text bg-bg-surface/50 border border-border rounded-xl transition-all focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_3px_theme('colors.brand.primary-pale')] placeholder:text-text-muted"
 								placeholder="yourname.bsky.social"
 								required
 								autocomplete="username"
@@ -101,34 +55,21 @@ export const LoginPage: FC<LoginPageProps> = ({ error, errorMessage }) => {
 
 						<button
 							type="submit"
-							class="btn btn-primary btn-lg"
-							style={{ width: "100%" }}
+							class="w-full flex items-center justify-center gap-2 py-3 text-lg font-medium rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:opacity-90 hover:shadow-md transition-all"
 						>
 							<BlueskyIcon />
 							Continue with Bluesky
 						</button>
 					</form>
 
-					<div
-						style={{
-							marginTop: "var(--spacing-lg)",
-							paddingTop: "var(--spacing-lg)",
-							borderTop: "1px solid var(--color-border-light)",
-							textAlign: "center",
-						}}
-					>
-						<p
-							style={{
-								fontSize: "var(--font-size-sm)",
-								color: "var(--color-text-muted)",
-							}}
-						>
+					<div class="mt-6 pt-6 border-t border-border-light text-center">
+						<p class="text-sm text-text-muted">
 							계정이 없으신가요?{" "}
 							<a
 								href="https://bsky.app"
 								target="_blank"
 								rel="noopener noreferrer"
-								style={{ color: "var(--color-primary)" }}
+								class="text-brand-primary hover:underline"
 							>
 								Bluesky 가입하기
 							</a>
@@ -137,30 +78,11 @@ export const LoginPage: FC<LoginPageProps> = ({ error, errorMessage }) => {
 				</div>
 
 				{/* Info */}
-				<div
-					style={{
-						marginTop: "var(--spacing-xl)",
-						textAlign: "center",
-						maxWidth: "360px",
-					}}
-				>
-					<h3
-						style={{
-							fontSize: "var(--font-size-sm)",
-							fontWeight: 600,
-							color: "var(--color-text)",
-							marginBottom: "var(--spacing-sm)",
-						}}
-					>
+				<div class="text-center max-w-[360px] mt-8">
+					<h3 class="text-sm font-semibold text-text mb-2">
 						왜 Bluesky 계정이 필요한가요?
 					</h3>
-					<p
-						style={{
-							fontSize: "var(--font-size-xs)",
-							color: "var(--color-text-muted)",
-							lineHeight: 1.6,
-						}}
-					>
+					<p class="text-xs text-text-muted leading-relaxed">
 						jjalcloud는 AT Protocol을 사용하여 당신의 GIF를
 						탈중앙화된 방식으로 저장합니다. Bluesky 계정을 통해
 						로그인하면 당신의 개인 데이터 서버(PDS)에 GIF가

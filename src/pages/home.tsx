@@ -26,7 +26,7 @@ export const HomePage: FC<HomePageProps> = ({
 	return (
 		<Layout isLoggedIn={isLoggedIn} avatarUrl={avatarUrl}>
 			{/* Error Message */}
-			{error && <div class="alert alert-error mb-lg">{error}</div>}
+			{error && <div class="mb-6 p-4 rounded-md text-sm bg-status-error/10 border border-status-error text-status-error">{error}</div>}
 
 			{/* GIF Grid */}
 			{gifs.length > 0 ? (
@@ -52,20 +52,20 @@ export const HomePage: FC<HomePageProps> = ({
 					))}
 				</GifGrid>
 			) : (
-				<div class="empty-state">
+				<div class="flex flex-col items-center justify-center p-12 text-center">
 					<EmptyIcon />
-					<h3 class="empty-state-title">No GIFs yet</h3>
-					<p class="empty-state-text">
+					<h3 class="text-lg font-semibold text-text mb-1">No GIFs yet</h3>
+					<p class="text-sm text-text-muted mb-6">
 						{isLoggedIn
 							? "Be the first to upload a GIF!"
 							: "Sign in to start sharing GIFs."}
 					</p>
 					{isLoggedIn ? (
-						<a href="/upload" class="btn btn-primary">
+						<a href="/upload" class="inline-flex items-center justify-center gap-2 px-6 py-2 text-base font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90">
 							Upload GIF
 						</a>
 					) : (
-						<a href="/login" class="btn btn-primary">
+						<a href="/login" class="inline-flex items-center justify-center gap-2 px-6 py-2 text-base font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90">
 							Sign In
 						</a>
 					)}
@@ -74,10 +74,10 @@ export const HomePage: FC<HomePageProps> = ({
 
 			{/* Load More Button */}
 			{gifs.length > 0 && (
-				<div class="text-center mt-xl">
+				<div class="text-center mt-8">
 					<button
 						type="button"
-						class="btn btn-secondary"
+						class="inline-flex items-center justify-center gap-2 px-6 py-2 text-base font-medium rounded-md transition-all bg-bg-surface text-text border border-border hover:bg-bg-surface-hover hover:border-brand-primary-light"
 						id="load-more-btn"
 					>
 						<RefreshIcon />
@@ -99,7 +99,7 @@ function getGifUrl(gif: GifView): string {
 // Icons
 const EmptyIcon = () => (
 	<svg
-		class="empty-state-icon"
+		class="w-16 h-16 text-text-muted mb-4"
 		viewBox="0 0 24 24"
 		fill="none"
 		stroke="currentColor"
