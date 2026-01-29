@@ -24,7 +24,7 @@ export const UploadPage: FC<UploadPageProps> = ({
 					<p class="text-sm text-text-muted mb-6">
 						Please sign in to upload GIFs to the cloud.
 					</p>
-					<a href="/login" class="inline-flex items-center justify-center gap-2 px-6 py-2 text-base font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90">
+					<a href="/login" class="inline-flex items-center justify-center gap-2 px-6 py-2 text-base font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90 no-underline">
 						Sign In
 					</a>
 				</div>
@@ -108,7 +108,7 @@ export const UploadPage: FC<UploadPageProps> = ({
 						type="text"
 						id="title"
 						name="title"
-						class="w-full p-4 text-base text-text bg-bg-surface border border-border rounded-md transition-all focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_3px_theme('colors.brand.primary-pale')] placeholder:text-text-muted"
+						class="w-full box-border px-4 py-3 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
 						placeholder="Give it a catchy name..."
 						maxLength={100}
 					/>
@@ -127,7 +127,7 @@ export const UploadPage: FC<UploadPageProps> = ({
 							type="text"
 							id="tags"
 							name="tags"
-							class="w-full p-4 pl-8 text-base text-text bg-bg-surface border border-border rounded-md transition-all focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_3px_theme('colors.brand.primary-pale')] placeholder:text-text-muted"
+							class="w-full box-border px-4 py-3 pl-8 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
 							placeholder="funny, cat, reaction..."
 						/>
 					</div>
@@ -144,7 +144,7 @@ export const UploadPage: FC<UploadPageProps> = ({
 					<textarea
 						id="alt"
 						name="alt"
-						class="w-full p-4 text-base text-text bg-bg-surface border border-border rounded-md transition-all focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_3px_theme('colors.brand.primary-pale')] placeholder:text-text-muted min-h-[100px] resize-y"
+						class="w-full box-border px-4 py-3 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80 min-h-[100px] resize-y"
 						placeholder="Add some context..."
 						maxLength={300}
 					></textarea>
@@ -157,7 +157,7 @@ export const UploadPage: FC<UploadPageProps> = ({
 				<button
 					type="submit"
 					id="upload-btn"
-					class="w-full flex items-center justify-center gap-2 py-3 text-lg font-medium rounded-lg bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:opacity-90"
+					class="w-full box-border flex items-center justify-center gap-2 py-3 text-lg font-bold rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse border-none shadow-md hover:shadow-lg hover:opacity-95 transform active:scale-[0.98] transition-all duration-200"
 				>
 					<CloudUploadIcon />
 					Upload GIF

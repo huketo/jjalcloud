@@ -14,7 +14,7 @@ const CloudIcon = () => (
 	</svg>
 );
 
-const UploadIcon = () => (
+const UploadIcon = (props: any) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill="none"
@@ -22,6 +22,7 @@ const UploadIcon = () => (
 		stroke-width="2"
 		stroke-linecap="round"
 		stroke-linejoin="round"
+		{...props}
 	>
 		<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
 		<polyline points="17 8 12 3 7 8" />
@@ -74,6 +75,22 @@ const LogoutIcon = (props: any) => (
 	</svg>
 );
 
+const MenuIcon = (props: any) => (
+	<svg
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+		{...props}
+	>
+		<line x1="4" y1="12" x2="20" y2="12" />
+		<line x1="4" y1="6" x2="20" y2="6" />
+		<line x1="4" y1="18" x2="20" y2="18" />
+	</svg>
+);
+
 interface HeaderProps {
 	isLoggedIn?: boolean;
 	showSearch?: boolean;
@@ -90,11 +107,11 @@ export const Header: FC<HeaderProps> = ({
 }) => {
 	return (
 		<header class="fixed top-0 left-0 right-0 h-[60px] bg-bg-glass backdrop-blur-xl border-b border-border-light z-100">
-			<div class="flex items-center justify-between h-full max-w-[1200px] mx-auto px-4">
+			<div class="flex items-center justify-between h-full max-w-[1200px] mx-auto px-4 relative box-border">
 				{showBack ? (
 					<a
 						href="/"
-						class="inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium rounded-md transition-all bg-transparent text-text-secondary hover:bg-brand-primary-pale hover:text-brand-primary p-2 rounded-full"
+						class="inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium transition-all bg-transparent text-text-secondary hover:bg-brand-primary-pale hover:text-brand-primary p-2 rounded-full"
 						aria-label="뒤로가기"
 					>
 						<svg
@@ -111,7 +128,7 @@ export const Header: FC<HeaderProps> = ({
 						</svg>
 					</a>
 				) : (
-					<a href="/" class="flex items-center gap-2 text-xl font-bold text-brand-primary no-underline">
+					<a href="/" class="flex items-center gap-2 text-xl font-bold text-brand-primary no-underline z-20">
 						<div class="w-8 h-8 text-brand-primary">
 							<CloudIcon />
 						</div>
@@ -121,13 +138,14 @@ export const Header: FC<HeaderProps> = ({
 
 				{title && (
 					<span
-						class="text-lg font-semibold text-brand-primary absolute left-1/2 -translate-x-1/2"
+						class="text-lg font-semibold text-brand-primary absolute left-1/2 -translate-x-1/2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[50%]"
 					>
 						{title}
 					</span>
 				)}
 
-				<div class="flex items-center gap-2">
+				{/* Desktop Navigation */}
+				<div class="hidden md:flex items-center gap-2">
 					{isLoggedIn ? (
 						<>
 							<a
@@ -186,9 +204,82 @@ export const Header: FC<HeaderProps> = ({
 							</div>
 						</>
 					) : (
-						<a href="/login" class="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90 text-sm rounded-sm">
+						<a href="/login" class="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90 text-sm rounded-sm no-underline">
 							Login
 						</a>
+					)}
+				</div>
+
+				{/* Mobile Menu Button */}
+				<div class="md:hidden flex items-center z-20">
+					<button
+						type="button"
+						class="p-2 -mr-2 text-text-secondary hover:text-brand-primary transition-colors bg-transparent border-none cursor-pointer"
+						data-toggle-menu="mobile-menu"
+						aria-label="메뉴 열기"
+					>
+						<MenuIcon class="w-6 h-6" />
+					</button>
+				</div>
+			</div>
+
+			{/* Mobile Menu Dropdown */}
+			<div
+				id="mobile-menu"
+				class="hidden md:hidden absolute top-[60px] left-0 right-0 bg-bg-surface border-b border-border shadow-lg animate-fade-in origin-top"
+				style="animation-duration: 0.2s"
+			>
+				<div class="flex flex-col p-4 gap-4">
+					{isLoggedIn ? (
+						<>
+							<div class="flex items-center gap-3 px-2 pb-4 border-b border-border-light">
+								{avatarUrl ? (
+									<img
+										src={avatarUrl}
+										alt="Profile"
+										class="w-10 h-10 rounded-full border border-brand-primary-light object-cover"
+									/>
+								) : (
+									<div class="w-10 h-10 rounded-full bg-brand-primary-pale flex items-center justify-center text-brand-primary">
+										<UserIcon class="w-6 h-6" />
+									</div>
+								)}
+								<div class="flex flex-col">
+									<span class="text-sm font-medium text-text">Signed in</span>
+									<a href="/profile" class="text-xs text-brand-primary no-underline hover:underline">View Profile</a>
+								</div>
+							</div>
+							
+							<a
+								href="/upload"
+								class="flex items-center justify-center gap-2 w-full px-4 py-3 font-medium rounded-lg bg-brand-primary text-text-inverse no-underline shadow-sm active:scale-[0.98] transition-transform box-border"
+							>
+								<UploadIcon class="w-5 h-5" />
+								<span>Upload GIF</span>
+							</a>
+
+							<div class="h-px bg-border-light" />
+
+							<form action="/oauth/logout" method="post" class="m-0 w-full">
+								<button
+									type="submit"
+									class="flex items-center justify-center gap-2 w-full px-4 py-3 font-medium rounded-lg bg-bg-surface border-1 border-solid border-status-error text-status-error cursor-pointer active:bg-status-error/5 transition-colors box-border"
+								>
+									<LogoutIcon class="w-5 h-5" />
+									<span>Logout</span>
+								</button>
+							</form>
+						</>
+					) : (
+						<div class="flex flex-col gap-3">
+							<p class="text-center text-text-secondary text-sm my-2">Sign in to upload and manage your GIFs</p>
+							<a
+								href="/login"
+								class="flex items-center justify-center gap-2 w-full px-4 py-3 font-medium rounded-lg bg-brand-primary text-text-inverse no-underline shadow-sm active:scale-[0.98] transition-transform"
+							>
+								Login
+							</a>
+						</div>
 					)}
 				</div>
 			</div>

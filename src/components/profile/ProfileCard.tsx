@@ -53,7 +53,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({
 			</a>
 
 			{/* Bio */}
-			{description && <p class="text-sm text-text-secondary max-w-xs mb-6 leading-normal">{description}</p>}
+			{description && <p class="text-sm text-text-secondary max-w-xs mb-3 leading-normal">{description}</p>}
 
 			{/* Actions */}
 			{!isOwnProfile && (

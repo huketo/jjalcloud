@@ -45,7 +45,7 @@ export const GifCard: FC<GifCardProps> = ({
 	// A better UX is copying the full link. I'll leave the data attribute for a handler to use `window.location.origin + ...`
 	
 	return (
-		<article class="group relative bg-bg-surface rounded-xl overflow-hidden shadow-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+		<article class="group relative bg-bg-surface rounded-lg overflow-hidden shadow-card transition-all duration-300 md:hover:shadow-lg">
 			<a href={detailUrl} class="block w-full relative z-1">
 				<img
 					src={gifUrl}
@@ -71,7 +71,7 @@ export const GifCard: FC<GifCardProps> = ({
 				</div>
 			)}
 
-			<div class="absolute inset-0 z-5 bg-gradient-to-t from-brand-primary-dark/60 via-transparent to-transparent p-4 opacity-0 transition-opacity duration-300 flex flex-col justify-end pointer-events-none group-hover:opacity-100 backdrop-blur-[2px]">
+			<div class="absolute inset-0 z-5 bg-gradient-to-t from-brand-primary-dark/60 via-transparent to-transparent p-4 opacity-0 transition-opacity duration-300 hidden md:flex flex-col justify-end pointer-events-none md:group-hover:opacity-100 backdrop-blur-[2px]">
 				<div class="flex items-center justify-between w-full gap-2">
 					{showAuthor && (
 						<div class="pointer-events-auto">
@@ -104,13 +104,9 @@ export const GifCard: FC<GifCardProps> = ({
 								<button 
 									type="button" 
 									class="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-150 backdrop-blur-md border border-white/20 bg-black/30 hover:scale-105 active:scale-95 text-white copy-btn"
-									data-link={gifUrl}
+									data-copy-text={gifUrl}
+									data-copy-message="✅ Link copied to clipboard!"
 									aria-label="링크 복사"
-									onclick={`
-										window.copyToClipboard('${gifUrl}', 'JJal link copied to clipboard!');
-										event.stopPropagation();
-										event.preventDefault();
-									`}
 								>
 									<CopyIcon />
 								</button>

@@ -8,6 +8,15 @@ export default defineConfig({
       cdn: 'https://esm.sh/',
     }),
   ],
+  preflights: [
+    {
+      getCSS: () => `
+        *, *::before, *::after {
+          box-sizing: border-box;
+        }
+      `,
+    },
+  ],
   theme: {
     colors: {
       brand: {

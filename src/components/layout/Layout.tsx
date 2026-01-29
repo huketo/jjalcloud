@@ -24,7 +24,7 @@ export const Layout: FC<LayoutProps> = ({
 	avatarUrl,
 }) => {
 	return (
-		<div class="flex flex-col min-h-screen pb-[72px]">
+		<div class="flex flex-col min-h-screen pb-[72px] w-full max-w-[100vw] overflow-x-hidden">
 			{showHeader && (
 				<Header
 					isLoggedIn={isLoggedIn}
@@ -34,7 +34,7 @@ export const Layout: FC<LayoutProps> = ({
 				/>
 			)}
 
-			<main class="flex-1 w-full max-w-[1200px] mx-auto p-4 pt-[calc(60px+1rem)]">
+			<main class="flex-1 w-full max-w-[1200px] mx-auto p-4 pt-[calc(60px+1rem)] box-border">
 				{children}
 			</main>
 		</div>

@@ -41,138 +41,154 @@ export const DetailPage: FC<DetailPageProps> = ({
 			title="jjalcloud"
 			avatarUrl={avatarUrl}
 		>
-			{/* Breadcrumb */}
-			<nav class="flex items-center gap-2 text-sm text-text-muted mb-6">
-				<a href="/" class="hover:text-brand-primary transition-colors">← Feed</a>
-				<span>•</span>
-				<span>Detail View</span>
-			</nav>
-
-			{/* Main Card */}
-			<article class="bg-transparent shadow-none rounded-none overflow-visible">
-				<div class="flex flex-col gap-6 md:grid md:grid-cols-[1fr_240px] md:gap-8 md:items-start">
-					{/* GIF Image */}
-					<div class="flex items-start justify-center w-full md:justify-center bg-transparent">
-						<img
-							src={gifUrl}
-							alt={gif.alt || gif.title || "GIF"}
-							class="max-w-full max-h-[70vh] object-contain block rounded-2xl shadow-lg"
-						/>
+			<div class="max-w-5xl mx-auto px-4 py-8 md:py-12">
+				
+				{/* Main Layout: Uploader | GIF | Actions */}
+				<div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-8 md:gap-12">
+					
+					{/* 1. Left: Uploader Info (Desktop: Left, Mobile: Top/Order 2) */}
+					<div class="hidden md:flex flex-col items-center gap-3 w-40 flex-shrink-0 sticky top-24">
+						<a href={profileUrl} class="group flex flex-col items-center gap-3 text-center">
+							{gif.authorAvatar ? (
+								<img
+									src={gif.authorAvatar}
+									alt={gif.authorHandle || "User"}
+									class="w-20 h-20 rounded-full object-cover shadow-sm transition-transform group-hover:scale-105"
+								/>
+							) : (
+								<div class="w-20 h-20 rounded-full bg-brand-primary-pale flex items-center justify-center text-brand-primary font-bold text-2xl">
+									{(gif.authorHandle || "U")[0].toUpperCase()}
+								</div>
+							)}
+							<div class="flex flex-col">
+								<span class="text-lg font-bold text-text group-hover:text-brand-primary transition-colors">
+									@{gif.authorHandle || "unknown"}
+								</span>
+								{gif.authorDisplayName && (
+									<span class="text-sm text-text-muted">{gif.authorDisplayName}</span>
+								)}
+							</div>
+						</a>
 					</div>
 
-					{/* Action Buttons (Right Sidebar) */}
-					<div class="flex flex-row items-center justify-start gap-4 py-4 bg-transparent border-b border-border-light md:flex-col md:w-full md:border-none md:p-0 md:sticky md:top-[calc(60px+1.5rem)]">
-						<button
-							type="button"
-							class={`flex items-center gap-2 px-6 py-2 font-medium rounded-full transition-all shadow-sm hover:text-brand-primary md:w-full md:justify-start md:shadow-none md:rounded-xl md:p-4 md:hover:bg-bg-surface md:hover:shadow-sm md:hover:-translate-y-px ${
-								gif.isLiked 
-								? "text-status-like-active bg-bg-surface md:bg-transparent" 
-								: "text-text-secondary bg-bg-surface hover:bg-bg-surface-hover md:bg-transparent"
-							}`}
-							id="like-btn"
-							data-gif-uri={gif.uri}
-						>
-							<HeartIcon filled={gif.isLiked} className="w-5 h-5" />
-							<span>Favorite</span>
-						</button>
-
-						<button 
-							type="button" 
-							class="flex items-center gap-2 px-6 py-2 text-text-secondary font-medium rounded-full transition-all bg-bg-surface shadow-sm hover:text-brand-primary hover:bg-bg-surface-hover md:w-full md:justify-start md:bg-transparent md:shadow-none md:rounded-xl md:p-4 md:hover:bg-bg-surface md:hover:shadow-sm md:hover:-translate-y-px" 
-							id="copy-link-btn"
-						>
-							<LinkIcon className="w-5 h-5" />
-							<span>Copy Link</span>
-						</button>
-
-						<button 
-							type="button" 
-							class="flex items-center gap-2 px-6 py-2 text-text-secondary font-medium rounded-full transition-all bg-bg-surface shadow-sm hover:text-brand-primary hover:bg-bg-surface-hover md:w-full md:justify-start md:bg-transparent md:shadow-none md:rounded-xl md:p-4 md:hover:bg-bg-surface md:hover:shadow-sm md:hover:-translate-y-px" 
-							id="download-btn"
-						>
-							<DownloadIcon className="w-5 h-5" />
-							<span>Download</span>
-						</button>
-					</div>
-				</div>
-
-				{/* Content */}
-				<div class="p-6">
-					{/* Title */}
-					<h1 class="text-2xl font-bold text-text mb-2">{gif.title || "Untitled"}</h1>
-
-					{/* Description */}
-					{gif.alt && <p class="text-base text-text-secondary leading-relaxed mb-6">{gif.alt}</p>}
-
-					{/* Tags */}
-					{gif.tags && gif.tags.length > 0 && (
-						<div class="flex flex-wrap gap-1 mb-4">
-							{gif.tags.map((tag) => (
-								<a
-									key={tag}
-									href={`/search?q=${encodeURIComponent(tag)}`}
-									class="px-3 py-1 bg-brand-primary-pale text-brand-primary rounded-full text-xs font-medium transition-colors hover:bg-brand-primary-light hover:text-text-inverse"
-								>
-									#{tag}
-								</a>
-							))}
-						</div>
-					)}
-
-					{/* Author */}
-					<div class="flex items-center gap-2 mb-4">
-						{gif.authorAvatar ? (
+					{/* 2. Center: GIF Image & Info */}
+					<div class="relative flex-1 flex flex-col w-full md:max-w-4xl order-first md:order-none pb-12">
+						<div class="flex justify-center w-full mb-6">
 							<img
-								src={gif.authorAvatar}
-								alt={gif.authorHandle || "User"}
-								class="w-8 h-8 rounded-full object-cover"
+								src={gifUrl}
+								alt={gif.alt || gif.title || "GIF"}
+								class="max-w-full max-h-[75vh] object-contain block rounded-lg shadow-sm"
 							/>
-						) : (
-							<div class="w-8 h-8 rounded-full bg-brand-primary-pale flex items-center justify-center text-brand-primary text-sm">
-								👤
+						</div>
+
+						{/* Tags (Left aligned, No underline) */}
+						{gif.tags && gif.tags.length > 0 && (
+							<div class="flex flex-wrap justify-start gap-2 mb-4">
+								{gif.tags.map((tag) => (
+									<a
+										key={tag}
+										href={`/search?q=${encodeURIComponent(tag)}`}
+										class="px-4 py-1.5 bg-bg-surface-hover text-text font-medium rounded-full text-sm transition-all hover:bg-brand-primary hover:text-white decoration-none"
+									>
+										#{tag}
+									</a>
+								))}
 							</div>
 						)}
-						<div class="flex items-center gap-2">
-							<a href={profileUrl} class="text-sm font-medium text-brand-primary hover:underline">
-								@{gif.authorHandle || "unknown"}
-							</a>
+
+						{/* Title */}
+						<h1 class="text-2xl md:text-3xl font-bold text-text mb-2 leading-tight text-left">
+							{gif.title || "Untitled"}
+						</h1>
+
+						{/* Description */}
+						{gif.alt && (
+							<p class="text-base text-text-secondary leading-relaxed whitespace-pre-line max-w-2xl text-left">
+								{gif.alt}
+							</p>
+						)}
+					</div>
+
+					{/* Mobile Uploader Info (Visible only on mobile) */}
+					<div class="flex md:hidden items-center gap-3 w-full">
+						<a href={profileUrl} class="flex items-center gap-3">
+							{gif.authorAvatar ? (
+								<img
+									src={gif.authorAvatar}
+									alt={gif.authorHandle || "User"}
+									class="w-10 h-10 rounded-full object-cover"
+								/>
+							) : (
+								<div class="w-10 h-10 rounded-full bg-brand-primary-pale flex items-center justify-center text-brand-primary font-bold">
+									{(gif.authorHandle || "U")[0].toUpperCase()}
+								</div>
+							)}
+							<div class="font-bold text-text">@{gif.authorHandle || "unknown"}</div>
+						</a>
+					</div>
+
+					{/* 3. Right: Actions */}
+					<div class="w-full md:w-40 flex-shrink-0 sticky top-24">
+						<div 
+							id="detail-actions-root" 
+							data-props={JSON.stringify({
+								gifUrl: gifUrl,
+								gifTitle: gif.title || "Untitled",
+								isLiked: gif.isLiked || false,
+							})}
+						>
+							<div class="flex flex-row md:flex-col gap-2 w-full md:w-auto">
+								<button class="group flex items-center gap-3 py-2 text-text-secondary transition-colors md:justify-start">
+									<HeartIcon className="w-6 h-6 transition-transform group-hover:scale-110" />
+									<span class="font-medium">Favorite</span>
+								</button>
+								<button class="group flex items-center gap-3 py-2 text-text-secondary transition-colors md:justify-start">
+									<LinkIcon className="w-6 h-6 transition-transform group-hover:scale-110" />
+									<span class="font-medium">Copy Link</span>
+								</button>
+								<button class="group flex items-center gap-3 py-2 text-text-secondary transition-colors md:justify-start">
+									<DownloadIcon className="w-6 h-6 transition-transform group-hover:scale-110" />
+									<span class="font-medium">Download</span>
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>
-			</article>
+
+
+
+			</div>
 
 			{/* Related GIFs */}
 			{relatedGifs.length > 0 && (
-				<section class="mt-8">
-					<div class="flex items-center justify-between mb-4">
-						<h2 class="text-lg font-semibold text-text">More Soft Vibes</h2>
-						<a href="/" class="text-sm font-medium text-brand-primary hover:text-brand-primary-dark">
+				<section class="mt-16 border-t border-border-light pt-12 px-4 md:px-8 max-w-7xl mx-auto">
+					<div class="flex items-center justify-between mb-8">
+						<h2 class="text-xl font-bold text-text">More Like This</h2>
+						<a href="/" class="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors">
 							VIEW ALL
 						</a>
 					</div>
 
-					<div class="grid grid-cols-2 gap-4">
+					<div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
 						{relatedGifs.slice(0, 4).map((relatedGif) => (
 							<a
 								key={relatedGif.rkey}
 								href={`/gif/${relatedGif.rkey}`}
-								class="bg-bg-surface rounded-xl overflow-hidden shadow-card transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+								class="group relative bg-bg-surface rounded-2xl overflow-hidden shadow-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 block"
 							>
-								<img
-									src={getGifUrl(relatedGif)}
-									alt={
-										relatedGif.alt ||
-										relatedGif.title ||
-										"GIF"
-									}
-									class="w-full aspect-square object-cover"
-									loading="lazy"
-								/>
-								<div class="p-2">
-									<div class="text-sm font-medium text-text truncate">
+								<div class="aspect-square w-full overflow-hidden bg-bg-surface-hover">
+									<img
+										src={getGifUrl(relatedGif)}
+										alt={relatedGif.title || "GIF"}
+										class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+										loading="lazy"
+									/>
+								</div>
+								<div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+									<div class="text-white font-medium truncate">
 										{relatedGif.title || "Untitled"}
 									</div>
-									<div class="text-xs text-text-muted truncate">
+									<div class="text-white/80 text-xs truncate">
 										@{relatedGif.authorHandle || "unknown"}
 									</div>
 								</div>
@@ -181,62 +197,6 @@ export const DetailPage: FC<DetailPageProps> = ({
 					</div>
 				</section>
 			)}
-
-			{/* Client-side scripts */}
-			<script
-				dangerouslySetInnerHTML={{
-					__html: `
-						// Copy Link functionality
-						document.getElementById('copy-link-btn')?.addEventListener('click', async () => {
-							const img = document.querySelector('.detail-image');
-							if (!img) return;
-							
-							const url = img.src;
-							// Use global copyToClipboard if available, otherwise fallback
-							if (window.copyToClipboard) {
-								window.copyToClipboard(url, 'JJal link copied to clipboard!');
-							} else {
-								try {
-									await navigator.clipboard.writeText(url);
-									alert('JJal link copied to clipboard!');
-								} catch (err) {
-									console.error('Failed to copy link', err);
-								}
-							}
-						});
-
-						// Download functionality
-						document.getElementById('download-btn')?.addEventListener('click', async () => {
-							const img = document.querySelector('.detail-image');
-							if (!img) return;
-							
-							const src = img.src;
-							try {
-								// Attempt to fetch and download as blob
-								const response = await fetch(src);
-								const blob = await response.blob();
-								const url = window.URL.createObjectURL(blob);
-								const a = document.createElement('a');
-								a.href = url;
-								a.download = 'jjalcloud_' + Date.now() + '.gif';
-								document.body.appendChild(a);
-								a.click();
-								document.body.removeChild(a);
-								window.URL.revokeObjectURL(url);
-							} catch (e) {
-								// Fallback to opening in new tab
-								window.open(src, '_blank');
-							}
-						});
-
-						// Like button animation (UI only)
-						document.getElementById('like-btn')?.addEventListener('click', function() {
-							this.classList.toggle('liked');
-							// No longer updating count text as it's just "Favorite" label now
-						});
-					`,
-				}}
-			/>
 		</Layout>
 	);
 };

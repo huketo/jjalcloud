@@ -9,84 +9,85 @@ interface LoginPageProps {
 export const LoginPage: FC<LoginPageProps> = ({ error, errorMessage }) => {
 	return (
 		<Layout isLoggedIn={false} showFooter={false}>
-			<div class="flex flex-col items-center justify-center min-h-[calc(100vh-60px-2rem)] p-8">
-				{/* Logo */}
-				<div class="mb-8 text-center">
-					<div class="w-20 h-20 mx-auto mb-4 text-brand-primary">
+			<div class="flex flex-col items-center justify-center min-h-[calc(100vh-60px)] p-4">
+				
+				{/* Logo & Headline */}
+				<div class="mb-6 text-center space-y-1">
+					<div class="w-14 h-14 mx-auto mb-3 text-brand-primary drop-shadow-md">
 						<CloudIcon />
 					</div>
-					<h1 class="text-3xl font-bold text-brand-primary mb-1">
+					<h1 class="text-3xl md:text-3xl font-bold text-brand-primary tracking-tight">
 						jjalcloud
 					</h1>
-					<p class="text-text-secondary">
-						AT Protocol 기반 탈중앙화 GIF 공유 플랫폼
+					<p class="text-base text-text-secondary font-medium">
+						A Decentralized GIF Platform built on the AT Protocol
 					</p>
 				</div>
 
 				{/* Error Message */}
 				{error && (
-					<div class="w-full max-w-[360px] mb-6 p-4 rounded-md text-sm bg-status-error/10 border border-status-error text-status-error">
-						<strong>로그인 실패:</strong> {errorMessage || error}
+					<div class="w-full max-w-sm mb-4 p-3 rounded-lg text-sm font-medium bg-status-error/10 border border-status-error text-status-error shadow-sm">
+						<strong>Login Failed:</strong> {errorMessage || error}
 					</div>
 				)}
 
 				{/* Login Card */}
-				<div class="w-full max-w-[360px] p-8 bg-bg-surface/60 backdrop-blur-sm rounded-3xl shadow-card border border-white/50">
-					<h2 class="text-xl font-semibold text-center mb-6">
-						Bluesky로 로그인
+				<div class="w-full max-w-sm p-6 md:p-8 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-border/60">
+					<h2 class="text-xl font-bold text-center text-text mb-6">
+						Sign in with Bluesky
 					</h2>
 
 					<form action="/oauth/login" method="get">
-						<div class="mb-6">
-							<label class="block text-sm font-medium text-brand-primary mb-2" for="handle">
+						<div class="mb-6 group">
+							<label class="block text-sm font-semibold text-text-secondary mb-1.5" for="handle">
 								Bluesky Handle
 							</label>
-							<input
-								type="text"
-								id="handle"
-								name="handle"
-								class="w-full p-4 text-base text-text bg-bg-surface/50 border border-border rounded-xl transition-all focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_3px_theme('colors.brand.primary-pale')] placeholder:text-text-muted"
-								placeholder="yourname.bsky.social"
-								required
-								autocomplete="username"
-								autocapitalize="none"
-							/>
+							<div class="relative w-full">
+								<input
+									type="text"
+									id="handle"
+									name="handle"
+									class="w-full box-border px-4 py-3 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
+									placeholder="username.bsky.social"
+									required
+									autocomplete="username"
+									autocapitalize="none"
+								/>
+							</div>
 						</div>
 
 						<button
 							type="submit"
-							class="w-full flex items-center justify-center gap-2 py-3 text-lg font-medium rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:opacity-90 hover:shadow-md transition-all"
+							class="w-full box-border flex items-center justify-center gap-2 py-3 text-base font-bold rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary-dark text-white border-none shadow-md hover:shadow-lg hover:opacity-95 transform active:scale-[0.98] transition-all duration-200"
 						>
 							<BlueskyIcon />
-							Continue with Bluesky
+							<span>Continue with Bluesky</span>
 						</button>
 					</form>
 
-					<div class="mt-6 pt-6 border-t border-border-light text-center">
-						<p class="text-sm text-text-muted">
-							계정이 없으신가요?{" "}
+					<div class="mt-6 pt-5 border-t border-border-light text-center">
+						<p class="text-sm text-text-secondary">
+							Don't have an account?{" "}
 							<a
 								href="https://bsky.app"
 								target="_blank"
 								rel="noopener noreferrer"
-								class="text-brand-primary hover:underline"
+								class="font-semibold text-brand-primary hover:text-brand-primary-dark hover:underline transition-colors"
 							>
-								Bluesky 가입하기
+								Join Bluesky
 							</a>
 						</p>
 					</div>
 				</div>
 
-				{/* Info */}
-				<div class="text-center max-w-[360px] mt-8">
-					<h3 class="text-sm font-semibold text-text mb-2">
-						왜 Bluesky 계정이 필요한가요?
+				{/* Info Section */}
+				<div class="text-center max-w-sm mt-8 space-y-1">
+					<h3 class="text-sm font-semibold text-text">
+						Why do I need a Bluesky account?
 					</h3>
 					<p class="text-xs text-text-muted leading-relaxed">
-						jjalcloud는 AT Protocol을 사용하여 당신의 GIF를
-						탈중앙화된 방식으로 저장합니다. Bluesky 계정을 통해
-						로그인하면 당신의 개인 데이터 서버(PDS)에 GIF가
-						저장됩니다.
+						jjalcloud leverages the AT Protocol to store your GIFs in a truly decentralized way. 
+						Your account ensures that your data lives in your own Personal Data Server (PDS).
 					</p>
 				</div>
 			</div>
