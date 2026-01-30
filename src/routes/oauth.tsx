@@ -9,7 +9,7 @@ import {
 	extractErrorMessage,
 } from "../utils";
 
-// app.bsky.actor.getProfile API 응답 타입
+// app.bsky.actor.getProfile API response type
 interface ProfileResponse {
 	did: string;
 	handle: string;
@@ -24,8 +24,8 @@ interface ProfileResponse {
 const oauth = new Hono<HonoEnv>();
 
 /**
- * OAuth 클라이언트 메타데이터 엔드포인트
- * Bluesky Authorization Server가 이 URL을 통해 클라이언트 정보를 가져갑니다.
+ * OAuth client metadata endpoint
+ * Bluesky Authorization Server fetches client info via this URL.
  */
 oauth.get("/client-metadata.json", async (c) => {
 	const client = await createOAuthClient(c.env);
@@ -38,8 +38,8 @@ oauth.get("/client-metadata.json", async (c) => {
 });
 
 /**
- * OAuth 로그인 시작
- * 사용자를 Bluesky 인증 페이지로 리다이렉트합니다.
+ * Start OAuth Login
+ * Redirect user to Bluesky auth page.
  */
 oauth.get("/login", async (c) => {
 	const handle = c.req.query("handle");
@@ -51,10 +51,10 @@ oauth.get("/login", async (c) => {
 	try {
 		const client = await createOAuthClient(c.env);
 
-		// 인증 URL 생성 (scope는 clientMetadata에 정의된 것 사용)
+		// Create auth URL (scope uses what's defined in clientMetadata)
 		const authUrl = await client.authorize(handle);
 
-		// 사용자를 Bluesky 인증 페이지로 리다이렉트
+		// Redirect user to Bluesky auth page
 		return c.redirect(authUrl.toString());
 	} catch (error) {
 		console.error("Login error:", error);
@@ -69,22 +69,22 @@ oauth.get("/login", async (c) => {
 });
 
 /**
- * OAuth 콜백 처리
- * Bluesky에서 인증 후 리다이렉트되는 엔드포인트입니다.
+ * Handle OAuth Callback
+ * Endpoint redirected to after Bluesky auth.
  */
 oauth.get("/callback", async (c) => {
 	try {
 		const client = await createOAuthClient(c.env);
 
-		// URL에서 파라미터 추출
+		// Extract params from URL
 		const params = new URLSearchParams(c.req.url.split("?")[1] || "");
 
-		// 콜백 처리
+		// Handle callback
 		const { session, state } = await client.callback(params);
 
 		const isLocal = isLocalDevelopment(c.env.PUBLIC_URL);
 
-		// 세션 쿠키 설정 (DID 저장)
+		// Set session cookie (store DID)
 		setCookie(c, SESSION_COOKIE, session.did, {
 			httpOnly: true,
 			secure: !isLocal,
@@ -104,8 +104,8 @@ oauth.get("/callback", async (c) => {
 });
 
 /**
- * 로그아웃
- * 세션을 삭제하고 메인 페이지로 리다이렉트합니다.
+ * Logout
+ * Delete session and redirect to main page.
  */
 oauth.post("/logout", async (c) => {
 	const did = getCookie(c, SESSION_COOKIE);
@@ -125,7 +125,7 @@ oauth.post("/logout", async (c) => {
 });
 
 /**
- * 현재 세션 정보 조회
+ * Get current session info
  */
 oauth.get("/session", async (c) => {
 	const did = getCookie(c, SESSION_COOKIE);
@@ -144,7 +144,7 @@ oauth.get("/session", async (c) => {
 		});
 	} catch (error) {
 		console.error("Session restore error:", error);
-		// 세션 복원 실패시 쿠키 삭제
+		// Delete cookie if session restore fails
 		deleteCookie(c, SESSION_COOKIE, {
 			path: "/",
 		});
@@ -153,8 +153,8 @@ oauth.get("/session", async (c) => {
 });
 
 /**
- * 프로필 정보 조회
- * ATProto API를 통해 사용자 프로필을 가져옵니다.
+ * Get profile info
+ * Fetch user profile via ATProto API.
  */
 oauth.get("/profile", async (c) => {
 	const did = getCookie(c, SESSION_COOKIE);

@@ -14,7 +14,7 @@ import { eq, inArray, and, sql } from "drizzle-orm";
 const gif = new Hono<AuthenticatedEnv>();
 
 /**
- * GIF 목록 조회 (내 GIF)
+ * List GIFs (My GIFs)
  * GET /api/gif
  */
 gif.get("/", requireAuth, async (c) => {
@@ -83,7 +83,7 @@ gif.get("/", requireAuth, async (c) => {
 });
 
 /**
- * 특정 사용자의 GIF 목록 조회
+ * List User GIFs
  * GET /api/gif/user/:did
  */
 gif.get("/user/:did", requireAuth, async (c) => {
@@ -157,7 +157,7 @@ gif.get("/user/:did", requireAuth, async (c) => {
 });
 
 /**
- * 단일 GIF 조회
+ * Get Single GIF
  * GET /api/gif/:rkey
  */
 gif.get("/:rkey", requireAuth, async (c) => {
@@ -224,14 +224,14 @@ gif.get("/:rkey", requireAuth, async (c) => {
 });
 
 /**
- * GIF 업로드 (Create)
+ * Create GIF
  * POST /api/gif
  *
  * FormData:
- * - file: GIF 파일 (required)
- * - title: 제목 (optional)
- * - alt: 대체 텍스트 (optional)
- * - tags: 태그 (optional, comma-separated)
+ * - file: GIF file (required)
+ * - title: Title (optional)
+ * - alt: Alt text (optional)
+ * - tags: Tags (optional, comma-separated)
  */
 gif.post("/", requireAuth, async (c) => {
 	const session = c.get("session");
@@ -248,29 +248,29 @@ gif.post("/", requireAuth, async (c) => {
 			return c.json({ error: "File is required" }, 400);
 		}
 
-		// GIF 파일 검증
+		// Verify GIF file
 		if (!file.type.includes("gif")) {
 			return c.json({ error: "Only GIF files are allowed" }, 400);
 		}
 
-		// 파일 크기 검증
+		// Verify file size
 		if (file.size > MAX_GIF_SIZE) {
 			return c.json({ error: "File size must be less than 20MB" }, 400);
 		}
 
-		// 태그 파싱
+		// Parse tags
 		const tags = parseTags(tagsStr, MAX_TAGS_COUNT);
 
 		const rpc = createRpcClient(session);
 
-		// 1. Blob 업로드
+		// 1. Upload Blob
 		const blobData = await ok(
 			rpc.post("com.atproto.repo.uploadBlob", {
 				input: file,
 			}),
 		);
 
-		// 2. GIF 레코드 생성
+		// 2. Create GIF Record
 		const rkey = TID.nextStr();
 		const record: Record<string, unknown> = {
 			$type: GIF_COLLECTION,
@@ -299,7 +299,7 @@ gif.post("/", requireAuth, async (c) => {
 				uri: result.uri,
 				cid: result.cid,
 				rkey,
-				message: "GIF가 성공적으로 업로드되었습니다.",
+				message: "GIF successfully uploaded.",
 			},
 			201,
 		);
@@ -316,13 +316,13 @@ gif.post("/", requireAuth, async (c) => {
 });
 
 /**
- * GIF 수정 (Update)
+ * Update GIF
  * PUT /api/gif/:rkey
  *
  * JSON Body:
- * - title: 제목 (optional)
- * - alt: 대체 텍스트 (optional)
- * - tags: 태그 배열 (optional)
+ * - title: Title (optional)
+ * - alt: Alt text (optional)
+ * - tags: Tags array (optional)
  */
 gif.put("/:rkey", requireAuth, async (c) => {
 	const session = c.get("session");
@@ -332,7 +332,7 @@ gif.put("/:rkey", requireAuth, async (c) => {
 	try {
 		const rpc = createRpcClient(session);
 
-		// 기존 레코드 조회
+		// Get existing record
 		const existingData = await ok(
 			rpc.get("com.atproto.repo.getRecord", {
 				params: {
@@ -351,14 +351,14 @@ gif.put("/:rkey", requireAuth, async (c) => {
 
 		const existingValue = existingData.value as GifRecord;
 
-		// 업데이트할 레코드 생성 (기존 값 유지, 새 값으로 덮어쓰기)
+		// Create record to update (preserve existing values, overwrite with new ones)
 		const updatedRecord: Record<string, unknown> = {
 			$type: GIF_COLLECTION,
-			file: existingValue.file, // 파일은 변경하지 않음
-			createdAt: existingValue.createdAt, // 생성 시간 유지
+			file: existingValue.file, // do not change file
+			createdAt: existingValue.createdAt, // preserve creation time
 		};
 
-		// 선택적 필드 업데이트
+		// Update optional fields
 		if (body.title !== undefined) {
 			updatedRecord.title = body.title || undefined;
 		} else if (existingValue.title) {
@@ -380,7 +380,7 @@ gif.put("/:rkey", requireAuth, async (c) => {
 			updatedRecord.tags = existingValue.tags;
 		}
 
-		// 레코드 업데이트
+		// Update record
 		const result = await ok(
 			rpc.post("com.atproto.repo.putRecord", {
 				input: {
@@ -398,7 +398,7 @@ gif.put("/:rkey", requireAuth, async (c) => {
 			uri: result.uri,
 			cid: result.cid,
 			rkey,
-			message: "GIF가 성공적으로 수정되었습니다.",
+			message: "GIF successfully updated.",
 		});
 	} catch (error) {
 		if (error instanceof ClientResponseError && error.status === 404) {
@@ -416,7 +416,7 @@ gif.put("/:rkey", requireAuth, async (c) => {
 });
 
 /**
- * GIF 삭제 (Delete)
+ * Delete GIF
  * DELETE /api/gif/:rkey
  */
 gif.delete("/:rkey", requireAuth, async (c) => {
@@ -439,7 +439,7 @@ gif.delete("/:rkey", requireAuth, async (c) => {
 
 		return c.json({
 			success: true,
-			message: "GIF가 성공적으로 삭제되었습니다.",
+			message: "GIF successfully deleted.",
 		});
 	} catch (error) {
 		if (error instanceof ClientResponseError && error.status === 404) {

@@ -71,7 +71,7 @@ document.addEventListener("click", (e) => {
 
 		const uri = likeBtn.getAttribute("data-gif-uri");
 		const cid = likeBtn.getAttribute("data-gif-cid");
-		const isLiked = likeBtn.getAttribute("aria-label") === "좋아요 취소"; // Assuming aria-label tracks state or we need a data attr
+		const isLiked = likeBtn.getAttribute("aria-label") === "Unlike"; // Assuming aria-label tracks state or we need a data attr
 		// Better: use data-is-liked or check class
 		// Let's rely on aria-label or toggle class for now, but safer to have explicit data attr on update.
 		// However, we are modifying DOM directly here.
@@ -94,7 +94,7 @@ document.addEventListener("click", (e) => {
 				likeBtn.classList.add("text-status-like");
 			}
 			if (iconContainer) iconContainer.innerHTML = filledIcon;
-			likeBtn.setAttribute("aria-label", "좋아요 취소");
+			likeBtn.setAttribute("aria-label", "Unlike");
 		} else {
 			likeBtn.classList.remove("text-status-like-active", "text-status-like");
 			likeBtn.classList.add("text-text-muted"); // Default variant
@@ -104,7 +104,7 @@ document.addEventListener("click", (e) => {
 				likeBtn.classList.remove("text-text-muted");
 			}
 			if (iconContainer) iconContainer.innerHTML = outlineIcon;
-			likeBtn.setAttribute("aria-label", "좋아요");
+			likeBtn.setAttribute("aria-label", "Like");
 		}
 
 		// API Call
@@ -137,12 +137,12 @@ document.addEventListener("click", (e) => {
 					// Tried to unlike, failed -> revert to liked
 					likeBtn.classList.add("text-status-like-active");
 					if (iconContainer) iconContainer.innerHTML = filledIcon;
-					likeBtn.setAttribute("aria-label", "좋아요 취소");
+					likeBtn.setAttribute("aria-label", "Unlike");
 				} else {
 					// Tried to like, failed -> revert to unliked
 					likeBtn.classList.remove("text-status-like-active");
 					if (iconContainer) iconContainer.innerHTML = outlineIcon;
-					likeBtn.setAttribute("aria-label", "좋아요");
+					likeBtn.setAttribute("aria-label", "Like");
 				}
 				window.dispatchEvent(
 					new CustomEvent("show-toast", {

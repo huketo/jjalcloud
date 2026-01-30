@@ -112,7 +112,7 @@ export const Header: FC<HeaderProps> = ({
 					<a
 						href="/"
 						class="inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium transition-all bg-transparent text-text-secondary hover:bg-brand-primary-pale hover:text-brand-primary p-2 rounded-full"
-						aria-label="뒤로가기"
+						aria-label="Go Back"
 					>
 						<svg
 							viewBox="0 0 24 24"
@@ -160,7 +160,7 @@ export const Header: FC<HeaderProps> = ({
 								<button
 									type="button"
 									class="inline-flex items-center gap-[2px] p-0 pr-1 border-none bg-transparent rounded-full cursor-pointer transition-colors duration-150 h-10 hover:opacity-70"
-									aria-label="프로필 메뉴"
+									aria-label="Profile Menu"
 									aria-haspopup="true"
 								>
 									{avatarUrl ? (
@@ -220,7 +220,7 @@ export const Header: FC<HeaderProps> = ({
 						type="button"
 						class="p-2 -mr-2 text-text-secondary hover:text-brand-primary transition-colors bg-transparent border-none cursor-pointer"
 						data-toggle-menu="mobile-menu"
-						aria-label="메뉴 열기"
+						aria-label="Open Menu"
 					>
 						<MenuIcon class="w-6 h-6" />
 					</button>

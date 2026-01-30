@@ -1,17 +1,17 @@
 /**
- * Cloudflare Workers 바인딩 타입 정의
+ * Cloudflare Workers Bindings Type Definition
  */
 export interface CloudflareBindings {
-	// KV 네임스페이스
+	// KV Namespaces
 	STATE_STORE: KVNamespace;
 	SESSION_STORE: KVNamespace;
 	DID_CACHE: KVNamespace;
 	HANDLE_CACHE: KVNamespace;
 
-	// 환경 변수
+	// Environment Variables
 	PUBLIC_URL: string;
 
-	// 시크릿 (wrangler secret put으로 설정)
+	// Secrets (Set via wrangler secret put)
 	PRIVATE_KEY_JWK?: string;
 
 	// D1 Database
@@ -19,7 +19,7 @@ export interface CloudflareBindings {
 }
 
 /**
- * Hono Context에서 사용할 환경 타입
+ * Hono Environment type used in Context
  */
 export type HonoEnv = {
 	Bindings: CloudflareBindings;

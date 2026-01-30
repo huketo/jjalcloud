@@ -65,7 +65,7 @@ export const LikeButton: FC<LikeButtonProps> = ({
 				} like-btn`}
 				data-gif-uri={gifUri}
 				data-gif-cid={gifCid}
-				aria-label={isLiked ? "좋아요 취소" : "좋아요"}
+				aria-label={isLiked ? "Unlike" : "Like"}
 			>
 				<span class="flex items-center justify-center w-5 h-5">
 					<HeartFilledIcon />
@@ -82,7 +82,7 @@ export const LikeButton: FC<LikeButtonProps> = ({
 			} like-btn`}
 			data-gif-uri={gifUri}
 			data-gif-cid={gifCid}
-			aria-label={isLiked ? "좋아요 취소" : "좋아요"}
+			aria-label={isLiked ? "Unlike" : "Like"}
 		>
 			<span class={`flex items-center justify-center ${iconClass}`}>
 				{isLiked ? <HeartFilledIcon /> : <HeartOutlineIcon />}

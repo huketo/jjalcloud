@@ -15,7 +15,7 @@ import type { Did } from "@atcute/lexicons/syntax";
 const like = new Hono<AuthenticatedEnv>();
 
 /**
- * 좋아요 생성 (Toggle On)
+ * Create Like (Toggle On)
  * POST /api/like
  * Body: { subject: { uri: string, cid: string } }
  */
@@ -93,7 +93,7 @@ like.post("/", requireAuth, async (c) => {
 });
 
 /**
- * 좋아요 취소 (Toggle Off)
+ * Cancel Like (Toggle Off)
  * DELETE /api/like
  * Body: { subject: { uri: string } }
  */
@@ -153,7 +153,7 @@ like.delete("/", requireAuth, async (c) => {
 });
 
 /**
- * 좋아요 상태 및 카운트 조회
+ * Get Like status and count
  * GET /api/like?subject=...
  */
 like.get("/", optionalAuth, async (c) => {

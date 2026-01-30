@@ -18,24 +18,24 @@ const app = new Hono<HonoEnv>();
 
 app.use(renderer);
 
-// OAuth 라우트 등록
+// Register OAuth routes
 app.route("/oauth", oauthRoutes);
 
 // Dev Helper removed: Auto-fix logic was causing crashes. Use migrations instead.
 
-// GIF API 라우트 등록
+// Register GIF API routes
 app.route("/api/gif", gifRoutes);
 app.route("/api/like", likeRoutes);
 
 // ================================
-// 메인 페이지 (홈 피드)
+// Main Page (Home Feed)
 // ================================
 app.get("/", async (c) => {
 	const did = getCookie(c, SESSION_COOKIE);
 	const activeTab = c.req.query("tab") || "for-you";
 	const isLoggedIn = !!did;
 
-	// GIF 목록 가져오기 (로그인한 경우 자신의 GIF, 아니면 빈 배열)
+	// Fetch GIF list (If logged in, own GIFs, otherwise empty array for now or public feed?)
 	let gifs: any[] = [];
 	let avatarUrl: string | undefined;
 
@@ -83,12 +83,12 @@ app.get("/", async (c) => {
 });
 
 // ================================
-// 로그인 페이지
+// Login Page
 // ================================
 app.get("/login", async (c) => {
 	const did = getCookie(c, SESSION_COOKIE);
 
-	// 이미 로그인되어 있으면 홈으로 리다이렉트
+	// Redirect to home if already logged in
 	if (did) {
 		return c.redirect("/");
 	}
@@ -100,14 +100,14 @@ app.get("/login", async (c) => {
 });
 
 // ================================
-// GIF 상세 페이지
+// GIF Detail Page
 // ================================
 app.get("/gif/:rkey", async (c) => {
 	const did = getCookie(c, SESSION_COOKIE);
 	const rkey = c.req.param("rkey");
 	const isLoggedIn = !!did;
 
-	// GIF 상세 정보 가져오기
+	// Fetch GIF Details
 	try {
 		const response = await fetch(
 			new URL(`/api/gif/${rkey}`, c.req.url).toString(),
@@ -122,10 +122,10 @@ app.get("/gif/:rkey", async (c) => {
 				<div class="app">
 					<main class="main-content">
 						<div class="empty-state">
-							<h3 class="empty-state-title">GIF를 찾을 수 없습니다</h3>
+							<h3 class="empty-state-title">GIF Not Found</h3>
 							<p class="empty-state-text">{data.message}</p>
 							<a href="/" class="btn btn-primary">
-								홈으로 돌아가기
+								Return to Home
 							</a>
 						</div>
 					</main>
@@ -180,12 +180,12 @@ app.get("/gif/:rkey", async (c) => {
 			<div class="app">
 				<main class="main-content">
 					<div class="empty-state">
-						<h3 class="empty-state-title">오류가 발생했습니다</h3>
+						<h3 class="empty-state-title">An error occurred</h3>
 						<p class="empty-state-text">
-							GIF를 불러오는 중 문제가 발생했습니다.
+							Failed to load GIF.
 						</p>
 						<a href="/" class="btn btn-primary">
-							홈으로 돌아가기
+							Return to Home
 						</a>
 					</div>
 				</main>
@@ -195,7 +195,7 @@ app.get("/gif/:rkey", async (c) => {
 });
 
 // ================================
-// 프로필 페이지 (자신)
+// Profile Page (Self)
 // ================================
 app.get("/profile", async (c) => {
 	const did = getCookie(c, SESSION_COOKIE);
@@ -223,7 +223,7 @@ app.get("/profile", async (c) => {
 });
 
 // ================================
-// 프로필 페이지 (다른 사용자)
+// Profile Page (Other User)
 // ================================
 app.get("/profile/:handle", async (c) => {
 	const currentDid = getCookie(c, SESSION_COOKIE);
@@ -288,7 +288,7 @@ app.get("/profile/:handle", async (c) => {
 });
 
 // ================================
-// 업로드 페이지
+// Upload Page
 // ================================
 app.get("/upload", async (c) => {
 	const did = getCookie(c, SESSION_COOKIE);

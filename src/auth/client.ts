@@ -10,9 +10,9 @@ import type { CloudflareBindings } from "../types";
 import { isLocalDevelopment, extractPort } from "../utils";
 
 /**
- * OAuth 클라이언트 인스턴스를 생성합니다.
- * - 로컬 개발: Loopback client (public client)
- * - 프로덕션: Confidential client (private_key_jwt 인증)
+ * Create OAuth client instance.
+ * - Local Development: Loopback client (public client)
+ * - Production: Confidential client (private_key_jwt auth)
  */
 export async function createOAuthClient(
 	env: CloudflareBindings,
@@ -20,10 +20,10 @@ export async function createOAuthClient(
 	const publicUrl = env.PUBLIC_URL;
 	const isLocal = isLocalDevelopment(publicUrl);
 
-	// 프로덕션 환경에서만 키셋 로드 (Confidential client)
+	// Load keyset only in production (Confidential client)
 	const keyset = isLocal ? undefined : await loadKeyset(env);
 
-	// 로컬 개발용 URL 설정
+	// Set URL for local development
 	const port = isLocal ? extractPort(publicUrl || "http://localhost:5173") : "";
 	// ATProto loopback client 요구사항 (RFC 8252):
 	// - client_id: http://localhost?redirect_uri=...&scope=... 형식
@@ -31,45 +31,45 @@ export async function createOAuthClient(
 	const loopbackRedirectUri = `http://127.0.0.1:${port}/oauth/callback`;
 	const loopbackScope = "atproto transition:generic";
 
-	// Loopback client_id는 query parameter로 redirect_uri와 scope 포함
+	// Loopback client_id includes redirect_uri and scope as query parameters
 	const loopbackClientId = `http://localhost?${new URLSearchParams([
 		["redirect_uri", loopbackRedirectUri],
 		["scope", loopbackScope],
 	]).toString()}`;
 
 	const client = new WorkersOAuthClient({
-		// DID 캐시 (DID 문서 캐싱)
+		// DID Cache (Caching DID documents)
 		didCache: new DidCacheKV(env.DID_CACHE),
-		// Handle 캐시 (handle -> did 매핑 캐싱)
+		// Handle Cache (Caching handle -> did mapping)
 		handleCache: new HandleCacheKV(env.HANDLE_CACHE, {}),
-		// OAuth State 저장소 (인증 흐름 중 상태 저장)
+		// OAuth State Store (Store state during auth flow)
 		stateStore: new StateStoreKV(env.STATE_STORE),
-		// OAuth Session 저장소 (인증된 세션 저장)
+		// OAuth Session Store (Store authenticated sessions)
 		sessionStore: new SessionStoreKV(env.SESSION_STORE),
 
-		// 로컬 개발에서 HTTP 허용
+		// Allow HTTP in local development
 		allowHttp: isLocal,
 
-		// Confidential client를 위한 키셋 (프로덕션 전용)
+		// Keyset for Confidential client (Production only)
 		keyset,
 
 		// Client 메타데이터
 		clientMetadata: isLocal
-			? // 로컬 개발용 Loopback client (RFC 8252)
+			? // Loopback client for local development (RFC 8252)
 				{
-					// Loopback client_id에 redirect_uri와 scope가 query param으로 포함됨
+					// Loopback client_id includes redirect_uri and scope as query param
 					client_id: loopbackClientId,
-					// redirect_uri는 127.0.0.1 사용 (RFC 8252)
+					// Use 127.0.0.1 for redirect_uri (RFC 8252)
 					redirect_uris: [loopbackRedirectUri],
 					grant_types: ["authorization_code", "refresh_token"],
 					response_types: ["code"],
 					scope: loopbackScope,
-					// Public client (로컬 개발용)
+					// Public client (for local dev)
 					token_endpoint_auth_method: "none",
 					application_type: "native",
 					dpop_bound_access_tokens: true,
 				}
-			: // 프로덕션용 Confidential client
+			: // Confidential client for production
 				{
 					client_id: `${publicUrl}/oauth/client-metadata.json`,
 					client_name: "jjalcloud",
@@ -81,7 +81,7 @@ export async function createOAuthClient(
 					grant_types: ["authorization_code", "refresh_token"],
 					response_types: ["code"],
 					scope: "atproto transition:generic",
-					// Confidential client 설정
+					// Confidential client settings
 					token_endpoint_auth_method: "private_key_jwt",
 					token_endpoint_auth_signing_alg: "ES256",
 					application_type: "web",
@@ -93,8 +93,8 @@ export async function createOAuthClient(
 }
 
 /**
- * Confidential client를 위한 키셋을 로드합니다.
- * 환경 변수에서 JWK를 로드하거나, 없으면 새로 생성합니다.
+ * Load keyset for Confidential client.
+ * Load JWK from environment variable, or generate new one if missing.
  */
 async function loadKeyset(env: CloudflareBindings): Promise<JoseKey[]> {
 	if (env.PRIVATE_KEY_JWK) {
@@ -110,7 +110,7 @@ async function loadKeyset(env: CloudflareBindings): Promise<JoseKey[]> {
 		}
 	}
 
-	// 개발 환경에서는 새 키 생성 (프로덕션에서는 반드시 환경 변수로 설정해야 함)
+	// Generate new key in dev environment (Must set env var in production)
 	console.warn(
 		"No PRIVATE_KEY_JWK found. Generating a new key for development. " +
 			"For production, set PRIVATE_KEY_JWK using `wrangler secret put PRIVATE_KEY_JWK`",
@@ -126,8 +126,8 @@ async function loadKeyset(env: CloudflareBindings): Promise<JoseKey[]> {
 }
 
 /**
- * 개발용: 새 ES256 키를 생성하고 JWK를 반환합니다.
- * 이 키를 `wrangler secret put PRIVATE_KEY_JWK`로 설정하세요.
+ * For dev: Generate new ES256 key and return JWK.
+ * Set this key with `wrangler secret put PRIVATE_KEY_JWK`.
  */
 export async function generatePrivateKey(): Promise<{
 	privateJwk: object;
@@ -141,9 +141,9 @@ export async function generatePrivateKey(): Promise<{
 }
 
 /**
- * 클라이언트 메타데이터를 생성합니다.
- * /.well-known/oauth-client-metadata.json 엔드포인트에서 제공됩니다.
- * (프로덕션 전용 - 로컬 개발에서는 loopback client 사용)
+ * Create client metadata.
+ * Served at /.well-known/oauth-client-metadata.json endpoint.
+ * (Production only - Local uses loopback client)
  */
 export function createClientMetadata(
 	env: CloudflareBindings,
@@ -166,7 +166,7 @@ export function createClientMetadata(
 		token_endpoint_auth_signing_alg: "ES256",
 		application_type: "web",
 		dpop_bound_access_tokens: true,
-		// JWKS 포함 (public keys만)
+		// Include JWKS (public keys only)
 		...(jwks && { jwks }),
 	};
 }

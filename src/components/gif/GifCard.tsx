@@ -115,7 +115,7 @@ export const GifCard: FC<GifCardProps> = ({
 									class="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-150 backdrop-blur-md border border-white/20 bg-black/30 hover:scale-105 active:scale-95 text-white copy-btn"
 									data-copy-text={gifUrl}
 									data-copy-message="✅ Link copied to clipboard!"
-									aria-label="링크 복사"
+									aria-label="Copy Link"
 								>
 									<CopyIcon />
 								</button>

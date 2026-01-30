@@ -1,7 +1,7 @@
 import type { BlobRef } from "@atproto/lexicon";
 
 /**
- * GIF 레코드 타입 (com.jjalcloud.feed.gif)
+ * GIF Record Type (com.jjalcloud.feed.gif)
  */
 export interface GifRecord {
 	$type: "com.jjalcloud.feed.gif";
@@ -13,7 +13,7 @@ export interface GifRecord {
 }
 
 /**
- * GIF 목록 응답에서 사용하는 뷰 타입
+ * View type used in GIF list response
  */
 export interface GifView {
 	uri: string;
@@ -29,7 +29,7 @@ export interface GifView {
 }
 
 /**
- * GIF 업데이트 요청 타입
+ * GIF update request type
  */
 export interface GifUpdateRequest {
 	title?: string;
@@ -38,7 +38,7 @@ export interface GifUpdateRequest {
 }
 
 /**
- * ATProto 레코드를 GifView로 변환합니다.
+ * Convert ATProto record to GifView.
  */
 export function toGifView(record: {
 	uri: string;
@@ -61,7 +61,7 @@ export function toGifView(record: {
 }
 
 /**
- * 태그 문자열을 파싱합니다.
+ * Parse tags string.
  */
 export function parseTags(
 	tagsStr: string | null,

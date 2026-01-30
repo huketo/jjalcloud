@@ -5,14 +5,14 @@ import type { HonoEnv } from "../types";
 import { SESSION_COOKIE } from "../constants";
 
 /**
- * OAuth 세션 타입 (restore 메서드 반환 타입 추론)
+ * OAuth Session Type (Infer return type of restore method)
  */
 type OAuthSessionType = Awaited<
 	ReturnType<Awaited<ReturnType<typeof createOAuthClient>>["restore"]>
 >;
 
 /**
- * 확장된 Hono 환경 타입 (세션 포함)
+ * Extended Hono Environment Type (includes session)
  */
 export type AuthenticatedEnv = HonoEnv & {
 	Variables: {
@@ -22,8 +22,8 @@ export type AuthenticatedEnv = HonoEnv & {
 };
 
 /**
- * 인증 필수 미들웨어
- * 로그인하지 않은 사용자는 401 에러를 반환합니다.
+ * Auth Required Middleware
+ * Returns 401 error for unauthorized users.
  */
 export const requireAuth = createMiddleware<AuthenticatedEnv>(
 	async (c, next) => {
@@ -31,7 +31,7 @@ export const requireAuth = createMiddleware<AuthenticatedEnv>(
 
 		if (!did) {
 			return c.json(
-				{ error: "Unauthorized", message: "로그인이 필요합니다." },
+				{ error: "Unauthorized", message: "Login is required." },
 				401,
 			);
 		}
@@ -40,7 +40,7 @@ export const requireAuth = createMiddleware<AuthenticatedEnv>(
 			const client = await createOAuthClient(c.env);
 			const session = await client.restore(did);
 
-			// 컨텍스트에 세션 정보 저장
+			// Store session info in context
 			c.set("session", session);
 			c.set("did", did);
 
@@ -50,7 +50,7 @@ export const requireAuth = createMiddleware<AuthenticatedEnv>(
 			return c.json(
 				{
 					error: "Session expired",
-					message: "세션이 만료되었습니다. 다시 로그인해주세요.",
+					message: "Session expired. Please login again.",
 				},
 				401,
 			);
@@ -59,8 +59,8 @@ export const requireAuth = createMiddleware<AuthenticatedEnv>(
 );
 
 /**
- * 선택적 인증 미들웨어
- * 로그인하지 않아도 접근 가능하지만, 로그인한 경우 세션 정보를 제공합니다.
+ * Optional Auth Middleware
+ * Accessible without login, but provides session info if logged in.
  */
 export const optionalAuth = createMiddleware<AuthenticatedEnv>(
 	async (c, next) => {
@@ -74,7 +74,7 @@ export const optionalAuth = createMiddleware<AuthenticatedEnv>(
 				c.set("session", session);
 				c.set("did", did);
 			} catch (error) {
-				// 세션 복원 실패해도 계속 진행
+				// Proceed even if session restore fails
 				console.error("Optional session restore error:", error);
 			}
 		}

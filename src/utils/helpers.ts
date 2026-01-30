@@ -2,7 +2,7 @@ import { Client, ClientResponseError } from "@atcute/client";
 import type { Context } from "hono";
 
 /**
- * 로컬 개발 환경인지 확인합니다.
+ * Check if running in local development environment.
  */
 export function isLocalDevelopment(publicUrl: string | undefined): boolean {
 	return (
@@ -13,7 +13,7 @@ export function isLocalDevelopment(publicUrl: string | undefined): boolean {
 }
 
 /**
- * URL에서 포트 번호를 추출합니다.
+ * Extract port number from URL.
  */
 export function extractPort(url: string): string {
 	try {
@@ -25,7 +25,7 @@ export function extractPort(url: string): string {
 }
 
 /**
- * 환경 변수에서 리다이렉트 URL을 생성합니다.
+ * Generate redirect URL from environment variable.
  */
 export function getRedirectUrl(publicUrl: string | undefined): string {
 	const isLocal = isLocalDevelopment(publicUrl);
@@ -33,7 +33,7 @@ export function getRedirectUrl(publicUrl: string | undefined): string {
 }
 
 /**
- * OAuth 세션 타입 정의
+ * OAuth Session Type Definition
  */
 export type OAuthSession = {
 	did: string;
@@ -41,7 +41,7 @@ export type OAuthSession = {
 };
 
 /**
- * OAuth 세션으로부터 atcute Client를 생성하는 헬퍼 함수
+ * Helper function to create atcute Client from OAuth session
  */
 export function createRpcClient(session: OAuthSession): Client {
 	return new Client({
@@ -50,7 +50,7 @@ export function createRpcClient(session: OAuthSession): Client {
 }
 
 /**
- * 에러 메시지를 추출합니다.
+ * Extract error message.
  */
 export function extractErrorMessage(error: unknown): string {
 	if (error instanceof ClientResponseError) {
@@ -63,7 +63,7 @@ export function extractErrorMessage(error: unknown): string {
 }
 
 /**
- * API 에러 응답을 생성합니다.
+ * Create API error response.
  */
 export function createErrorResponse(
 	c: Context,
@@ -81,7 +81,7 @@ export function createErrorResponse(
 }
 
 /**
- * 성공 응답을 생성합니다.
+ * Create success response.
  */
 export function createSuccessResponse<T extends Record<string, unknown>>(
 	c: Context,
