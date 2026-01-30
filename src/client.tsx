@@ -18,6 +18,15 @@ if (detailActionsRoot) {
   render(<DetailActions {...props} />, detailActionsRoot)
 }
 
+// Mount Upload Form if present
+import { UploadForm } from './islands/UploadForm'
+const uploadFormRoot = document.getElementById('upload-form-root')
+if (uploadFormRoot) {
+    const propsInJSON = uploadFormRoot.getAttribute('data-props');
+    const props = propsInJSON ? JSON.parse(propsInJSON) : {};
+    render(<UploadForm {...props} />, uploadFormRoot)
+}
+
 // Global Event Delegation for simple interactions (like Card Copy)
 document.addEventListener('click', (e) => {
   const target = (e.target as HTMLElement).closest('[data-copy-text]') as HTMLElement | null
