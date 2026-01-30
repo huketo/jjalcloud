@@ -6,10 +6,12 @@ import { showToast } from '../components/ui/Toast'
 interface DetailActionsProps {
   gifUrl: string;
   gifTitle: string;
+  gifUri?: string;
+  gifCid?: string;
   isLiked?: boolean; // Currently UI only for this Demo
 }
 
-export const DetailActions = ({ gifUrl, gifTitle, isLiked: initialIsLiked = false }: DetailActionsProps) => {
+export const DetailActions = ({ gifUrl, gifTitle, gifUri, gifCid, isLiked: initialIsLiked = false }: DetailActionsProps) => {
   const [isLiked, setIsLiked] = useState(initialIsLiked)
 
   const handleCopy = async () => {
@@ -41,8 +43,39 @@ export const DetailActions = ({ gifUrl, gifTitle, isLiked: initialIsLiked = fals
     }
   }
 
-  const handleLike = () => {
-    setIsLiked(!isLiked)
+  const handleLike = async () => {
+    if (!gifUri || !gifCid) {
+        showToast('Cannot like this item', 'error');
+        return;
+    }
+
+    const nextIsLiked = !isLiked;
+    setIsLiked(nextIsLiked); // Optimistic
+
+    const method = nextIsLiked ? 'POST' : 'DELETE';
+    const body = nextIsLiked 
+        ? JSON.stringify({ subject: { uri: gifUri, cid: gifCid } })
+        : JSON.stringify({ subject: { uri: gifUri } });
+
+    try {
+        const res = await fetch('/api/like', {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body
+        });
+
+        if (!res.ok) {
+            if (res.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
+            throw new Error('Failed to like');
+        }
+    } catch (err) {
+        console.error('Like action failed', err);
+        setIsLiked(!nextIsLiked); // Revert
+        showToast('Failed to update like', 'error');
+    }
   }
 
   const buttonBaseClass = "group flex items-center gap-3 py-2 font-medium text-text-secondary transition-colors bg-transparent border-none shadow-none cursor-pointer"

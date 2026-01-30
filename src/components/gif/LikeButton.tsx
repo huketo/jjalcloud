@@ -35,6 +35,7 @@ interface LikeButtonProps {
 	size?: "sm" | "md" | "lg";
 	showCount?: boolean;
 	gifUri?: string;
+	gifCid?: string;
 	variant?: "default" | "glass";
 }
 
@@ -44,6 +45,7 @@ export const LikeButton: FC<LikeButtonProps> = ({
 	size = "md",
 	showCount = true,
 	gifUri,
+	gifCid,
 	variant = "default",
 }) => {
 	const sizeClasses = {
@@ -62,6 +64,7 @@ export const LikeButton: FC<LikeButtonProps> = ({
 					isLiked ? "text-status-like" : "text-white"
 				} like-btn`}
 				data-gif-uri={gifUri}
+				data-gif-cid={gifCid}
 				aria-label={isLiked ? "좋아요 취소" : "좋아요"}
 			>
 				<span class="flex items-center justify-center w-5 h-5">
@@ -78,6 +81,7 @@ export const LikeButton: FC<LikeButtonProps> = ({
 				isLiked ? "text-status-like-active" : "text-text-muted"
 			} like-btn`}
 			data-gif-uri={gifUri}
+			data-gif-cid={gifCid}
 			aria-label={isLiked ? "좋아요 취소" : "좋아요"}
 		>
 			<span class={`flex items-center justify-center ${iconClass}`}>

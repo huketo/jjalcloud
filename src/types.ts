@@ -13,6 +13,9 @@ export interface CloudflareBindings {
 
 	// 시크릿 (wrangler secret put으로 설정)
 	PRIVATE_KEY_JWK?: string;
+
+	// D1 Database
+	jjalcloud_db: D1Database;
 }
 
 /**

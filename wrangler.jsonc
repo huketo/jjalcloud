@@ -2,7 +2,9 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "jjalcloud",
 	"compatibility_date": "2025-08-03",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"main": "./src/index.tsx",
 	"kv_namespaces": [
 		{
@@ -30,4 +32,13 @@
 	"vars": {
 		"PUBLIC_URL": "",
 	},
+	"d1_databases": [
+		{
+			"binding": "jjalcloud_db",
+			"database_name": "jjalcloud-db",
+			"database_id": "02e7eeb9-5d1e-4fcf-b6a3-cddce49a0757",
+			"remote": true,
+			"migrations_dir": "drizzle"
+		}
+	],
 }

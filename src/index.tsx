@@ -3,6 +3,7 @@ import { getCookie } from "hono/cookie";
 import { renderer } from "./renderer";
 import oauthRoutes from "./routes/oauth";
 import gifRoutes from "./routes/gif";
+import likeRoutes from "./routes/like";
 import type { HonoEnv } from "./auth";
 import { SESSION_COOKIE } from "./constants";
 import { HomePage } from "./pages/home";
@@ -20,8 +21,13 @@ app.use(renderer);
 // OAuth 라우트 등록
 app.route("/oauth", oauthRoutes);
 
+// Dev Helper removed: Auto-fix logic was causing crashes. Use migrations instead.
+
 // GIF API 라우트 등록
 app.route("/api/gif", gifRoutes);
+app.route("/api/like", likeRoutes);
+
+
 
 // ================================
 // 메인 페이지 (홈 피드)

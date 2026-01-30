@@ -7,6 +7,9 @@ import type { Did } from "@atcute/lexicons/syntax";
 import { GIF_COLLECTION, MAX_GIF_SIZE, MAX_TAGS_COUNT } from "../constants";
 import { createRpcClient, extractErrorMessage } from "../utils";
 import { type GifRecord, toGifView, parseTags } from "../types/gif";
+import { drizzle } from "drizzle-orm/d1";
+import { likes } from "../db/schema";
+import { eq, inArray, and, sql } from "drizzle-orm";
 
 const gif = new Hono<AuthenticatedEnv>();
 
@@ -32,6 +35,39 @@ gif.get("/", requireAuth, async (c) => {
 		);
 
 		const gifs = data.records.map(toGifView);
+
+		// Enrich with likes
+		if (gifs.length > 0) {
+			const db = drizzle(c.env.jjalcloud_db);
+			const uris = gifs.map(g => g.uri);
+			
+			// Get like counts
+			const likeCounts = await db
+				.select({ 
+					subject: likes.subject, 
+					count: sql<number>`count(*)` 
+				})
+				.from(likes)
+				.where(inArray(likes.subject, uris))
+				.groupBy(likes.subject)
+				.all();
+
+			const likeCountMap = new Map(likeCounts.map(l => [l.subject, l.count]));
+
+			// Check if user liked
+			const userLikes = await db
+				.select({ subject: likes.subject })
+				.from(likes)
+				.where(and(inArray(likes.subject, uris), eq(likes.author, did)))
+				.all();
+			
+			const userLikedSet = new Set(userLikes.map(l => l.subject));
+
+			gifs.forEach(gif => {
+				gif.likeCount = Number(likeCountMap.get(gif.uri) || 0);
+				gif.isLiked = userLikedSet.has(gif.uri);
+			});
+		}
 
 		return c.json({ gifs, cursor: data.cursor });
 	} catch (error) {
@@ -69,6 +105,42 @@ gif.get("/user/:did", requireAuth, async (c) => {
 
 		const gifs = data.records.map(toGifView);
 
+		// Enrich with likes
+		if (gifs.length > 0) {
+			const db = drizzle(c.env.jjalcloud_db);
+			const uris = gifs.map(g => g.uri);
+			const currentDid = c.get("did"); // Needs to check if logged in for isLiked? requireAuth ensures DID is present.
+
+			// Get like counts
+			const likeCounts = await db
+				.select({ 
+					subject: likes.subject, 
+					count: sql<number>`count(*)` 
+				})
+				.from(likes)
+				.where(inArray(likes.subject, uris))
+				.groupBy(likes.subject)
+				.all();
+
+			const likeCountMap = new Map(likeCounts.map(l => [l.subject, l.count]));
+
+			// Check if user liked (if did is present)
+			let userLikedSet = new Set<string>();
+			if (currentDid) {
+				const userLikes = await db
+					.select({ subject: likes.subject })
+					.from(likes)
+					.where(and(inArray(likes.subject, uris), eq(likes.author, currentDid)))
+					.all();
+				userLikedSet = new Set(userLikes.map(l => l.subject));
+			}
+
+			gifs.forEach(gif => {
+				gif.likeCount = Number(likeCountMap.get(gif.uri) || 0);
+				gif.isLiked = userLikedSet.has(gif.uri);
+			});
+		}
+
 		return c.json({ gifs, cursor: data.cursor });
 	} catch (error) {
 		console.error("List user GIFs error:", error);
@@ -104,6 +176,19 @@ gif.get("/:rkey", requireAuth, async (c) => {
 			}),
 		);
 
+		const db = drizzle(c.env.jjalcloud_db);
+		const uri = data.uri;
+
+		// Get Like Info
+		const likeCountRes = await db.select({ count: sql<number>`count(*)` }).from(likes).where(eq(likes.subject, uri)).get();
+		const likeCount = likeCountRes ? likeCountRes.count : 0;
+
+		let isLiked = false;
+		if (did) {
+			const userLike = await db.select().from(likes).where(and(eq(likes.subject, uri), eq(likes.author, did))).get();
+			isLiked = !!userLike;
+		}
+
 		return c.json({
 			uri: data.uri,
 			cid: data.cid,
@@ -113,6 +198,8 @@ gif.get("/:rkey", requireAuth, async (c) => {
 			tags: (data.value as GifRecord).tags || [],
 			file: (data.value as GifRecord).file,
 			createdAt: (data.value as GifRecord).createdAt,
+			likeCount: Number(likeCount),
+			isLiked,
 		});
 	} catch (error) {
 		if (error instanceof ClientResponseError && error.status === 404) {

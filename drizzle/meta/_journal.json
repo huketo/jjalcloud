@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1769741424714,
+      "tag": "0000_opposite_anita_blake",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1769759699150,
+      "tag": "0001_thin_pet_avengers",
+      "breakpoints": true
+    }
+  ]
+}

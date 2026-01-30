@@ -133,6 +133,8 @@ export const DetailPage: FC<DetailPageProps> = ({
 							id="detail-actions-root" 
 							data-props={JSON.stringify({
 								gifUrl: gifUrl,
+								gifUri: gif.uri,
+								gifCid: gif.cid,
 								gifTitle: gif.title || "Untitled",
 								isLiked: gif.isLiked || false,
 							})}

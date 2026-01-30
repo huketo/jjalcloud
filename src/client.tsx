@@ -24,6 +24,8 @@ document.addEventListener('click', (e) => {
   const menuTrigger = (e.target as HTMLElement).closest('[data-toggle-menu]') as HTMLElement | null
   const mobileMenu = document.getElementById('mobile-menu')
   
+  const likeBtn = (e.target as HTMLElement).closest('.like-btn') as HTMLElement | null
+  
   // Handle Copy Button
   if (target) {
     const text = target.getAttribute('data-copy-text')
@@ -37,6 +39,84 @@ document.addEventListener('click', (e) => {
         console.error('Failed to copy', err)
       })
     }
+  }
+
+  // Handle Like Button
+  if (likeBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const uri = likeBtn.getAttribute('data-gif-uri');
+    const cid = likeBtn.getAttribute('data-gif-cid');
+    const isLiked = likeBtn.getAttribute('aria-label') === '좋아요 취소'; // Assuming aria-label tracks state or we need a data attr
+    // Better: use data-is-liked or check class
+    // Let's rely on aria-label or toggle class for now, but safer to have explicit data attr on update.
+    // However, we are modifying DOM directly here.
+    
+    if (!uri || !cid) return;
+
+    // Optimistic UI Update
+    const iconContainer = likeBtn.querySelector('span:first-child');
+    const filledIcon = `<svg class="like-icon w-full h-full" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>`;
+    const outlineIcon = `<svg class="like-icon w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>`;
+
+    const nextIsLiked = !isLiked;
+
+    // Toggle Classes
+    if (nextIsLiked) {
+        likeBtn.classList.add('text-status-like-active');
+        likeBtn.classList.remove('text-text-muted', 'text-white'); // Remove potential inactive classes
+        if (likeBtn.classList.contains('backdrop-blur-md')) { // Glass variant
+             likeBtn.classList.add('text-status-like');
+        }
+        if (iconContainer) iconContainer.innerHTML = filledIcon;
+        likeBtn.setAttribute('aria-label', '좋아요 취소');
+    } else {
+        likeBtn.classList.remove('text-status-like-active', 'text-status-like');
+        likeBtn.classList.add('text-text-muted'); // Default variant
+        if (likeBtn.classList.contains('backdrop-blur-md')) { // Glass variant
+             likeBtn.classList.add('text-white');
+             likeBtn.classList.remove('text-text-muted');
+        }
+        if (iconContainer) iconContainer.innerHTML = outlineIcon;
+        likeBtn.setAttribute('aria-label', '좋아요');
+    }
+
+    // API Call
+    const method = nextIsLiked ? 'POST' : 'DELETE';
+    const body = nextIsLiked 
+        ? JSON.stringify({ subject: { uri, cid } })
+        : JSON.stringify({ subject: { uri } });
+
+    fetch('/api/like', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body
+    }).then(async (res) => {
+        if (!res.ok) {
+            if (res.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
+            throw new Error('Failed to like');
+        }
+        // Success: Maybe update count if present
+        // We aren't updating count locally for now (too complex to parse number).
+        // But the next page load will show correct count.
+    }).catch(err => {
+        console.error('Like action failed', err);
+        // Revert UI
+        if (!nextIsLiked) { // Tried to unlike, failed -> revert to liked
+            likeBtn.classList.add('text-status-like-active');
+            if (iconContainer) iconContainer.innerHTML = filledIcon;
+            likeBtn.setAttribute('aria-label', '좋아요 취소');
+        } else { // Tried to like, failed -> revert to unliked
+            likeBtn.classList.remove('text-status-like-active');
+            if (iconContainer) iconContainer.innerHTML = outlineIcon;
+            likeBtn.setAttribute('aria-label', '좋아요');
+        }
+        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Failed to update like', type: 'error' } }));
+    });
   }
 
   // Handle Mobile Menu Toggle

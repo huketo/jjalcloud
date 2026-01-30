@@ -30,7 +30,6 @@
 ### 2.3. 소셜 인터랙션 (Social Interaction)
 
 * **좋아요 (Like):** 마음에 드는 콘텐츠에 긍정적인 반응을 남깁니다.
-* **내부 팔로우 (Follow):** **jjalcloud** 내에서 특정 크리에이터를 팔로우하여 개인화된 피드를 생성합니다.
 
 ### 2.4. 외부 통합 (Integration - Giphy Style)
 
