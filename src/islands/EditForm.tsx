@@ -25,6 +25,11 @@ export const EditForm = ({
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+	// Controlled inputs state
+	const [title, setTitle] = useState(initialTitle);
+	const [tags, setTags] = useState(initialTags.join(", "));
+	const [alt, setAlt] = useState(initialAlt);
+
 	const handleSubmit = async (e: Event) => {
 		e.preventDefault();
 		const form = e.target as HTMLFormElement;
@@ -131,7 +136,8 @@ export const EditForm = ({
 						type="text"
 						id="title"
 						name="title"
-						defaultValue={initialTitle}
+						value={title}
+						onInput={(e) => setTitle(e.currentTarget.value)}
 						placeholder="Give it a catchy name..."
 						maxLength={100}
 					/>
@@ -145,7 +151,8 @@ export const EditForm = ({
 							type="text"
 							id="tags"
 							name="tags"
-							defaultValue={initialTags.join(", ")}
+							value={tags}
+							onInput={(e) => setTags(e.currentTarget.value)}
 							placeholder="funny, cat, reaction..."
 						/>
 					</div>
@@ -160,7 +167,8 @@ export const EditForm = ({
 					<Textarea
 						id="alt"
 						name="alt"
-						defaultValue={initialAlt}
+						value={alt}
+						onInput={(e) => setAlt(e.currentTarget.value)}
 						placeholder="Add some context..."
 						maxLength={300}
 					/>
