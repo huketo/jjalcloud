@@ -18,8 +18,8 @@ Users own their media on their PDS (Personal Data Server), can easily log in via
 - [x] **GIF Management API**:
   - [x] List my GIFs (PDS `listRecords`)
   - [x] GIF Upload (Blob upload and record creation)
-  - [x] GIF Edit
-  - [x] GIF Delete
+  - [ ] GIF Edit
+  - [ ] GIF Delete
 - [x] **Social Interaction API**:
   - [x] Like
 

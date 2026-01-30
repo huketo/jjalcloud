@@ -11,6 +11,7 @@ import { DetailPage } from "./pages/detail";
 import { ProfilePage } from "./pages/profile";
 import { UploadPage } from "./pages/upload";
 import { LoginPage } from "./pages/login";
+import { EditPage } from "./pages/edit";
 import { toGifView } from "./types/gif";
 import { fetchProfile } from "./utils";
 
@@ -169,6 +170,7 @@ app.get("/gif/:rkey", async (c) => {
 		return c.render(
 			<DetailPage
 				isLoggedIn={isLoggedIn}
+				isOwner={did === authorDid}
 				gif={gif}
 				relatedGifs={[]}
 				avatarUrl={avatarUrl}
@@ -326,6 +328,80 @@ app.get("/upload", async (c) => {
 			avatarUrl={avatarUrl}
 		/>,
 	);
+});
+
+// ================================
+// Edit Page
+// ================================
+app.get("/edit/:rkey", async (c) => {
+	const did = getCookie(c, SESSION_COOKIE);
+	if (!did) {
+		return c.redirect("/login");
+	}
+
+	const rkey = c.req.param("rkey");
+
+	// Fetch GIF Details to verify ownership and populate form
+	try {
+		const response = await fetch(
+			new URL(`/api/gif/${rkey}`, c.req.url).toString(),
+			{
+				headers: { Cookie: c.req.header("Cookie") || "" },
+			},
+		);
+		const data = await response.json();
+
+		if (data.error) {
+			return c.render(
+				<div class="app">
+					<main class="main-content">
+						<div class="empty-state">
+							<h3>GIF Not Found</h3>
+							<p>{data.message}</p>
+							<a href="/" class="btn btn-primary">
+								Return to Home
+							</a>
+						</div>
+					</main>
+				</div>,
+			);
+		}
+
+		// Check Ownership
+		const authorDid = data.uri ? data.uri.split("/")[2] : "";
+		if (authorDid !== did) {
+			return c.text("Unauthorized", 403);
+		}
+
+		// Fetch profile for avatar
+		let avatarUrl: string | undefined;
+		try {
+			const profileRes = await fetch(
+				new URL("/oauth/profile", c.req.url).toString(),
+				{
+					headers: { Cookie: c.req.header("Cookie") || "" },
+				},
+			);
+			const profileData = await profileRes.json();
+			if (!profileData.error) {
+				avatarUrl = profileData.avatar;
+			}
+		} catch (err) {
+			console.error("Failed to fetch Profile:", err);
+		}
+
+		const gif = {
+			...data,
+			authorDid: authorDid,
+		};
+
+		return c.render(
+			<EditPage isLoggedIn={true} gif={gif} avatarUrl={avatarUrl} />,
+		);
+	} catch (err) {
+		console.error("Failed to load GIF for editing:", err);
+		return c.text("Internal Server Error", 500);
+	}
 });
 
 export default app;

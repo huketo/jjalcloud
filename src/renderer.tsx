@@ -13,6 +13,7 @@ export const renderer = jsxRenderer(({ children }) => {
 				/>
 				<title>jjalcloud</title>
 				<ViteClient />
+				<Link href="https://unpkg.com/@csstools/normalize.css" rel="stylesheet" />
 				<Link href="/src/uno.css" rel="stylesheet" />
 			</head>
 			<body>

@@ -10,6 +10,7 @@ import type { GifView } from "../types/gif";
 
 interface DetailPageProps {
 	isLoggedIn: boolean;
+	isOwner?: boolean;
 	gif: GifViewWithAuthor;
 	relatedGifs?: GifViewWithAuthor[];
 	avatarUrl?: string;
@@ -26,6 +27,7 @@ interface GifViewWithAuthor extends GifView {
 
 export const DetailPage: FC<DetailPageProps> = ({
 	isLoggedIn,
+	isOwner = false,
 	gif,
 	relatedGifs = [],
 	avatarUrl,
@@ -141,6 +143,8 @@ export const DetailPage: FC<DetailPageProps> = ({
 								gifCid: gif.cid,
 								gifTitle: gif.title || "Untitled",
 								isLiked: gif.isLiked || false,
+								isOwner: isOwner,
+								rkey: gif.rkey,
 							})}
 						>
 							<div class="flex flex-row md:flex-col gap-2 w-full md:w-auto">
@@ -156,6 +160,7 @@ export const DetailPage: FC<DetailPageProps> = ({
 									<DownloadIcon className="w-6 h-6 transition-transform group-hover:scale-110" />
 									<span class="font-medium">Download</span>
 								</button>
+								{/* Edit button handled by Island if owner */}
 							</div>
 						</div>
 					</div>
@@ -270,6 +275,21 @@ const DownloadIcon: FC<{ className?: string }> = ({ className }) => (
 		<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
 		<polyline points="7 10 12 15 17 10" />
 		<line x1="12" x2="12" y1="15" y2="3" />
+	</svg>
+);
+
+const EditIcon: FC<{ className?: string }> = ({ className }) => (
+	<svg
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+		class={className}
+	>
+		<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+		<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
 	</svg>
 );
 

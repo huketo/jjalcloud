@@ -26,6 +26,15 @@ if (uploadFormRoot) {
 	render(<UploadForm {...props} />, uploadFormRoot);
 }
 
+// Mount Edit Form if present
+import { EditForm } from "./islands/EditForm";
+const editFormRoot = document.getElementById("edit-form-root");
+if (editFormRoot) {
+	const propsInJSON = editFormRoot.getAttribute("data-props");
+	const props = propsInJSON ? JSON.parse(propsInJSON) : {};
+	render(<EditForm {...props} />, editFormRoot);
+}
+
 // Global Event Delegation for simple interactions (like Card Copy)
 document.addEventListener("click", (e) => {
 	const target = (e.target as HTMLElement).closest(

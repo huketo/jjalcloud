@@ -14,6 +14,10 @@ export default defineConfig({
         *, *::before, *::after {
           box-sizing: border-box;
         }
+        input, textarea, select, button {
+          font-family: inherit;
+          font-size: inherit;
+        }
       `,
 		},
 	],

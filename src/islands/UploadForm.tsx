@@ -259,7 +259,7 @@ export const UploadForm = ({
 						type="text"
 						id="title"
 						name="title"
-						class="w-full box-border px-4 py-3 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
+						class="w-full box-border px-4 py-3 text-base text-text font-sans bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
 						placeholder="Give it a catchy name..."
 						maxLength={100}
 					/>
@@ -278,8 +278,8 @@ export const UploadForm = ({
 							type="text"
 							id="tags"
 							name="tags"
-							class="w-full box-border px-4 py-3 pl-8 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
-							placeholder="# funny, cat, reaction..."
+							class="w-full box-border px-4 py-3 text-base text-text font-sans bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
+							placeholder="funny, cat, reaction..."
 						/>
 					</div>
 					<p class="text-xs text-text-muted mt-1">
@@ -298,7 +298,7 @@ export const UploadForm = ({
 					<textarea
 						id="alt"
 						name="alt"
-						class="w-full box-border px-4 py-3 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-md transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80 min-h-[100px] resize-y"
+						class="w-full box-border px-4 py-3 text-base text-text font-sans bg-bg-surface border-1 border-solid border-border-light rounded-md transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80 min-h-[100px] resize-y"
 						placeholder="Add some context..."
 						maxLength={300}
 					></textarea>
