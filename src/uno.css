@@ -293,6 +293,7 @@
 .leading-relaxed{line-height:1.625;}
 .leading-tight{line-height:1.25;}
 .tracking-tight{letter-spacing:-0.025em;}
+.font-sans{font-family:"Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;}
 .hover\:underline:hover{text-decoration-line:underline;}
 .decoration-none,
 .no-underline{text-decoration:none;}

@@ -144,7 +144,7 @@ export const UploadPage: FC<UploadPageProps> = ({
 					<textarea
 						id="alt"
 						name="alt"
-						class="w-full box-border px-4 py-3 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80 min-h-[100px] resize-y"
+						class="w-full box-border px-4 py-3 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-md font-sans transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80 min-h-[100px] resize-y"
 						placeholder="Add some context..."
 						maxLength={300}
 					></textarea>
