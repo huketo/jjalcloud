@@ -12,7 +12,7 @@ import { renderer } from "./renderer";
 import gifRoutes from "./routes/gif";
 import likeRoutes from "./routes/like";
 import oauthRoutes from "./routes/oauth";
-import { toGifView } from "./types/gif";
+
 import { fetchProfile } from "./utils";
 
 const app = new Hono<HonoEnv>();

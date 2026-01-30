@@ -40,7 +40,7 @@ export const UploadForm = ({
 		const k = 1024;
 		const sizes = ["Bytes", "KB", "MB", "GB"];
 		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return parseFloat((bytes / k ** i).toFixed(2)) + " " + sizes[i];
+		return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 	};
 
 	const handleFile = (file: File) => {
@@ -63,7 +63,7 @@ export const UploadForm = ({
 		e.stopPropagation();
 		setIsDragOver(false);
 		const dt = (e as any).dataTransfer;
-		if (dt && dt.files && dt.files.length > 0) {
+		if (dt?.files && dt.files.length > 0) {
 			const file = dt.files[0];
 			if (fileInputRef.current) {
 				// Manually setting files is tricky in some browsers but works in modern ones
@@ -121,7 +121,7 @@ export const UploadForm = ({
 				setStatus({ type: "error", message: data.message || data.error });
 				setIsUploading(false);
 			} else {
-				setStatus({ type: "success", message: "✅ " + data.message });
+				setStatus({ type: "success", message: `✅ ${data.message}` });
 				// Reset form
 				if (formRef.current) formRef.current.reset();
 				setPreview(null);
@@ -131,7 +131,7 @@ export const UploadForm = ({
 					window.location.href = "/";
 				}, 1500);
 			}
-		} catch (err) {
+		} catch (_err) {
 			setStatus({ type: "error", message: "Upload failed. Please try again." });
 			setIsUploading(false);
 		}

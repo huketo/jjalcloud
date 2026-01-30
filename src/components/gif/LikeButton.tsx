@@ -97,10 +97,10 @@ export const LikeButton: FC<LikeButtonProps> = ({
 // 숫자 포맷팅 (1000 -> 1k, 1000000 -> 1M)
 function formatCount(num: number): string {
 	if (num >= 1000000) {
-		return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+		return `${(num / 1000000).toFixed(1).replace(/\.0$/, "")}M`;
 	}
 	if (num >= 1000) {
-		return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+		return `${(num / 1000).toFixed(1).replace(/\.0$/, "")}k`;
 	}
 	return num.toString();
 }

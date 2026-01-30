@@ -74,7 +74,7 @@ export const EditForm = ({
 				});
 				setIsSubmitting(false);
 			}
-		} catch (err) {
+		} catch (_err) {
 			setStatus({ type: "error", message: "Network error occurred." });
 			setIsSubmitting(false);
 		}
@@ -104,7 +104,7 @@ export const EditForm = ({
 				setIsSubmitting(false);
 				setShowDeleteConfirm(false);
 			}
-		} catch (err) {
+		} catch (_err) {
 			setStatus({ type: "error", message: "Network error occurred." });
 			setIsSubmitting(false);
 			setShowDeleteConfirm(false);

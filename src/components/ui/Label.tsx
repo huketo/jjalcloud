@@ -8,6 +8,7 @@ interface LabelProps extends JSX.LabelHTMLAttributes {
 export const Label = (props: LabelProps) => {
 	const { className = "", children, ...rest } = props;
 	return (
+		// biome-ignore lint/a11y/noLabelWithoutControl: generic label component
 		<label
 			class={`block text-sm font-medium text-brand-primary mb-2 ${className}`}
 			{...rest}

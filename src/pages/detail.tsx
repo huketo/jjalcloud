@@ -1,11 +1,5 @@
 import type { FC } from "hono/jsx";
-import {
-	GifCard,
-	GifGrid,
-	GifGridItem,
-	Layout,
-	LikeButton,
-} from "../components";
+import { Layout } from "../components";
 import type { GifView } from "../types/gif";
 
 interface DetailPageProps {
@@ -148,15 +142,24 @@ export const DetailPage: FC<DetailPageProps> = ({
 							})}
 						>
 							<div class="flex flex-row md:flex-col gap-2 w-full md:w-auto">
-								<button class="group flex items-center gap-3 py-2 text-text-secondary transition-colors md:justify-start">
+								<button
+									type="button"
+									class="group flex items-center gap-3 py-2 text-text-secondary transition-colors md:justify-start"
+								>
 									<HeartIcon className="w-6 h-6 transition-transform group-hover:scale-110" />
 									<span class="font-medium">Favorite</span>
 								</button>
-								<button class="group flex items-center gap-3 py-2 text-text-secondary transition-colors md:justify-start">
+								<button
+									type="button"
+									class="group flex items-center gap-3 py-2 text-text-secondary transition-colors md:justify-start"
+								>
 									<LinkIcon className="w-6 h-6 transition-transform group-hover:scale-110" />
 									<span class="font-medium">Copy Link</span>
 								</button>
-								<button class="group flex items-center gap-3 py-2 text-text-secondary transition-colors md:justify-start">
+								<button
+									type="button"
+									class="group flex items-center gap-3 py-2 text-text-secondary transition-colors md:justify-start"
+								>
 									<DownloadIcon className="w-6 h-6 transition-transform group-hover:scale-110" />
 									<span class="font-medium">Download</span>
 								</button>
@@ -219,12 +222,12 @@ function getGifUrl(gif: GifView): string {
 	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
 }
 
-function formatNumber(num: number): string {
+function _formatNumber(num: number): string {
 	if (num >= 1000000) {
-		return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+		return `${(num / 1000000).toFixed(1).replace(/\.0$/, "")}M`;
 	}
 	if (num >= 1000) {
-		return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+		return `${(num / 1000).toFixed(1).replace(/\.0$/, "")}k`;
 	}
 	return num.toString();
 }
@@ -278,7 +281,7 @@ const DownloadIcon: FC<{ className?: string }> = ({ className }) => (
 	</svg>
 );
 
-const EditIcon: FC<{ className?: string }> = ({ className }) => (
+const _EditIcon: FC<{ className?: string }> = ({ className }) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill="none"

@@ -14,7 +14,7 @@ interface DetailActionsProps {
 
 export const DetailActions = ({
 	gifUrl,
-	gifTitle,
+	// gifTitle,
 	gifUri,
 	gifCid,
 	isLiked: initialIsLiked = false,
@@ -125,7 +125,9 @@ export const DetailActions = ({
 			{isOwner && rkey && (
 				<button
 					type="button"
-					onClick={() => (window.location.href = `/edit/${rkey}`)}
+					onClick={() => {
+						window.location.href = `/edit/${rkey}`;
+					}}
 					class={`${buttonBaseClass} hover:text-blue-500`}
 				>
 					<EditIcon className="w-6 h-6 transition-transform duration-200 group-hover:scale-110" />

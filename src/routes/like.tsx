@@ -1,6 +1,6 @@
-import { ClientResponseError, ok } from "@atcute/client";
+import { ok } from "@atcute/client";
 import type { Did } from "@atcute/lexicons/syntax";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { LIKE_COLLECTION } from "../constants";
