@@ -5,7 +5,11 @@ interface GifGridProps {
 }
 
 export const GifGrid: FC<GifGridProps> = ({ children }) => {
-	return <div class="columns-2 gap-2 md:gap-4 sm:columns-3 lg:columns-4">{children}</div>;
+	return (
+		<div class="columns-2 gap-2 md:gap-4 sm:columns-3 lg:columns-4">
+			{children}
+		</div>
+	);
 };
 
 interface GifGridItemProps {

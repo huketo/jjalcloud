@@ -88,9 +88,7 @@ export const LikeButton: FC<LikeButtonProps> = ({
 				{isLiked ? <HeartFilledIcon /> : <HeartOutlineIcon />}
 			</span>
 			{showCount && (
-				<span class={`font-medium ${fontClass}`}>
-					{formatCount(count)}
-				</span>
+				<span class={`font-medium ${fontClass}`}>{formatCount(count)}</span>
 			)}
 		</button>
 	);

@@ -4,14 +4,7 @@
 	"defs": {
 		"gifView": {
 			"type": "object",
-			"required": [
-				"uri",
-				"cid",
-				"author",
-				"value",
-				"likeCount",
-				"indexedAt"
-			],
+			"required": ["uri", "cid", "author", "value", "likeCount", "indexedAt"],
 			"properties": {
 				"uri": { "type": "string", "format": "at-uri" },
 				"cid": { "type": "string", "format": "cid" },

@@ -27,8 +27,6 @@ app.route("/oauth", oauthRoutes);
 app.route("/api/gif", gifRoutes);
 app.route("/api/like", likeRoutes);
 
-
-
 // ================================
 // 메인 페이지 (홈 피드)
 // ================================
@@ -56,12 +54,9 @@ app.get("/", async (c) => {
 			}
 
 			// 2. Fetch GIFs
-			const response = await fetch(
-				new URL("/api/gif", c.req.url).toString(),
-				{
-					headers: { Cookie: c.req.header("Cookie") || "" },
-				},
-			);
+			const response = await fetch(new URL("/api/gif", c.req.url).toString(), {
+				headers: { Cookie: c.req.header("Cookie") || "" },
+			});
 			const data = await response.json();
 			if (data.gifs) {
 				// Add author info from session/profile
@@ -127,9 +122,7 @@ app.get("/gif/:rkey", async (c) => {
 				<div class="app">
 					<main class="main-content">
 						<div class="empty-state">
-							<h3 class="empty-state-title">
-								GIF를 찾을 수 없습니다
-							</h3>
+							<h3 class="empty-state-title">GIF를 찾을 수 없습니다</h3>
 							<p class="empty-state-text">{data.message}</p>
 							<a href="/" class="btn btn-primary">
 								홈으로 돌아가기
@@ -153,8 +146,8 @@ app.get("/gif/:rkey", async (c) => {
 			likeCount: Math.floor(Math.random() * 5000), // Mock for UI
 			commentCount: Math.floor(Math.random() * 200),
 		};
-        
-        // Fetch profile for avatar
+
+		// Fetch profile for avatar
 		let avatarUrl: string | undefined;
 		if (isLoggedIn) {
 			try {
@@ -255,9 +248,9 @@ app.get("/profile/:handle", async (c) => {
 				},
 			);
 			const profileData = await profileRes.json();
-			
+
 			if (
-				!profileData.error && 
+				!profileData.error &&
 				(profileData.handle === identifier || profileData.did === identifier)
 			) {
 				isOwnProfile = true;
@@ -308,22 +301,22 @@ app.get("/upload", async (c) => {
 	const error = c.req.query("error");
 	const success = c.req.query("success");
 
-    // Fetch profile for avatar
-    let avatarUrl: string | undefined;
-    try {
-        const profileRes = await fetch(
-            new URL("/oauth/profile", c.req.url).toString(),
-            {
-                headers: { Cookie: c.req.header("Cookie") || "" },
-            },
-        );
-        const profileData = await profileRes.json();
-        if (!profileData.error) {
-            avatarUrl = profileData.avatar;
-        }
-    } catch (err) {
-        console.error("Failed to fetch Profile:", err);
-    }
+	// Fetch profile for avatar
+	let avatarUrl: string | undefined;
+	try {
+		const profileRes = await fetch(
+			new URL("/oauth/profile", c.req.url).toString(),
+			{
+				headers: { Cookie: c.req.header("Cookie") || "" },
+			},
+		);
+		const profileData = await profileRes.json();
+		if (!profileData.error) {
+			avatarUrl = profileData.avatar;
+		}
+	} catch (err) {
+		console.error("Failed to fetch Profile:", err);
+	}
 
 	return c.render(
 		<UploadPage

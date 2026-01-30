@@ -24,7 +24,6 @@ interface GifViewWithAuthor extends GifView {
 	isLiked?: boolean;
 }
 
-
 export const DetailPage: FC<DetailPageProps> = ({
 	isLoggedIn,
 	gif,
@@ -42,13 +41,14 @@ export const DetailPage: FC<DetailPageProps> = ({
 			avatarUrl={avatarUrl}
 		>
 			<div class="max-w-5xl mx-auto px-4 py-8 md:py-12">
-				
 				{/* Main Layout: Uploader | GIF | Actions */}
 				<div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-8 md:gap-12">
-					
 					{/* 1. Left: Uploader Info (Desktop: Left, Mobile: Top/Order 2) */}
 					<div class="hidden md:flex flex-col items-center gap-3 w-40 flex-shrink-0 sticky top-24">
-						<a href={profileUrl} class="group flex flex-col items-center gap-3 text-center">
+						<a
+							href={profileUrl}
+							class="group flex flex-col items-center gap-3 text-center"
+						>
 							{gif.authorAvatar ? (
 								<img
 									src={gif.authorAvatar}
@@ -65,7 +65,9 @@ export const DetailPage: FC<DetailPageProps> = ({
 									@{gif.authorHandle || "unknown"}
 								</span>
 								{gif.authorDisplayName && (
-									<span class="text-sm text-text-muted">{gif.authorDisplayName}</span>
+									<span class="text-sm text-text-muted">
+										{gif.authorDisplayName}
+									</span>
 								)}
 							</div>
 						</a>
@@ -123,14 +125,16 @@ export const DetailPage: FC<DetailPageProps> = ({
 									{(gif.authorHandle || "U")[0].toUpperCase()}
 								</div>
 							)}
-							<div class="font-bold text-text">@{gif.authorHandle || "unknown"}</div>
+							<div class="font-bold text-text">
+								@{gif.authorHandle || "unknown"}
+							</div>
 						</a>
 					</div>
 
 					{/* 3. Right: Actions */}
 					<div class="w-full md:w-40 flex-shrink-0 sticky top-24">
-						<div 
-							id="detail-actions-root" 
+						<div
+							id="detail-actions-root"
 							data-props={JSON.stringify({
 								gifUrl: gifUrl,
 								gifUri: gif.uri,
@@ -156,9 +160,6 @@ export const DetailPage: FC<DetailPageProps> = ({
 						</div>
 					</div>
 				</div>
-
-
-
 			</div>
 
 			{/* Related GIFs */}
@@ -166,7 +167,10 @@ export const DetailPage: FC<DetailPageProps> = ({
 				<section class="mt-16 border-t border-border-light pt-12 px-4 md:px-8 max-w-7xl mx-auto">
 					<div class="flex items-center justify-between mb-8">
 						<h2 class="text-xl font-bold text-text">More Like This</h2>
-						<a href="/" class="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors">
+						<a
+							href="/"
+							class="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors"
+						>
 							VIEW ALL
 						</a>
 					</div>
@@ -220,10 +224,11 @@ function formatNumber(num: number): string {
 	return num.toString();
 }
 
-
-
 // Icons
-const HeartIcon: FC<{ filled?: boolean; className?: string }> = ({ filled, className }) => (
+const HeartIcon: FC<{ filled?: boolean; className?: string }> = ({
+	filled,
+	className,
+}) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill={filled ? "currentColor" : "none"}

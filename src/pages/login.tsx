@@ -10,7 +10,6 @@ export const LoginPage: FC<LoginPageProps> = ({ error, errorMessage }) => {
 	return (
 		<Layout isLoggedIn={false} showFooter={false}>
 			<div class="flex flex-col items-center justify-center min-h-[calc(100vh-60px)] p-4">
-				
 				{/* Logo & Headline */}
 				<div class="mb-6 text-center space-y-1">
 					<div class="w-14 h-14 mx-auto mb-3 text-brand-primary drop-shadow-md">
@@ -39,7 +38,10 @@ export const LoginPage: FC<LoginPageProps> = ({ error, errorMessage }) => {
 
 					<form action="/oauth/login" method="get">
 						<div class="mb-6 group">
-							<label class="block text-sm font-semibold text-text-secondary mb-1.5" for="handle">
+							<label
+								class="block text-sm font-semibold text-text-secondary mb-1.5"
+								for="handle"
+							>
 								Bluesky Handle
 							</label>
 							<div class="relative w-full">
@@ -86,8 +88,9 @@ export const LoginPage: FC<LoginPageProps> = ({ error, errorMessage }) => {
 						Why do I need a Bluesky account?
 					</h3>
 					<p class="text-xs text-text-muted leading-relaxed">
-						jjalcloud leverages the AT Protocol to store your GIFs in a truly decentralized way. 
-						Your account ensures that your data lives in your own Personal Data Server (PDS).
+						jjalcloud leverages the AT Protocol to store your GIFs in a truly
+						decentralized way. Your account ensures that your data lives in your
+						own Personal Data Server (PDS).
 					</p>
 				</div>
 			</div>

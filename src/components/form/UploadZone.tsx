@@ -22,19 +22,23 @@ const CloudUploadIcon = () => (
 
 export const UploadZone: FC<UploadZoneProps> = ({ id = "upload-zone" }) => {
 	return (
-		<label 
-			class="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-2xl bg-bg-surface cursor-pointer transition-all duration-200 hover:border-brand-primary hover:bg-brand-primary-pale group" 
-			for={`${id}-input`} 
+		<label
+			class="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-2xl bg-bg-surface cursor-pointer transition-all duration-200 hover:border-brand-primary hover:bg-brand-primary-pale group"
+			for={`${id}-input`}
 			id={id}
 		>
 			<div class="w-16 h-16 text-brand-primary-light mb-4">
 				<CloudUploadIcon />
 			</div>
-			<div class="text-lg font-medium text-text mb-1">Tap or Drag GIFs Here</div>
+			<div class="text-lg font-medium text-text mb-1">
+				Tap or Drag GIFs Here
+			</div>
 			<div class="text-sm text-text-muted mb-4">
 				Supports .gif, .mp4, .webp up to 15MB
 			</div>
-			<span class="inline-flex items-center justify-center gap-2 px-3 py-1 text-sm font-medium rounded-md bg-bg-surface text-text border border-border transition-all hover:bg-bg-surface-hover hover:border-brand-primary-light">Browse Files</span>
+			<span class="inline-flex items-center justify-center gap-2 px-3 py-1 text-sm font-medium rounded-md bg-bg-surface text-text border border-border transition-all hover:bg-bg-surface-hover hover:border-brand-primary-light">
+				Browse Files
+			</span>
 			<input
 				type="file"
 				id={`${id}-input`}

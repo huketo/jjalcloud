@@ -2,6 +2,9 @@
 	"name": "jjalcloud",
 	"type": "module",
 	"scripts": {
+		"format": "biome format --write",
+		"lint": "biome check",
+		"lint:fix": "biome check --write",
 		"dev": "vite",
 		"build": "$npm_execpath run uno && vite build",
 		"preview": "$npm_execpath run build && vite preview",
@@ -30,6 +33,7 @@
 	},
 	"devDependencies": {
 		"@atproto/lex-cli": "^0.9.8",
+		"@biomejs/biome": "2.3.13",
 		"@cloudflare/vite-plugin": "^1.2.3",
 		"@unocss/cli": "^66.6.0",
 		"drizzle-kit": "^0.31.8",

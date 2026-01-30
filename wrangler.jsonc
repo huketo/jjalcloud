@@ -2,35 +2,33 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "jjalcloud",
 	"compatibility_date": "2025-08-03",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
+	"compatibility_flags": ["nodejs_compat"],
 	"main": "./src/index.tsx",
 	"kv_namespaces": [
 		{
 			"binding": "DID_CACHE",
 			"id": "7a58f1e438c14dc4a6f1ebb7945de0d7",
-			"remote": true,
+			"remote": true
 		},
 		{
 			"binding": "HANDLE_CACHE",
 			"id": "109ad295763744f98b6ca1459c04560e",
-			"remote": true,
+			"remote": true
 		},
 		{
 			"binding": "STATE_STORE",
 			"id": "18391baebf3b4c34a68a6f7bdd7b1692",
-			"remote": true,
+			"remote": true
 		},
 		{
 			"binding": "SESSION_STORE",
 			"id": "655a18b4b5504380a1e113a08648c954",
-			"remote": true,
-		},
+			"remote": true
+		}
 	],
 	// PRIVATE_KEY_JWK: wrangler secret put PRIVATE_KEY_JWK
 	"vars": {
-		"PUBLIC_URL": "",
+		"PUBLIC_URL": ""
 	},
 	"d1_databases": [
 		{
@@ -40,5 +38,5 @@
 			"remote": true,
 			"migrations_dir": "drizzle"
 		}
-	],
+	]
 }

@@ -1,7 +1,11 @@
 import { Hono } from "hono";
 import { drizzle } from "drizzle-orm/d1";
 import { eq, and, sql } from "drizzle-orm";
-import { requireAuth, optionalAuth, type AuthenticatedEnv } from "../middleware";
+import {
+	requireAuth,
+	optionalAuth,
+	type AuthenticatedEnv,
+} from "../middleware";
 import { ok, ClientResponseError } from "@atcute/client";
 import { LIKE_COLLECTION } from "../constants";
 import { createRpcClient, extractErrorMessage } from "../utils";
@@ -165,10 +169,14 @@ like.get("/", optionalAuth, async (c) => {
 		// 1. Get Count
 		// Drizzle count is a bit verbose in SQLite currently without `count()` helper
 		// const countResult = await db.select({ count: sql<number>`count(*)` }).from(likes).where(eq(likes.subject, subjectUri)).get();
-        // Using raw sql or standard method
-        const allLikes = await db.select().from(likes).where(eq(likes.subject, subjectUri)).all(); // Optimization: use count queries if possible
-        const count = allLikes.length;
-        
+		// Using raw sql or standard method
+		const allLikes = await db
+			.select()
+			.from(likes)
+			.where(eq(likes.subject, subjectUri))
+			.all(); // Optimization: use count queries if possible
+		const count = allLikes.length;
+
 		// 2. Check if User Liked
 		let isLiked = false;
 		if (did) {

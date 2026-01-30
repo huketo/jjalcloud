@@ -24,9 +24,7 @@ export async function createOAuthClient(
 	const keyset = isLocal ? undefined : await loadKeyset(env);
 
 	// 로컬 개발용 URL 설정
-	const port = isLocal
-		? extractPort(publicUrl || "http://localhost:5173")
-		: "";
+	const port = isLocal ? extractPort(publicUrl || "http://localhost:5173") : "";
 	// ATProto loopback client 요구사항 (RFC 8252):
 	// - client_id: http://localhost?redirect_uri=...&scope=... 형식
 	// - redirect_uri는 127.0.0.1 사용
@@ -105,10 +103,7 @@ async function loadKeyset(env: CloudflareBindings): Promise<JoseKey[]> {
 			const key = await JoseKey.fromJWK(jwk);
 			return [key];
 		} catch (error) {
-			console.error(
-				"Failed to load private key from environment:",
-				error,
-			);
+			console.error("Failed to load private key from environment:", error);
 			throw new Error(
 				"Invalid PRIVATE_KEY_JWK format. Please set a valid JWK.",
 			);

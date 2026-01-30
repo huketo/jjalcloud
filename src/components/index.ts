@@ -10,6 +10,5 @@ export { GifGrid, GifGridItem } from "./gif/GifGrid";
 // Profile Components
 export { ProfileCard } from "./profile/ProfileCard";
 
-
 // Form Components
 export { UploadZone } from "./form/UploadZone";

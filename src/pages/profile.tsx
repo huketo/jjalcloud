@@ -13,7 +13,6 @@ interface ProfilePageProps {
 	isOwnProfile: boolean;
 	profile: ProfileData;
 	gifs: GifViewWithAuthor[];
-
 }
 
 interface ProfileData {
@@ -33,8 +32,6 @@ interface GifViewWithAuthor extends GifView {
 	likeCount?: number;
 	isLiked?: boolean;
 }
-
-
 
 export const ProfilePage: FC<ProfilePageProps> = ({
 	isLoggedIn,
@@ -65,10 +62,8 @@ export const ProfilePage: FC<ProfilePageProps> = ({
 			</div>
 
 			{/* Tabs removed, only showing Collection */}
-			
+
 			<GifCollectionTab gifs={gifs} profile={profile} />
-
-
 		</Layout>
 	);
 };
@@ -104,9 +99,7 @@ const GifCollectionTab: FC<{
 						authorDid={profile.did}
 						authorHandle={profile.handle}
 						authorAvatar={profile.avatar}
-						likeCount={
-							gif.likeCount || Math.floor(Math.random() * 500)
-						}
+						likeCount={gif.likeCount || Math.floor(Math.random() * 500)}
 						isLiked={gif.isLiked}
 						showActions
 					/>
@@ -115,8 +108,6 @@ const GifCollectionTab: FC<{
 		</GifGrid>
 	);
 };
-
-
 
 // Helper
 function getGifUrl(gif: GifView): string {
@@ -141,9 +132,5 @@ const EmptyIcon = () => (
 		<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
 	</svg>
 );
-
-
-
-
 
 export default ProfilePage;

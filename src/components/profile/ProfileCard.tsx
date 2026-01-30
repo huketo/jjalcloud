@@ -32,7 +32,9 @@ export const ProfileCard: FC<ProfileCardProps> = ({
 						class="w-24 h-24 rounded-full object-cover border-[3px] border-brand-primary-light shadow-md block"
 					/>
 				) : (
-					<div class="w-24 h-24 rounded-full bg-gradient-to-br from-brand-primary-pale to-brand-primary-light flex items-center justify-center text-3xl mb-4 border-[3px] border-brand-primary-light">👤</div>
+					<div class="w-24 h-24 rounded-full bg-gradient-to-br from-brand-primary-pale to-brand-primary-light flex items-center justify-center text-3xl mb-4 border-[3px] border-brand-primary-light">
+						👤
+					</div>
 				)}
 				{isVerified && (
 					<div class="absolute bottom-0 right-0 w-6 h-6 bg-brand-primary text-text-inverse rounded-full flex items-center justify-center text-xs border-2 border-bg-surface">
@@ -42,7 +44,9 @@ export const ProfileCard: FC<ProfileCardProps> = ({
 			</div>
 
 			{/* Name & Handle */}
-			<h1 class="text-2xl font-bold text-text mb-1 mt-0">{displayName || handle}</h1>
+			<h1 class="text-2xl font-bold text-text mb-1 mt-0">
+				{displayName || handle}
+			</h1>
 			<a
 				href={`https://bsky.app/profile/${handle}`}
 				target="_blank"
@@ -53,7 +57,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({
 			</a>
 
 			{/* Bio */}
-			{description && <p class="text-sm text-text-secondary max-w-xs mb-3 leading-normal">{description}</p>}
+			{description && (
+				<p class="text-sm text-text-secondary max-w-xs mb-3 leading-normal">
+					{description}
+				</p>
+			)}
 
 			{/* Actions */}
 			{!isOwnProfile && (
@@ -61,9 +69,9 @@ export const ProfileCard: FC<ProfileCardProps> = ({
 					<button
 						type="button"
 						class={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-md transition-all shadow-sm hover:shadow-md hover:opacity-90 ${
-							isFollowing 
-							? "bg-bg-surface text-text border border-border hover:bg-bg-surface-hover hover:border-brand-primary-light" 
-							: "bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse"
+							isFollowing
+								? "bg-bg-surface text-text border border-border hover:bg-bg-surface-hover hover:border-brand-primary-light"
+								: "bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse"
 						}`}
 						data-did={did}
 					>
@@ -79,8 +87,8 @@ export const ProfileCard: FC<ProfileCardProps> = ({
 							</>
 						)}
 					</button>
-					<button 
-						type="button" 
+					<button
+						type="button"
 						class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-md transition-all bg-bg-surface text-text border border-border hover:bg-bg-surface-hover hover:border-brand-primary-light"
 					>
 						<MessageIcon />
@@ -93,7 +101,6 @@ export const ProfileCard: FC<ProfileCardProps> = ({
 };
 
 // Helper function removed
-
 
 // Icons
 const PlusIcon = () => (

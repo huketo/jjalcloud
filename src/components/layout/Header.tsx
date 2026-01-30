@@ -128,7 +128,10 @@ export const Header: FC<HeaderProps> = ({
 						</svg>
 					</a>
 				) : (
-					<a href="/" class="flex items-center gap-2 text-xl font-bold text-brand-primary no-underline z-20">
+					<a
+						href="/"
+						class="flex items-center gap-2 text-xl font-bold text-brand-primary no-underline z-20"
+					>
 						<div class="w-8 h-8 text-brand-primary">
 							<CloudIcon />
 						</div>
@@ -137,9 +140,7 @@ export const Header: FC<HeaderProps> = ({
 				)}
 
 				{title && (
-					<span
-						class="text-lg font-semibold text-brand-primary absolute left-1/2 -translate-x-1/2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[50%]"
-					>
+					<span class="text-lg font-semibold text-brand-primary absolute left-1/2 -translate-x-1/2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[50%]">
 						{title}
 					</span>
 				)}
@@ -204,7 +205,10 @@ export const Header: FC<HeaderProps> = ({
 							</div>
 						</>
 					) : (
-						<a href="/login" class="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90 text-sm rounded-sm no-underline">
+						<a
+							href="/login"
+							class="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90 text-sm rounded-sm no-underline"
+						>
 							Login
 						</a>
 					)}
@@ -246,10 +250,15 @@ export const Header: FC<HeaderProps> = ({
 								)}
 								<div class="flex flex-col">
 									<span class="text-sm font-medium text-text">Signed in</span>
-									<a href="/profile" class="text-xs text-brand-primary no-underline hover:underline">View Profile</a>
+									<a
+										href="/profile"
+										class="text-xs text-brand-primary no-underline hover:underline"
+									>
+										View Profile
+									</a>
 								</div>
 							</div>
-							
+
 							<a
 								href="/upload"
 								class="flex items-center justify-center gap-2 w-full px-4 py-3 font-medium rounded-lg bg-brand-primary text-text-inverse no-underline shadow-sm active:scale-[0.98] transition-transform box-border"
@@ -272,7 +281,9 @@ export const Header: FC<HeaderProps> = ({
 						</>
 					) : (
 						<div class="flex flex-col gap-3">
-							<p class="text-center text-text-secondary text-sm my-2">Sign in to upload and manage your GIFs</p>
+							<p class="text-center text-text-secondary text-sm my-2">
+								Sign in to upload and manage your GIFs
+							</p>
 							<a
 								href="/login"
 								class="flex items-center justify-center gap-2 w-full px-4 py-3 font-medium rounded-lg bg-brand-primary text-text-inverse no-underline shadow-sm active:scale-[0.98] transition-transform"

@@ -26,7 +26,11 @@ export const HomePage: FC<HomePageProps> = ({
 	return (
 		<Layout isLoggedIn={isLoggedIn} avatarUrl={avatarUrl}>
 			{/* Error Message */}
-			{error && <div class="mb-6 p-4 rounded-md text-sm bg-status-error/10 border border-status-error text-status-error">{error}</div>}
+			{error && (
+				<div class="mb-6 p-4 rounded-md text-sm bg-status-error/10 border border-status-error text-status-error">
+					{error}
+				</div>
+			)}
 
 			{/* GIF Grid */}
 			{gifs.length > 0 ? (
@@ -42,10 +46,7 @@ export const HomePage: FC<HomePageProps> = ({
 								authorDid={gif.authorDid}
 								authorHandle={gif.authorHandle}
 								authorAvatar={gif.authorAvatar}
-								likeCount={
-									gif.likeCount ||
-									Math.floor(Math.random() * 1000)
-								} // Mock data for UI
+								likeCount={gif.likeCount || Math.floor(Math.random() * 1000)} // Mock data for UI
 								isLiked={gif.isLiked}
 							/>
 						</GifGridItem>
@@ -61,11 +62,17 @@ export const HomePage: FC<HomePageProps> = ({
 							: "Sign in to start sharing GIFs."}
 					</p>
 					{isLoggedIn ? (
-						<a href="/upload" class="inline-flex items-center justify-center gap-2 px-6 py-2 text-base font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90">
+						<a
+							href="/upload"
+							class="inline-flex items-center justify-center gap-2 px-6 py-2 text-base font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90"
+						>
 							Upload GIF
 						</a>
 					) : (
-						<a href="/login" class="inline-flex items-center justify-center gap-2 px-6 py-2 text-base font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90 no-underline">
+						<a
+							href="/login"
+							class="inline-flex items-center justify-center gap-2 px-6 py-2 text-base font-medium rounded-md transition-all bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-sm hover:shadow-md hover:opacity-90 no-underline"
+						>
 							Sign In
 						</a>
 					)}

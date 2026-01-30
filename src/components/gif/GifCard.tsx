@@ -38,14 +38,14 @@ export const GifCard: FC<GifCardProps> = ({
 }) => {
 	const detailUrl = `/gif/${rkey}`;
 	const profileUrl = authorDid ? `/profile/${authorDid}` : "#";
-	
+
 	// Copy functionality script (needs to be handled globally or inline since this is SSR)
 	// We'll add a specific class for the global handler to pick up, or use a tiny inline onclick if allowed.
 	// For now, I'll add a data attribute `data-copy-text` with the full URL.
 	// Assuming the app has a base URL, but we'll use relative or constructing it if possible.
 	// Since we don't have the base URL here, we'll try to use a relative path resolved by client or just copy the path.
 	// A better UX is copying the full link. I'll leave the data attribute for a handler to use `window.location.origin + ...`
-	
+
 	return (
 		<article class="group relative bg-bg-surface rounded-lg overflow-hidden shadow-card transition-all duration-300 md:hover:shadow-lg">
 			<a href={detailUrl} class="block w-full relative z-1">
@@ -77,7 +77,10 @@ export const GifCard: FC<GifCardProps> = ({
 				<div class="flex items-center justify-between w-full gap-2">
 					{showAuthor && (
 						<div class="pointer-events-auto">
-							<a href={profileUrl} class="flex items-center gap-2 text-text-inverse no-underline font-medium text-sm transition-opacity duration-150 hover:opacity-80 drop-shadow-md">
+							<a
+								href={profileUrl}
+								class="flex items-center gap-2 text-text-inverse no-underline font-medium text-sm transition-opacity duration-150 hover:opacity-80 drop-shadow-md"
+							>
 								{authorAvatar ? (
 									<img
 										src={authorAvatar}
@@ -85,13 +88,17 @@ export const GifCard: FC<GifCardProps> = ({
 										class="w-6 h-6 rounded-full object-cover border border-white/70"
 									/>
 								) : (
-									<div class="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-xs text-white">👤</div>
+									<div class="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-xs text-white">
+										👤
+									</div>
 								)}
-								<span class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap pt-[2px]">{authorHandle || "Unknown"}</span>
+								<span class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap pt-[2px]">
+									{authorHandle || "Unknown"}
+								</span>
 							</a>
 						</div>
 					)}
-					
+
 					<div class="flex items-center gap-1 pointer-events-auto">
 						{showActions && (
 							<>
@@ -104,7 +111,7 @@ export const GifCard: FC<GifCardProps> = ({
 									showCount={false}
 									variant="glass"
 								/>
-								<button 
+								<button
 									class="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-150 backdrop-blur-md border border-white/20 bg-black/30 hover:scale-105 active:scale-95 text-white copy-btn"
 									data-copy-text={gifUrl}
 									data-copy-message="✅ Link copied to clipboard!"
@@ -122,12 +129,12 @@ export const GifCard: FC<GifCardProps> = ({
 };
 
 const CopyIcon = () => (
-	<svg 
-		viewBox="0 0 24 24" 
-		fill="none" 
-		stroke="currentColor" 
-		stroke-width="2" 
-		stroke-linecap="round" 
+	<svg
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
 		stroke-linejoin="round"
 		class="w-4.5 h-4.5"
 	>

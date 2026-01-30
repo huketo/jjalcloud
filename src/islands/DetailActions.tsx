@@ -1,119 +1,134 @@
-
 /** @jsxImportSource hono/jsx/dom */
-import { useState } from 'hono/jsx'
-import { showToast } from '../components/ui/Toast'
+import { useState } from "hono/jsx";
+import { showToast } from "../components/ui/Toast";
 
 interface DetailActionsProps {
-  gifUrl: string;
-  gifTitle: string;
-  gifUri?: string;
-  gifCid?: string;
-  isLiked?: boolean; // Currently UI only for this Demo
+	gifUrl: string;
+	gifTitle: string;
+	gifUri?: string;
+	gifCid?: string;
+	isLiked?: boolean; // Currently UI only for this Demo
 }
 
-export const DetailActions = ({ gifUrl, gifTitle, gifUri, gifCid, isLiked: initialIsLiked = false }: DetailActionsProps) => {
-  const [isLiked, setIsLiked] = useState(initialIsLiked)
+export const DetailActions = ({
+	gifUrl,
+	gifTitle,
+	gifUri,
+	gifCid,
+	isLiked: initialIsLiked = false,
+}: DetailActionsProps) => {
+	const [isLiked, setIsLiked] = useState(initialIsLiked);
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(gifUrl)
-      showToast('✅ Link copied to clipboard!')
-    } catch (e) {
-      console.error(e)
-      showToast('Failed to copy link', 'error')
-    }
-  }
+	const handleCopy = async () => {
+		try {
+			await navigator.clipboard.writeText(gifUrl);
+			showToast("✅ Link copied to clipboard!");
+		} catch (e) {
+			console.error(e);
+			showToast("Failed to copy link", "error");
+		}
+	};
 
-  const handleDownload = async () => {
-    try {
-      const response = await fetch(gifUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `jjalcloud_${Date.now()}.gif`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      showToast('Download started!')
-    } catch (e) {
-      console.error(e)
-      window.open(gifUrl, '_blank')
-    }
-  }
+	const handleDownload = async () => {
+		try {
+			const response = await fetch(gifUrl);
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `jjalcloud_${Date.now()}.gif`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			window.URL.revokeObjectURL(url);
+			showToast("Download started!");
+		} catch (e) {
+			console.error(e);
+			window.open(gifUrl, "_blank");
+		}
+	};
 
-  const handleLike = async () => {
-    if (!gifUri || !gifCid) {
-        showToast('Cannot like this item', 'error');
-        return;
-    }
+	const handleLike = async () => {
+		if (!gifUri || !gifCid) {
+			showToast("Cannot like this item", "error");
+			return;
+		}
 
-    const nextIsLiked = !isLiked;
-    setIsLiked(nextIsLiked); // Optimistic
+		const nextIsLiked = !isLiked;
+		setIsLiked(nextIsLiked); // Optimistic
 
-    const method = nextIsLiked ? 'POST' : 'DELETE';
-    const body = nextIsLiked 
-        ? JSON.stringify({ subject: { uri: gifUri, cid: gifCid } })
-        : JSON.stringify({ subject: { uri: gifUri } });
+		const method = nextIsLiked ? "POST" : "DELETE";
+		const body = nextIsLiked
+			? JSON.stringify({ subject: { uri: gifUri, cid: gifCid } })
+			: JSON.stringify({ subject: { uri: gifUri } });
 
-    try {
-        const res = await fetch('/api/like', {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body
-        });
+		try {
+			const res = await fetch("/api/like", {
+				method,
+				headers: { "Content-Type": "application/json" },
+				body,
+			});
 
-        if (!res.ok) {
-            if (res.status === 401) {
-                window.location.href = '/login';
-                return;
-            }
-            throw new Error('Failed to like');
-        }
-    } catch (err) {
-        console.error('Like action failed', err);
-        setIsLiked(!nextIsLiked); // Revert
-        showToast('Failed to update like', 'error');
-    }
-  }
+			if (!res.ok) {
+				if (res.status === 401) {
+					window.location.href = "/login";
+					return;
+				}
+				throw new Error("Failed to like");
+			}
+		} catch (err) {
+			console.error("Like action failed", err);
+			setIsLiked(!nextIsLiked); // Revert
+			showToast("Failed to update like", "error");
+		}
+	};
 
-  const buttonBaseClass = "group flex items-center gap-3 py-2 font-medium text-text-secondary transition-colors bg-transparent border-none shadow-none cursor-pointer"
+	const buttonBaseClass =
+		"group flex items-center gap-3 py-2 font-medium text-text-secondary transition-colors bg-transparent border-none shadow-none cursor-pointer";
 
-  return (
-    <div class="flex flex-row md:flex-col gap-2 w-full md:w-auto">
-      <button
-        type="button"
-        onClick={handleLike}
-        class={`${buttonBaseClass} ${isLiked ? "text-red-500 hover:text-red-600" : "hover:text-red-500"}`}
-      >
-        <HeartIcon filled={isLiked} className={`w-6 h-6 transition-transform duration-200 group-hover:scale-110 ${isLiked ? "fill-current" : ""}`} />
-        <span>Favorite</span>
-      </button>
+	return (
+		<div class="flex flex-row md:flex-col gap-2 w-full md:w-auto">
+			<button
+				type="button"
+				onClick={handleLike}
+				class={`${buttonBaseClass} ${isLiked ? "text-red-500 hover:text-red-600" : "hover:text-red-500"}`}
+			>
+				<HeartIcon
+					filled={isLiked}
+					className={`w-6 h-6 transition-transform duration-200 group-hover:scale-110 ${isLiked ? "fill-current" : ""}`}
+				/>
+				<span>Favorite</span>
+			</button>
 
-      <button 
-        type="button" 
-        onClick={handleCopy}
-        class={`${buttonBaseClass} hover:text-brand-primary`}
-      >
-        <LinkIcon className="w-6 h-6 transition-transform duration-200 group-hover:scale-110" />
-        <span>Copy Link</span>
-      </button>
+			<button
+				type="button"
+				onClick={handleCopy}
+				class={`${buttonBaseClass} hover:text-brand-primary`}
+			>
+				<LinkIcon className="w-6 h-6 transition-transform duration-200 group-hover:scale-110" />
+				<span>Copy Link</span>
+			</button>
 
-      <button 
-        type="button" 
-        onClick={handleDownload}
-        class={`${buttonBaseClass} hover:text-green-600`}
-      >
-        <DownloadIcon className="w-6 h-6 transition-transform duration-200 group-hover:scale-110" />
-        <span>Download</span>
-      </button>
-    </div>
-  )
-}
+			<button
+				type="button"
+				onClick={handleDownload}
+				class={`${buttonBaseClass} hover:text-green-600`}
+			>
+				<DownloadIcon className="w-6 h-6 transition-transform duration-200 group-hover:scale-110" />
+				<span>Download</span>
+			</button>
+		</div>
+	);
+};
 
 // Icons (duplicated for client bundle)
-const HeartIcon = ({ filled, className }: { filled?: boolean; className?: string }) => (
+const HeartIcon = ({
+	filled,
+	className,
+}: {
+	filled?: boolean;
+	className?: string;
+}) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill={filled ? "currentColor" : "none"}
