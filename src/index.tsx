@@ -1,17 +1,17 @@
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
-import { renderer } from "./renderer";
-import oauthRoutes from "./routes/oauth";
-import gifRoutes from "./routes/gif";
-import likeRoutes from "./routes/like";
 import type { HonoEnv } from "./auth";
 import { SESSION_COOKIE } from "./constants";
-import { HomePage } from "./pages/home";
 import { DetailPage } from "./pages/detail";
+import { EditPage } from "./pages/edit";
+import { HomePage } from "./pages/home";
+import { LoginPage } from "./pages/login";
 import { ProfilePage } from "./pages/profile";
 import { UploadPage } from "./pages/upload";
-import { LoginPage } from "./pages/login";
-import { EditPage } from "./pages/edit";
+import { renderer } from "./renderer";
+import gifRoutes from "./routes/gif";
+import likeRoutes from "./routes/like";
+import oauthRoutes from "./routes/oauth";
 import { toGifView } from "./types/gif";
 import { fetchProfile } from "./utils";
 
@@ -183,9 +183,7 @@ app.get("/gif/:rkey", async (c) => {
 				<main class="main-content">
 					<div class="empty-state">
 						<h3 class="empty-state-title">An error occurred</h3>
-						<p class="empty-state-text">
-							Failed to load GIF.
-						</p>
+						<p class="empty-state-text">Failed to load GIF.</p>
 						<a href="/" class="btn btn-primary">
 							Return to Home
 						</a>

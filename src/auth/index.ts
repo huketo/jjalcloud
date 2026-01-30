@@ -1,6 +1,6 @@
+export type { CloudflareBindings, HonoEnv } from "../types";
 export {
-	createOAuthClient,
 	createClientMetadata,
+	createOAuthClient,
 	generatePrivateKey,
 } from "./client";
-export type { CloudflareBindings, HonoEnv } from "../types";

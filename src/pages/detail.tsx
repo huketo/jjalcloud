@@ -1,10 +1,10 @@
 import type { FC } from "hono/jsx";
 import {
-	Layout,
-	LikeButton,
 	GifCard,
 	GifGrid,
 	GifGridItem,
+	Layout,
+	LikeButton,
 } from "../components";
 import type { GifView } from "../types/gif";
 

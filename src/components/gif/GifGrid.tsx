@@ -1,4 +1,4 @@
-import type { FC, Child } from "hono/jsx";
+import type { Child, FC } from "hono/jsx";
 
 interface GifGridProps {
 	children: Child;

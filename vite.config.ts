@@ -1,7 +1,7 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
+import UnoCSS from "unocss/vite";
 import { defineConfig } from "vite";
 import ssrPlugin from "vite-ssr-components/plugin";
-import UnoCSS from "unocss/vite";
 
 export default defineConfig({
 	plugins: [

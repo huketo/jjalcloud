@@ -1,10 +1,10 @@
 import type { FC } from "hono/jsx";
 import {
-	Layout,
-	ProfileCard,
 	GifCard,
 	GifGrid,
 	GifGridItem,
+	Layout,
+	ProfileCard,
 } from "../components";
 import type { GifView } from "../types/gif";
 

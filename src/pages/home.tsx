@@ -1,5 +1,5 @@
 import type { FC } from "hono/jsx";
-import { Layout, GifCard, GifGrid, GifGridItem } from "../components";
+import { GifCard, GifGrid, GifGridItem, Layout } from "../components";
 import type { GifView } from "../types/gif";
 
 interface HomePageProps {

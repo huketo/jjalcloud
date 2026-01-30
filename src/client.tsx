@@ -19,6 +19,7 @@ if (detailActionsRoot) {
 
 // Mount Upload Form if present
 import { UploadForm } from "./islands/UploadForm";
+
 const uploadFormRoot = document.getElementById("upload-form-root");
 if (uploadFormRoot) {
 	const propsInJSON = uploadFormRoot.getAttribute("data-props");
@@ -28,6 +29,7 @@ if (uploadFormRoot) {
 
 // Mount Edit Form if present
 import { EditForm } from "./islands/EditForm";
+
 const editFormRoot = document.getElementById("edit-form-root");
 if (editFormRoot) {
 	const propsInJSON = editFormRoot.getAttribute("data-props");

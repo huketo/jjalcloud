@@ -1,1 +1,1 @@
-export { requireAuth, optionalAuth, type AuthenticatedEnv } from "./auth";
+export { type AuthenticatedEnv, optionalAuth, requireAuth } from "./auth";

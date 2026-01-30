@@ -1,8 +1,8 @@
-import { createMiddleware } from "hono/factory";
 import { getCookie } from "hono/cookie";
+import { createMiddleware } from "hono/factory";
 import { createOAuthClient } from "../auth/client";
-import type { HonoEnv } from "../types";
 import { SESSION_COOKIE } from "../constants";
+import type { HonoEnv } from "../types";
 
 /**
  * OAuth Session Type (Infer return type of restore method)

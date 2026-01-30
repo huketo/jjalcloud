@@ -3,14 +3,14 @@
  */
 import {
 	type Auth,
-	type Options as XrpcOptions,
-	Server as XrpcServer,
-	type StreamConfigOrHandler,
-	type MethodConfigOrHandler,
 	createServer as createXrpcServer,
+	type MethodConfigOrHandler,
+	type StreamConfigOrHandler,
+	type Options as XrpcOptions,
+	type Server as XrpcServer,
 } from "@atproto/xrpc-server";
 import { schemas } from "./lexicons.js";
-import * as ComJjalcloudFeedGetSearch from "./types/com/jjalcloud/feed/getSearch.js";
+import type * as ComJjalcloudFeedGetSearch from "./types/com/jjalcloud/feed/getSearch.js";
 
 export function createServer(options?: XrpcOptions): Server {
 	return new Server(options);

@@ -1,12 +1,12 @@
 import { Hono } from "hono";
-import { setCookie, getCookie, deleteCookie } from "hono/cookie";
-import { createOAuthClient, createClientMetadata } from "../auth";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { HonoEnv } from "../auth";
-import { SESSION_COOKIE, SESSION_MAX_AGE, BSKY_PUBLIC_API } from "../constants";
+import { createClientMetadata, createOAuthClient } from "../auth";
+import { BSKY_PUBLIC_API, SESSION_COOKIE, SESSION_MAX_AGE } from "../constants";
 import {
-	isLocalDevelopment,
-	getRedirectUrl,
 	extractErrorMessage,
+	getRedirectUrl,
+	isLocalDevelopment,
 } from "../utils";
 
 // app.bsky.actor.getProfile API response type

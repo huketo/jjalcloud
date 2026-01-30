@@ -1,4 +1,4 @@
-import { type JSX } from "hono/jsx";
+import type { JSX } from "hono/jsx";
 
 interface ButtonProps extends JSX.ButtonHTMLAttributes {
 	variant?: "primary" | "secondary" | "destructive" | "ghost" | "outline";
@@ -19,7 +19,8 @@ export const Button = (props: ButtonProps) => {
 		...rest
 	} = props;
 
-	const baseStyles = "inline-flex items-center justify-center font-sans font-medium transition-all duration-200 border-none cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-[0.98]";
+	const baseStyles =
+		"inline-flex items-center justify-center font-sans font-medium transition-all duration-200 border-none cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-[0.98]";
 
 	const sizeStyles = {
 		sm: "text-xs px-3 py-1.5 rounded-lg",
@@ -30,12 +31,11 @@ export const Button = (props: ButtonProps) => {
 	const variantStyles = {
 		primary:
 			"bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-md hover:shadow-lg hover:opacity-95",
-		secondary:
-			"bg-bg-search text-text hover:bg-bg-search/80",
-		destructive:
-			"bg-status-error text-white hover:opacity-90 shadow-sm",
+		secondary: "bg-bg-search text-text hover:bg-bg-search/80",
+		destructive: "bg-status-error text-white hover:opacity-90 shadow-sm",
 		ghost: "bg-transparent text-text hover:bg-bg-surface-hover",
-		outline: "bg-transparent text-text border-1 border-solid border-border hover:bg-bg-surface-hover",
+		outline:
+			"bg-transparent text-text border-1 border-solid border-border hover:bg-bg-surface-hover",
 	};
 
 	const loadingSpinner = (

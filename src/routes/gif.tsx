@@ -1,15 +1,15 @@
-import { Hono } from "hono";
-import { requireAuth, type AuthenticatedEnv } from "../middleware";
-import { TID } from "@atproto/common-web";
-import { ok, ClientResponseError } from "@atcute/client";
 import type {} from "@atcute/atproto";
+import { ClientResponseError, ok } from "@atcute/client";
 import type { Did } from "@atcute/lexicons/syntax";
-import { GIF_COLLECTION, MAX_GIF_SIZE, MAX_TAGS_COUNT } from "../constants";
-import { createRpcClient, extractErrorMessage } from "../utils";
-import { type GifRecord, toGifView, parseTags } from "../types/gif";
+import { TID } from "@atproto/common-web";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
+import { Hono } from "hono";
+import { GIF_COLLECTION, MAX_GIF_SIZE, MAX_TAGS_COUNT } from "../constants";
 import { likes } from "../db/schema";
-import { eq, inArray, and, sql } from "drizzle-orm";
+import { type AuthenticatedEnv, requireAuth } from "../middleware";
+import { type GifRecord, parseTags, toGifView } from "../types/gif";
+import { createRpcClient, extractErrorMessage } from "../utils";
 
 const gif = new Hono<AuthenticatedEnv>();
 

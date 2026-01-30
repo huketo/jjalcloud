@@ -1,9 +1,9 @@
 /** @jsxImportSource hono/jsx/dom */
-import { useState, useRef } from "hono/jsx";
-import { Input } from "../components/ui/Input";
-import { Textarea } from "../components/ui/Textarea";
-import { Label } from "../components/ui/Label";
+import { useRef, useState } from "hono/jsx";
 import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Label } from "../components/ui/Label";
+import { Textarea } from "../components/ui/Textarea";
 
 interface UploadFormProps {
 	initialError?: string;
@@ -40,7 +40,7 @@ export const UploadForm = ({
 		const k = 1024;
 		const sizes = ["Bytes", "KB", "MB", "GB"];
 		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+		return parseFloat((bytes / k ** i).toFixed(2)) + " " + sizes[i];
 	};
 
 	const handleFile = (file: File) => {

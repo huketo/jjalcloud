@@ -1,4 +1,4 @@
-import { type JSX } from "hono/jsx";
+import type { JSX } from "hono/jsx";
 
 interface LabelProps extends JSX.LabelHTMLAttributes {
 	className?: string;

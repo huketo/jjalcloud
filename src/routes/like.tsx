@@ -1,16 +1,16 @@
-import { Hono } from "hono";
-import { drizzle } from "drizzle-orm/d1";
-import { eq, and, sql } from "drizzle-orm";
-import {
-	requireAuth,
-	optionalAuth,
-	type AuthenticatedEnv,
-} from "../middleware";
-import { ok, ClientResponseError } from "@atcute/client";
-import { LIKE_COLLECTION } from "../constants";
-import { createRpcClient, extractErrorMessage } from "../utils";
-import { likes } from "../db/schema";
+import { ClientResponseError, ok } from "@atcute/client";
 import type { Did } from "@atcute/lexicons/syntax";
+import { and, eq, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
+import { Hono } from "hono";
+import { LIKE_COLLECTION } from "../constants";
+import { likes } from "../db/schema";
+import {
+	type AuthenticatedEnv,
+	optionalAuth,
+	requireAuth,
+} from "../middleware";
+import { createRpcClient, extractErrorMessage } from "../utils";
 
 const like = new Hono<AuthenticatedEnv>();
 

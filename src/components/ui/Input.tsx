@@ -1,4 +1,4 @@
-import { type JSX } from "hono/jsx";
+import type { JSX } from "hono/jsx";
 
 interface InputProps extends JSX.InputHTMLAttributes {
 	className?: string;

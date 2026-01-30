@@ -1,13 +1,13 @@
 import { JoseKey } from "@atproto/jwk-jose";
 import {
-	WorkersOAuthClient,
 	DidCacheKV,
 	HandleCacheKV,
-	StateStoreKV,
 	SessionStoreKV,
+	StateStoreKV,
+	WorkersOAuthClient,
 } from "atproto-oauth-client-cloudflare-workers";
 import type { CloudflareBindings } from "../types";
-import { isLocalDevelopment, extractPort } from "../utils";
+import { extractPort, isLocalDevelopment } from "../utils";
 
 /**
  * Create OAuth client instance.
