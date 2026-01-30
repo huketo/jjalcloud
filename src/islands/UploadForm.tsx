@@ -1,5 +1,9 @@
 /** @jsxImportSource hono/jsx/dom */
 import { useState, useRef } from "hono/jsx";
+import { Input } from "../components/ui/Input";
+import { Textarea } from "../components/ui/Textarea";
+import { Label } from "../components/ui/Label";
+import { Button } from "../components/ui/Button";
 
 interface UploadFormProps {
 	initialError?: string;
@@ -159,10 +163,11 @@ export const UploadForm = ({
 				method="post"
 				enctype="multipart/form-data"
 				onSubmit={handleSubmit}
+				class="space-y-6"
 			>
 				{/* Upload Zone */}
 				{!preview && (
-					<div class="mb-6">
+					<div>
 						<label
 							class={`flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-2xl bg-bg-surface cursor-pointer transition-all duration-200 hover:border-brand-primary hover:bg-brand-primary-pale group ${isDragOver ? "dragover border-brand-primary bg-brand-primary-pale" : ""}`}
 							for="gif-upload-input"
@@ -213,7 +218,7 @@ export const UploadForm = ({
 
 				{/* Preview */}
 				{preview && (
-					<div class="mb-6">
+					<div>
 						<div class="bg-bg-surface rounded-xl shadow-card overflow-hidden p-4 flex items-center gap-4">
 							<img
 								src={preview.url}
@@ -248,37 +253,25 @@ export const UploadForm = ({
 				)}
 
 				{/* GIF Title */}
-				<div class="mb-6">
-					<label
-						class="block text-sm font-medium text-brand-primary mb-2"
-						for="title"
-					>
-						GIF Title
-					</label>
-					<input
+				<div>
+					<Label for="title">GIF Title</Label>
+					<Input
 						type="text"
 						id="title"
 						name="title"
-						class="w-full box-border px-4 py-3 text-base text-text font-sans bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
 						placeholder="Give it a catchy name..."
 						maxLength={100}
 					/>
 				</div>
 
 				{/* Tags */}
-				<div class="mb-6">
-					<label
-						class="block text-sm font-medium text-brand-primary mb-2"
-						for="tags"
-					>
-						Tags
-					</label>
+				<div>
+					<Label for="tags">Tags</Label>
 					<div class="relative">
-						<input
+						<Input
 							type="text"
 							id="tags"
 							name="tags"
-							class="w-full box-border px-4 py-3 text-base text-text font-sans bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
 							placeholder="funny, cat, reaction..."
 						/>
 					</div>
@@ -288,55 +281,45 @@ export const UploadForm = ({
 				</div>
 
 				{/* Description */}
-				<div class="mb-6">
-					<label
-						class="block text-sm font-medium text-brand-primary mb-2"
-						for="alt"
-					>
-						Description (Optional)
-					</label>
-					<textarea
+				<div>
+					<Label for="alt">Description (Optional)</Label>
+					<Textarea
 						id="alt"
 						name="alt"
-						class="w-full box-border px-4 py-3 text-base text-text font-sans bg-bg-surface border-1 border-solid border-border-light rounded-md transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80 min-h-[100px] resize-y"
 						placeholder="Add some context..."
 						maxLength={300}
-					></textarea>
+					/>
 					<p class="text-xs text-text-muted mt-1">
 						Also used as alt text for accessibility
 					</p>
 				</div>
 
 				{/* Submit Button */}
-				<button
+				<Button
 					type="submit"
 					disabled={isUploading}
-					class="w-full box-border flex items-center justify-center gap-2 py-3 text-lg font-bold rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse border-none shadow-md hover:shadow-lg hover:opacity-95 transform active:scale-[0.98] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+					isLoading={isUploading}
+					variant="primary"
+					size="lg"
+					className="w-full flex items-center justify-center gap-2 font-bold transform active:scale-[0.98] transition-all duration-200"
 				>
-					{isUploading ? (
-						<>
-							<span class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></span>
-							Uploading...
-						</>
-					) : (
-						<>
-							<svg
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								style={{ width: "18px", height: "18px" }}
-							>
-								<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-								<path d="M12 12v9" />
-								<path d="m16 16-4-4-4 4" />
-							</svg>
-							Upload GIF
-						</>
+					{!isUploading && (
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							style={{ width: "18px", height: "18px" }}
+						>
+							<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+							<path d="M12 12v9" />
+							<path d="m16 16-4-4-4 4" />
+						</svg>
 					)}
-				</button>
+					{isUploading ? "Uploading..." : "Upload GIF"}
+				</Button>
 
 				{/* Terms */}
 				<p class="text-center mt-4 text-xs text-text-muted">

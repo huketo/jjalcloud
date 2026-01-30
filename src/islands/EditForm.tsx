@@ -1,5 +1,9 @@
 /** @jsxImportSource hono/jsx/dom */
 import { useState } from "hono/jsx";
+import { Input } from "../components/ui/Input";
+import { Textarea } from "../components/ui/Textarea";
+import { Label } from "../components/ui/Label";
+import { Button } from "../components/ui/Button";
 
 interface EditFormProps {
 	rkey: string;
@@ -122,18 +126,12 @@ export const EditForm = ({
 			<form onSubmit={handleSubmit} class="space-y-6">
 				{/* Title */}
 				<div>
-					<label
-						class="block text-sm font-medium text-brand-primary mb-2"
-						for="title"
-					>
-						GIF Title
-					</label>
-					<input
+					<Label for="title">GIF Title</Label>
+					<Input
 						type="text"
 						id="title"
 						name="title"
 						defaultValue={initialTitle}
-						class="w-full box-border px-4 py-3 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
 						placeholder="Give it a catchy name..."
 						maxLength={100}
 					/>
@@ -141,19 +139,13 @@ export const EditForm = ({
 
 				{/* Tags */}
 				<div>
-					<label
-						class="block text-sm font-medium text-brand-primary mb-2"
-						for="tags"
-					>
-						Tags
-					</label>
+					<Label for="tags">Tags</Label>
 					<div class="relative">
-						<input
+						<Input
 							type="text"
 							id="tags"
 							name="tags"
 							defaultValue={initialTags.join(", ")}
-							class="w-full box-border px-4 py-3 pl-8 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-xl transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80"
 							placeholder="funny, cat, reaction..."
 						/>
 					</div>
@@ -164,61 +156,62 @@ export const EditForm = ({
 
 				{/* Description / Alt */}
 				<div>
-					<label
-						class="block text-sm font-medium text-brand-primary mb-2"
-						for="alt"
-					>
-						Description (Alt Text)
-					</label>
-					<textarea
+					<Label for="alt">Description (Alt Text)</Label>
+					<Textarea
 						id="alt"
 						name="alt"
 						defaultValue={initialAlt}
-						class="w-full box-border px-4 py-3 text-base text-text bg-bg-surface border-1 border-solid border-border-light rounded-md transition-all outline-none focus:border-brand-primary placeholder:text-text-muted/80 min-h-[100px] resize-y"
 						placeholder="Add some context..."
 						maxLength={300}
-					></textarea>
+					/>
 				</div>
 
 				{/* Actions */}
 				<div class="flex flex-col gap-4 mt-8 pt-6 border-t border-border-light">
-					<button
+					<Button
 						type="submit"
 						disabled={isSubmitting}
-						class="w-full py-3 text-lg font-bold rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary-dark text-text-inverse shadow-md hover:shadow-lg hover:opacity-95 transform active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer"
+						isLoading={isSubmitting}
+						variant="primary"
+						size="lg"
+						className="w-full font-bold"
 					>
 						{isSubmitting ? "Saving..." : "Save Changes"}
-					</button>
+					</Button>
 
 					{!showDeleteConfirm ? (
-						<button
+						<Button
 							type="button"
 							onClick={() => setShowDeleteConfirm(true)}
 							disabled={isSubmitting}
-							class="w-full py-3 text-base font-medium rounded-xl text-status-error bg-status-error/5 hover:bg-status-error/10 transition-colors border-none cursor-pointer"
+							variant="destructive"
+							size="lg"
+							className="w-full font-bold"
 						>
 							Delete GIF
-						</button>
+						</Button>
 					) : (
 						<div class="flex flex-col gap-2 p-4 bg-status-error/5 rounded-xl border border-status-error/20">
 							<p class="text-status-error font-medium text-center m-0 mb-2">
 								Are you sure? This cannot be undone.
 							</p>
 							<div class="flex gap-2">
-								<button
+								<Button
 									type="button"
 									onClick={() => setShowDeleteConfirm(false)}
-									class="flex-1 py-2 text-sm font-medium rounded-lg bg-bg-surface text-text border border-border hover:bg-bg-surface-hover cursor-pointer"
+									variant="outline"
+									className="flex-1"
 								>
 									Cancel
-								</button>
-								<button
+								</Button>
+								<Button
 									type="button"
 									onClick={handleDelete}
-									class="flex-1 py-2 text-sm font-bold rounded-lg bg-status-error text-white border-none hover:opacity-90 cursor-pointer"
+									variant="destructive"
+									className="flex-1 font-bold"
 								>
 									Confirm Delete
-								</button>
+								</Button>
 							</div>
 						</div>
 					)}

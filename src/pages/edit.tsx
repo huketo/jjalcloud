@@ -33,7 +33,7 @@ export const EditPage: FC<EditPageProps> = ({ isLoggedIn, gif, avatarUrl }) => {
 		<Layout
 			isLoggedIn={isLoggedIn}
 			showBack
-			title="Edit GIF"
+			title="jjalcloud"
 			avatarUrl={avatarUrl}
 		>
 			<div class="max-w-xl mx-auto px-4 py-8">
