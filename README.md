@@ -12,24 +12,27 @@ Users own their media on their PDS (Personal Data Server), can easily log in via
 - [x] **Bluesky OAuth Authentication** (Login, Callback, Logout)
 - [x] **Stateless Session Management**
 
-### Phase 2: Core Logic (🚧 In Progress)
+### Phase 2: Core Logic (✅ Completed)
 - [x] **Lexicon Definitions**: Data model design for `com.jjalcloud.feed.gif`, `like`, `follow`, etc.
 - [x] **Lexicon Type Generation**: TypeScript type definitions using `lex-cli`
 - [x] **GIF Management API**:
   - [x] List my GIFs (PDS `listRecords`)
   - [x] GIF Upload (Blob upload and record creation)
-  - [ ] GIF Edit
-  - [ ] GIF Delete
+  - [x] GIF Edit
+  - [x] GIF Delete
 - [x] **Social Interaction API**:
   - [x] Like
 
 ### Phase 3: Indexing & Real-time (❌ Planned)
-- [ ] **Jetstream Indexer**: Collect/sync `jjalcloud` records from the entire network (Cron Worker)
-- [ ] **Durable Objects**: Indexing cursor management and real-time state synchronization
-- [ ] **Cloudflare D1 Usage**: Global indexing and caching layer (Read Model) for PDS data
-- [ ] **Global Feed & Search**: D1-based sorting (latest), tag filtering, search API
+- [ ] **Monorepo Structure**: Separate `apps/web` (Cloudflare Workers) and `apps/indexer` (Node.js) using pnpm workspace
+- [ ] **Jetstream Indexer (Node.js)**: 
+  - Standalone service ensuring real-time data synchronization to D1
+  - Built with `@atcute/client` and related libraries
+  - Deployed on self-hosted infrastructure (Mini PC)
+- [ ] **Real-time D1 Sync**: Direct database operations from the Indexer
+- [ ] **Global Feed & Search**: D1-based sorting and filtering derived from indexed data
 
-### Phase 4: Frontend (🚧 In Progress)
+### Phase 4: Frontend (✅ Completed)
 - [x] **Hono JSX Renderer**: Basic layout and SSR setup
 - [x] **UnoCSS Integration**: Utility-first CSS styling
 - [x] **Main Feed**: Infinite scroll and feed UI (Indexed GIFs)
@@ -59,17 +62,21 @@ pnpm db:migrate:local
 
 ### Development
 
-Start the development server:
+Start the development environment (Web + Indexer):
 
 ```bash
 pnpm dev
+# This runs both 'apps/web' and 'apps/indexer' concurrently
 ```
 
-For styling updates, run UnoCSS in watch mode in a separate terminal:
+To run individual services:
 
 ```bash
-pnpm uno:watch
+pnpm --filter web dev
+pnpm --filter indexer dev
 ```
+
+> **Note**: The web app must be started at least once to generate the local D1 database file for the indexer to connect to.
 
 ### Deployment
 
