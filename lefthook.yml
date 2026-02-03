@@ -1,0 +1,14 @@
+# Lefthook configuration for pre-commit hooks
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.{js,jsx,ts,tsx,json,jsonc}"
+      run: pnpm biome check --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+    format:
+      glob: "*.{js,jsx,ts,tsx,json,jsonc}"
+      run: pnpm biome format --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
