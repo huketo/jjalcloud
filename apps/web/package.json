@@ -14,8 +14,8 @@
 		"uno": "unocss 'src/**/*.{tsx,ts}' -o src/uno.css",
 		"uno:watch": "unocss 'src/**/*.{tsx,ts}' -o src/uno.css --watch",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate:local": "wrangler d1 migrations apply jjalcloud-db --local",
-		"db:migrate:remote": "wrangler d1 migrations apply jjalcloud-db --remote"
+		"db:migrate:local": "wrangler d1 migrations apply jjalcloud_db --local",
+		"db:migrate:remote": "wrangler d1 migrations apply jjalcloud_db --remote"
 	},
 	"dependencies": {
 		"@atcute/atproto": "^3.1.10",

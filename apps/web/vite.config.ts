@@ -9,13 +9,12 @@ export default defineConfig({
 		cloudflare({
 			configPath: "wrangler.jsonc",
 			persistState: {
-				path: ".wrangler/state/v3",
+				path: ".wrangler/state",
 			},
 		}),
 		ssrPlugin(),
 		UnoCSS(),
 	],
-
 	server: {
 		host: "127.0.0.1",
 		port: 5173,
