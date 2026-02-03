@@ -18,7 +18,7 @@ export const Layout: FC<LayoutProps> = ({
 	children,
 	isLoggedIn = false,
 	showHeader = true,
-	showSearch = false,
+	showSearch: _showSearch = false,
 	showBack = false,
 	title,
 	avatarUrl,

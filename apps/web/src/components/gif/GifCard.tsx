@@ -24,7 +24,7 @@ export const GifCard: FC<GifCardProps> = ({
 	cid,
 	title,
 	alt,
-	tags = [],
+	tags: _tags = [],
 	gifUrl,
 	authorDid,
 	authorHandle,
@@ -32,7 +32,7 @@ export const GifCard: FC<GifCardProps> = ({
 	likeCount = 0,
 	isLiked = false,
 	isTrending = false,
-	createdAt,
+	createdAt: _createdAt,
 	showAuthor = true,
 	showActions = true,
 }) => {

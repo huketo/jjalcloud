@@ -62,7 +62,7 @@ export const UploadForm = ({
 		e.preventDefault();
 		e.stopPropagation();
 		setIsDragOver(false);
-		const dt = (e as any).dataTransfer;
+		const dt = (e as DragEvent).dataTransfer;
 		if (dt?.files && dt.files.length > 0) {
 			const file = dt.files[0];
 			if (fileInputRef.current) {
@@ -118,7 +118,10 @@ export const UploadForm = ({
 			const data = await res.json();
 
 			if (data.error) {
-				setStatus({ type: "error", message: data.message || data.error });
+				setStatus({
+					type: "error",
+					message: data.message || data.error,
+				});
 				setIsUploading(false);
 			} else {
 				setStatus({ type: "success", message: `✅ ${data.message}` });
@@ -132,7 +135,10 @@ export const UploadForm = ({
 				}, 1500);
 			}
 		} catch (_err) {
-			setStatus({ type: "error", message: "Upload failed. Please try again." });
+			setStatus({
+				type: "error",
+				message: "Upload failed. Please try again.",
+			});
 			setIsUploading(false);
 		}
 	};

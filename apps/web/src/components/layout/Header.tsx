@@ -1,4 +1,7 @@
 import type { FC } from "hono/jsx";
+import type { JSX } from "hono/jsx/jsx-runtime";
+
+type SVGProps = JSX.IntrinsicElements["svg"];
 
 // SVG Icons
 const CloudIcon = () => (
@@ -14,7 +17,7 @@ const CloudIcon = () => (
 	</svg>
 );
 
-const UploadIcon = (props: any) => (
+const UploadIcon = (props: SVGProps) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill="none"
@@ -30,7 +33,7 @@ const UploadIcon = (props: any) => (
 	</svg>
 );
 
-const UserIcon = (props: any) => (
+const UserIcon = (props: SVGProps) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill="none"
@@ -59,7 +62,7 @@ const ChevronDownIcon = () => (
 	</svg>
 );
 
-const LogoutIcon = (props: any) => (
+const LogoutIcon = (props: SVGProps) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill="none"
@@ -75,7 +78,7 @@ const LogoutIcon = (props: any) => (
 	</svg>
 );
 
-const MenuIcon = (props: any) => (
+const MenuIcon = (props: SVGProps) => (
 	<svg
 		viewBox="0 0 24 24"
 		fill="none"

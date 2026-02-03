@@ -15,7 +15,25 @@ import { renderer } from "./renderer";
 import gifRoutes from "./routes/gif";
 import likeRoutes from "./routes/like";
 import oauthRoutes from "./routes/oauth";
+import type { GifView } from "./types/gif";
 import { fetchProfile } from "./utils";
+
+// Extended GifView with author info for internal use
+interface GifViewWithAuthor extends GifView {
+	authorDid?: string;
+	authorHandle?: string;
+	authorAvatar?: string;
+}
+
+// Profile data structure
+interface ProfileData {
+	did: string;
+	handle: string;
+	displayName?: string;
+	avatar?: string;
+	description?: string;
+	isFollowing?: boolean;
+}
 
 const app = new Hono<HonoEnv>();
 
@@ -39,8 +57,9 @@ app.get("/api/debug/tables", async (c) => {
 			.prepare("SELECT name FROM sqlite_master WHERE type='table'")
 			.all();
 		return c.json(result);
-	} catch (err: any) {
-		return c.json({ error: err.message }, 500);
+	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : "Unknown error";
+		return c.json({ error: message }, 500);
 	}
 });
 
@@ -83,8 +102,6 @@ app.get("/api/feed", async (c) => {
 			const profile = profiles.get(g.author);
 			// Parse file blob if needed, but for now assuming we construct URL correctly
 			// Need to reconstruct the structure expected by frontend
-			const did = g.uri.split("/")[2];
-			const cid = g.cid; // or extract from file blob ref if needed
 			// g.file is stored as specific object in D1 (JSON)
 			// But types/gif.ts expects `file: BlobRef`.
 			// The `globalGifs` table `file` column is JSON. Cast it.
@@ -122,7 +139,7 @@ app.get("/", async (c) => {
 	const isLoggedIn = !!did;
 
 	// Fetch GIF list (Public Feed from D1)
-	let gifs: any[] = [];
+	let gifs: GifViewWithAuthor[] = [];
 	let avatarUrl: string | undefined;
 
 	// Fetch user profile if logged in
@@ -345,12 +362,12 @@ app.get("/profile/:handle", async (c) => {
 	const isLoggedIn = !!currentDid;
 
 	let isOwnProfile = false;
-	let profile: any = {
+	let profile: ProfileData = {
 		handle: identifier,
 		displayName: identifier,
-		did: identifier.startsWith("did:") ? identifier : undefined,
+		did: identifier.startsWith("did:") ? identifier : "",
 	};
-	let gifs: any[] = [];
+	let gifs: GifViewWithAuthor[] = [];
 
 	// Check if looking at own profile
 	if (isLoggedIn) {

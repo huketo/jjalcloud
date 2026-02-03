@@ -134,9 +134,12 @@ export async function generatePrivateKey(): Promise<{
 	publicJwk: object;
 }> {
 	const key = await JoseKey.generate(["ES256"]);
+	if (!key.privateJwk || !key.publicJwk) {
+		throw new Error("Failed to generate key pair");
+	}
 	return {
-		privateJwk: key.privateJwk!,
-		publicJwk: key.publicJwk!,
+		privateJwk: key.privateJwk,
+		publicJwk: key.publicJwk,
 	};
 }
 

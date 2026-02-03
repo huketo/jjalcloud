@@ -1,5 +1,6 @@
 import { Client, ClientResponseError } from "@atcute/client";
 import type { Context } from "hono";
+import type { StatusCode } from "hono/utils/http-status";
 
 /**
  * Check if running in local development environment.
@@ -67,7 +68,7 @@ export function extractErrorMessage(error: unknown): string {
  */
 export function createErrorResponse(
 	c: Context,
-	statusCode: number,
+	statusCode: StatusCode,
 	errorType: string,
 	error: unknown,
 ) {
@@ -76,7 +77,7 @@ export function createErrorResponse(
 			error: errorType,
 			message: extractErrorMessage(error),
 		},
-		statusCode as any,
+		statusCode,
 	);
 }
 
@@ -88,7 +89,7 @@ export function createSuccessResponse<T extends Record<string, unknown>>(
 	data: T,
 	statusCode: 200 | 201 = 200,
 ) {
-	return c.json(data, statusCode as any);
+	return c.json(data, statusCode);
 }
 
 import { BSKY_PUBLIC_API } from "../constants";

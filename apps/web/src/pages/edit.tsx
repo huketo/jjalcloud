@@ -2,10 +2,22 @@ import type { FC } from "hono/jsx";
 import { Layout } from "../components";
 import type { GifView } from "../types/gif";
 
+interface BlobRef {
+	$link?: string;
+	link?: string;
+}
+
 interface EditPageProps {
 	isLoggedIn: boolean;
 	gif: GifView;
 	avatarUrl?: string;
+}
+
+function getGifUrl(gif: GifView): string {
+	const did = gif.uri.split("/")[2];
+	const ref = gif.file.ref as BlobRef;
+	const cid = ref.$link || ref.link;
+	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
 }
 
 export const EditPage: FC<EditPageProps> = ({ isLoggedIn, gif, avatarUrl }) => {
@@ -46,7 +58,7 @@ export const EditPage: FC<EditPageProps> = ({ isLoggedIn, gif, avatarUrl }) => {
 				<div class="mb-8 flex justify-center">
 					<div class="relative rounded-xl overflow-hidden shadow-card max-h-[300px] inline-block">
 						<img
-							src={`https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${gif.uri.split("/")[2]}&cid=${(gif.file.ref as any).$link || (gif.file.ref as any).link}`}
+							src={getGifUrl(gif)}
 							alt={gif.title || "GIF Preview"}
 							class="max-w-full max-h-[300px] object-contain block"
 						/>

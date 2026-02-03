@@ -80,7 +80,7 @@ oauth.get("/callback", async (c) => {
 		const params = new URLSearchParams(c.req.url.split("?")[1] || "");
 
 		// Handle callback
-		const { session, state } = await client.callback(params);
+		const { session } = await client.callback(params);
 
 		const isLocal = isLocalDevelopment(c.env.PUBLIC_URL);
 

@@ -1,13 +1,12 @@
-import { IdResolver, MemoryCache } from "@atproto/identity";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { Firehose } from "@atproto/sync";
 import { likes } from "@jjalcloud/core";
 import Database from "better-sqlite3";
 import dotenv from "dotenv";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import fs from "fs";
-import path from "path";
 import pino from "pino";
-import { fileURLToPath } from "url";
 
 dotenv.config();
 
@@ -75,7 +74,7 @@ async function main() {
 										: new Date(),
 								})
 								.run();
-						} catch (err: any) {
+						} catch (err: unknown) {
 							logger.error({ err }, "Failed to insert like");
 						}
 					}
@@ -143,10 +142,7 @@ async function main() {
 				} else if (evt.event === "delete") {
 					logger.info({ uri: evt.uri }, "Deleting GIF");
 					try {
-						const { globalGifs } = await import("@jjalcloud/core");
-						// Use better-sqlite3 directly if needed or drizzle
-						// db.delete(globalGifs).where(eq(globalGifs.uri, evt.uri.toString())).run();
-						// Since I can't easily import 'eq' here without potentially messing up imports, I'll use raw SQL for safety as before
+						// Use raw SQL for delete operation
 						sqlite
 							.prepare("DELETE FROM global_gifs WHERE uri = ?")
 							.run(evt.uri.toString());

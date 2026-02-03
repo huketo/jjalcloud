@@ -3,7 +3,13 @@
 	"extends": "//",
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**", "!!.wrangler", "!!drizzle", "!!src/lexicon"]
+		"includes": [
+			"**",
+			"!!.wrangler",
+			"!!drizzle",
+			"!!src/lexicon",
+			"!!worker-configuration.d.ts"
+		]
 	},
 	"linter": {
 		"enabled": true,

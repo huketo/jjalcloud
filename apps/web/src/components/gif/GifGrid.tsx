@@ -14,7 +14,7 @@ export const GifGrid: FC<GifGridProps> = ({ children }) => {
 
 interface GifGridItemProps {
 	children: Child;
-	passedProps?: Record<string, any>;
+	passedProps?: Record<string, unknown>;
 }
 
 export const GifGridItem: FC<GifGridItemProps> = ({
