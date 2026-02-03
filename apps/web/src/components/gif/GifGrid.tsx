@@ -17,6 +17,13 @@ interface GifGridItemProps {
 	passedProps?: Record<string, any>;
 }
 
-export const GifGridItem: FC<GifGridItemProps> = ({ children, passedProps }) => {
-	return <div class="break-inside-avoid mb-4" {...(passedProps || {})}>{children}</div>;
+export const GifGridItem: FC<GifGridItemProps> = ({
+	children,
+	passedProps,
+}) => {
+	return (
+		<div class="break-inside-avoid mb-4" {...(passedProps || {})}>
+			{children}
+		</div>
+	);
 };

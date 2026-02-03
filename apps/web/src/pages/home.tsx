@@ -36,7 +36,10 @@ export const HomePage: FC<HomePageProps> = ({
 			{gifs.length > 0 ? (
 				<GifGrid>
 					{gifs.map((gif) => (
-						<GifGridItem key={gif.rkey} passedProps={{ "data-timestamp": gif.createdAt }}>
+						<GifGridItem
+							key={gif.rkey}
+							passedProps={{ "data-timestamp": gif.createdAt }}
+						>
 							<GifCard
 								rkey={gif.rkey}
 								title={gif.title}
@@ -138,7 +141,9 @@ const RefreshIcon = () => (
 );
 
 const LoadMoreScript = () => (
-    <script dangerouslySetInnerHTML={{ __html: `
+	<script
+		dangerouslySetInnerHTML={{
+			__html: `
         document.addEventListener('DOMContentLoaded', () => {
             const btn = document.getElementById('load-more-btn');
             const grid = document.querySelector('.grid'); // detailed-gif-grid
@@ -241,15 +246,16 @@ const LoadMoreScript = () => (
             
             observer.observe(btn);
         });
-    `}} />
+    `,
+		}}
+	/>
 );
 
-export default function(props: HomePageProps) {
-    return (
-        <>
-            <HomePage {...props} />
-             <LoadMoreScript />
-        </>
-    )
+export default function (props: HomePageProps) {
+	return (
+		<>
+			<HomePage {...props} />
+			<LoadMoreScript />
+		</>
+	);
 }
-

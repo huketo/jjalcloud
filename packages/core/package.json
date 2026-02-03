@@ -3,21 +3,21 @@
 	"version": "0.0.0",
 	"type": "module",
 	"main": "./src/index.ts",
-    "exports": {
-        ".": "./src/index.ts",
-        "./db/schema": "./src/db/schema.ts",
-        "./lexicon": "./src/lexicon/index.ts",
-        "./lexicon/types": "./src/lexicon/types.ts"
-    },
+	"exports": {
+		".": "./src/index.ts",
+		"./db/schema": "./src/db/schema.ts",
+		"./lexicon": "./src/lexicon/index.ts",
+		"./lexicon/types": "./src/lexicon/types.ts"
+	},
 	"scripts": {
 		"lexgen": "lex gen-server ./src/lexicon ./lexicons/**/**/**/*.json"
 	},
 	"dependencies": {
 		"@atproto/lexicon": "^0.6.1",
-    "@atproto/xrpc-server": "^0.10.10",
+		"@atproto/xrpc-server": "^0.10.10",
 		"drizzle-orm": "^0.45.1"
 	},
-    "devDependencies": {
-        "@atproto/lex-cli": "^0.9.8"
-    }
+	"devDependencies": {
+		"@atproto/lex-cli": "^0.9.8"
+	}
 }

@@ -1,3 +1,6 @@
+import { globalGifs } from "@jjalcloud/core";
+import { desc, lt } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 import type { HonoEnv } from "./auth";
@@ -12,12 +15,7 @@ import { renderer } from "./renderer";
 import gifRoutes from "./routes/gif";
 import likeRoutes from "./routes/like";
 import oauthRoutes from "./routes/oauth";
-
 import { fetchProfile } from "./utils";
-import { drizzle } from "drizzle-orm/d1";
-import { desc, lt } from "drizzle-orm";
-import { globalGifs } from "@jjalcloud/core";
-
 
 const app = new Hono<HonoEnv>();
 
@@ -35,73 +33,85 @@ app.route("/api/like", likeRoutes);
 
 // Debug endpoint
 app.get("/api/debug/tables", async (c) => {
-    try {
-        const db = c.env.jjalcloud_db;
-        const result = await db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
-        return c.json(result);
-    } catch (err: any) {
-        return c.json({ error: err.message }, 500);
-    }
+	try {
+		const db = c.env.jjalcloud_db;
+		const result = await db
+			.prepare("SELECT name FROM sqlite_master WHERE type='table'")
+			.all();
+		return c.json(result);
+	} catch (err: any) {
+		return c.json({ error: err.message }, 500);
+	}
 });
 
 // Global Feed API (Load More)
 app.get("/api/feed", async (c) => {
-    const cursor = c.req.query("cursor");
-    const limit = 12;
-    const db = drizzle(c.env.jjalcloud_db);
+	const cursor = c.req.query("cursor");
+	const limit = 12;
+	const db = drizzle(c.env.jjalcloud_db);
 
-    try {
-        let query = db.select().from(globalGifs).orderBy(desc(globalGifs.createdAt)).limit(limit);
-        
-        if (cursor) {
-             query = db.select().from(globalGifs).where(lt(globalGifs.createdAt, new Date(cursor))).orderBy(desc(globalGifs.createdAt)).limit(limit);
-        }
-        
-        const results = await query.all();
-        
-        // Fetch profiles for authors
-        const uniqueDids = [...new Set(results.map(g => g.author))];
-        const profiles = new Map();
-        
-        await Promise.all(uniqueDids.map(async (did) => {
-            const profile = await fetchProfile(did);
-            if (profile) profiles.set(did, profile);
-        }));
-        
-        const gifs = results.map(g => {
-            const profile = profiles.get(g.author);
-            // Parse file blob if needed, but for now assuming we construct URL correctly
-             // Need to reconstruct the structure expected by frontend
-            const did = g.uri.split("/")[2];
-            const cid = g.cid; // or extract from file blob ref if needed
-             // g.file is stored as specific object in D1 (JSON)
-            // But types/gif.ts expects `file: BlobRef`. 
-            // The `globalGifs` table `file` column is JSON. Cast it.
-            
-            return {
-                uri: g.uri,
-                cid: g.cid,
-                rkey: g.uri.split("/").pop() || "",
-                title: g.title,
-                alt: g.alt,
-                tags: g.tags ? JSON.parse(g.tags) : [],
-                file: g.file,
-                createdAt: g.createdAt.toISOString(),
-                authorDid: g.author,
-                authorHandle: profile?.handle || "unknown",
-                authorAvatar: profile?.avatar,
-                likeCount: 0, // Todo: join with likes
-                isLiked: false
-            };
-        });
-        
-        return c.json({ gifs });
-    } catch (err) {
-        console.error("Feed API Error:", err);
-        return c.json({ error: "Failed to fetch feed" }, 500);
-    }
+	try {
+		let query = db
+			.select()
+			.from(globalGifs)
+			.orderBy(desc(globalGifs.createdAt))
+			.limit(limit);
+
+		if (cursor) {
+			query = db
+				.select()
+				.from(globalGifs)
+				.where(lt(globalGifs.createdAt, new Date(cursor)))
+				.orderBy(desc(globalGifs.createdAt))
+				.limit(limit);
+		}
+
+		const results = await query.all();
+
+		// Fetch profiles for authors
+		const uniqueDids = [...new Set(results.map((g) => g.author))];
+		const profiles = new Map();
+
+		await Promise.all(
+			uniqueDids.map(async (did) => {
+				const profile = await fetchProfile(did);
+				if (profile) profiles.set(did, profile);
+			}),
+		);
+
+		const gifs = results.map((g) => {
+			const profile = profiles.get(g.author);
+			// Parse file blob if needed, but for now assuming we construct URL correctly
+			// Need to reconstruct the structure expected by frontend
+			const did = g.uri.split("/")[2];
+			const cid = g.cid; // or extract from file blob ref if needed
+			// g.file is stored as specific object in D1 (JSON)
+			// But types/gif.ts expects `file: BlobRef`.
+			// The `globalGifs` table `file` column is JSON. Cast it.
+
+			return {
+				uri: g.uri,
+				cid: g.cid,
+				rkey: g.uri.split("/").pop() || "",
+				title: g.title,
+				alt: g.alt,
+				tags: g.tags ? JSON.parse(g.tags) : [],
+				file: g.file,
+				createdAt: g.createdAt.toISOString(),
+				authorDid: g.author,
+				authorHandle: profile?.handle || "unknown",
+				authorAvatar: profile?.avatar,
+				likeCount: 0, // Todo: join with likes
+				isLiked: false,
+			};
+		});
+
+		return c.json({ gifs });
+	} catch (err) {
+		console.error("Feed API Error:", err);
+		return c.json({ error: "Failed to fetch feed" }, 500);
+	}
 });
-
 
 // ================================
 // Main Page (Home Feed)
@@ -114,8 +124,8 @@ app.get("/", async (c) => {
 	// Fetch GIF list (Public Feed from D1)
 	let gifs: any[] = [];
 	let avatarUrl: string | undefined;
-    
-    // Fetch user profile if logged in
+
+	// Fetch user profile if logged in
 	if (isLoggedIn) {
 		try {
 			const profileRes = await fetch(
@@ -128,49 +138,54 @@ app.get("/", async (c) => {
 			if (!profileData.error) {
 				avatarUrl = profileData.avatar;
 			}
-        } catch (err) {
-            console.error("Failed to fetch Profile:", err);
-        }
-    }
+		} catch (err) {
+			console.error("Failed to fetch Profile:", err);
+		}
+	}
 
-    // Fetch Global Feed
-    try {
-        const db = drizzle(c.env.jjalcloud_db);
-        const results = await db.select().from(globalGifs).orderBy(desc(globalGifs.createdAt)).limit(20).all();
+	// Fetch Global Feed
+	try {
+		const db = drizzle(c.env.jjalcloud_db);
+		const results = await db
+			.select()
+			.from(globalGifs)
+			.orderBy(desc(globalGifs.createdAt))
+			.limit(20)
+			.all();
 
-         // Fetch profiles for authors
-        const uniqueDids = [...new Set(results.map(g => g.author))];
-        const profiles = new Map();
-        
-        await Promise.all(uniqueDids.map(async (did) => {
-            const profile = await fetchProfile(did);
-            if (profile) profiles.set(did, profile);
-        }));
+		// Fetch profiles for authors
+		const uniqueDids = [...new Set(results.map((g) => g.author))];
+		const profiles = new Map();
 
-        gifs = results.map(g => {
-             const profile = profiles.get(g.author);
-            // Assuming g.file is the BlobRef object (parsed from JSON by drizzle mode: "json")
-            return {
-                uri: g.uri,
-                cid: g.cid,
-                rkey: g.uri.split("/").pop() || "",
-                title: g.title,
-                alt: g.alt,
-                tags: g.tags ? JSON.parse(g.tags) : [],
-                file: g.file,
-                createdAt: g.createdAt.toISOString(),
-                authorDid: g.author,
-                authorHandle: profile?.handle || "unknown",
-                authorAvatar: profile?.avatar,
-                likeCount: 0, 
-                isLiked: false
-            };
-        });
+		await Promise.all(
+			uniqueDids.map(async (did) => {
+				const profile = await fetchProfile(did);
+				if (profile) profiles.set(did, profile);
+			}),
+		);
 
-    } catch(err) {
-        console.error("Failed to fetch global feed:", err);
-    }
-
+		gifs = results.map((g) => {
+			const profile = profiles.get(g.author);
+			// Assuming g.file is the BlobRef object (parsed from JSON by drizzle mode: "json")
+			return {
+				uri: g.uri,
+				cid: g.cid,
+				rkey: g.uri.split("/").pop() || "",
+				title: g.title,
+				alt: g.alt,
+				tags: g.tags ? JSON.parse(g.tags) : [],
+				file: g.file,
+				createdAt: g.createdAt.toISOString(),
+				authorDid: g.author,
+				authorHandle: profile?.handle || "unknown",
+				authorAvatar: profile?.avatar,
+				likeCount: 0,
+				isLiked: false,
+			};
+		});
+	} catch (err) {
+		console.error("Failed to fetch global feed:", err);
+	}
 
 	return c.render(
 		<HomePage

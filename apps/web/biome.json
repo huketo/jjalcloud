@@ -1,23 +1,9 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.3.13/schema.json",
-	"vcs": {
-		"enabled": true,
-		"clientKind": "git",
-		"useIgnoreFile": true
-	},
+	"extends": "//",
 	"files": {
-		"includes": [
-			"**",
-			"!!**/dist",
-			"!!**/node_modules",
-			"!!.wrangler",
-			"!!**/drizzle",
-			"!!**/src/lexicon"
-		]
-	},
-	"formatter": {
-		"enabled": true,
-		"indentStyle": "tab"
+		"ignoreUnknown": false,
+		"includes": ["**", "!!.wrangler", "!!drizzle", "!!src/lexicon"]
 	},
 	"linter": {
 		"enabled": true,
@@ -25,19 +11,6 @@
 			"recommended": true,
 			"a11y": {
 				"noSvgWithoutTitle": "off"
-			}
-		}
-	},
-	"javascript": {
-		"formatter": {
-			"quoteStyle": "double"
-		}
-	},
-	"assist": {
-		"enabled": true,
-		"actions": {
-			"source": {
-				"organizeImports": "on"
 			}
 		}
 	}
