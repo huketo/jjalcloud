@@ -41,6 +41,17 @@ Users own their media on their PDS (Personal Data Server), can easily log in via
 - [x] **Main Feed**: Infinite scroll and feed UI (Indexed GIFs)
 - [x] **Detail Page & Player**: GIF playback and metadata display
 
+### Phase 5: Enhanced Features (🚧 Planned)
+- [ ] **Infinite Scroll**: Auto-loading more content as users scroll
+- [ ] **Search Functionality**:
+  - [ ] Search GIFs by keyword and tags
+  - [ ] Search users by DID and handle
+- [ ] **Social Features**:
+  - [ ] Follow/Unfollow users
+  - [ ] Profile page enhancements:
+    - [ ] Following/Followers tabs
+    - [ ] Liked GIFs list view
+
 ## Getting Started
 
 ### Prerequisites
