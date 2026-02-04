@@ -6,6 +6,7 @@ dist-server/
 .yarn/
 !.yarn/releases
 .vscode/*
+!.vscode/settings.json
 !.vscode/launch.json
 !.vscode/*.code-snippets
 .idea/workspace.xml

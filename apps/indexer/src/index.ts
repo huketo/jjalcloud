@@ -8,19 +8,15 @@ import { globalGifs, likes } from "@jjalcloud/common/db/schema";
 import type { Record as GifRecord } from "@jjalcloud/common/lexicon/types/com/jjalcloud/feed/gif";
 import type { Record as LikeRecord } from "@jjalcloud/common/lexicon/types/com/jjalcloud/feed/like";
 import Database from "better-sqlite3";
-import dotenv from "dotenv";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import pino from "pino";
-
-dotenv.config();
+import { D1HttpClient } from "./d1-client.js";
+import { env, isProduction } from "./env.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const LOG_LEVEL = process.env.LOG_LEVEL || "info";
-const FIREHOSE_URL = process.env.FIREHOSE_URL || "wss://bsky.network";
-
-// Find D1 Database File
+// Find D1 Database File (for development only)
 // Logic: Look for .wrangler/state/v3/d1/miniflare-D1DatabaseObject/*.sqlite in apps/web
 const WORKSPACE_ROOT = path.resolve(__dirname, "../../../");
 const WEB_WRANGLER_DIR = path.join(WORKSPACE_ROOT, "apps/web/.wrangler");
@@ -46,14 +42,126 @@ function findD1Database() {
 	return path.join(d1StateDir, files[0]);
 }
 
-async function main() {
-	const logger = pino({ name: "firehose", level: LOG_LEVEL });
+// Database abstraction layer
+interface DatabaseAdapter {
+	insertLike(data: {
+		subject: string;
+		author: string;
+		rkey: string;
+		createdAt: Date;
+	}): Promise<void>;
+	deleteLike(rkey: string, author: string): Promise<void>;
+	upsertGif(data: {
+		uri: string;
+		cid: string;
+		author: string;
+		title: string | null | undefined;
+		alt: string | null | undefined;
+		tags: string[] | null | undefined;
+		file: unknown;
+		createdAt: Date;
+	}): Promise<void>;
+	deleteGif(uri: string): Promise<void>;
+}
 
-	const dbPath = findD1Database();
-	logger.info({ dbPath }, "Found D1 Database");
-
+// Local SQLite adapter (development)
+function createLocalAdapter(dbPath: string): DatabaseAdapter {
 	const sqlite = new Database(dbPath);
 	const db = drizzle(sqlite);
+
+	return {
+		async insertLike(data) {
+			db.insert(likes)
+				.values({
+					subject: data.subject,
+					author: data.author,
+					rkey: data.rkey,
+					createdAt: data.createdAt,
+				})
+				.run();
+		},
+		async deleteLike(rkey, author) {
+			sqlite
+				.prepare("DELETE FROM likes WHERE rkey = ? AND author = ?")
+				.run(rkey, author);
+		},
+		async upsertGif(data) {
+			db.insert(globalGifs)
+				.values({
+					uri: data.uri,
+					cid: data.cid,
+					author: data.author,
+					title: data.title ?? null,
+					alt: data.alt ?? null,
+					tags: data.tags ? JSON.stringify(data.tags) : null,
+					file: data.file,
+					createdAt: data.createdAt,
+				})
+				.onConflictDoUpdate({
+					target: globalGifs.uri,
+					set: {
+						cid: data.cid,
+						title: data.title ?? null,
+						alt: data.alt ?? null,
+						tags: data.tags ? JSON.stringify(data.tags) : null,
+						file: data.file,
+						createdAt: data.createdAt,
+					},
+				})
+				.run();
+		},
+		async deleteGif(uri) {
+			sqlite.prepare("DELETE FROM global_gifs WHERE uri = ?").run(uri);
+		},
+	};
+}
+
+// Remote D1 adapter (production)
+function createRemoteAdapter(logger: pino.Logger): DatabaseAdapter {
+	const {
+		CLOUDFLARE_ACCOUNT_ID: accountId,
+		CLOUDFLARE_DATABASE_ID: databaseId,
+		CLOUDFLARE_API_TOKEN: apiToken,
+	} = env;
+
+	if (!accountId || !databaseId || !apiToken) {
+		throw new Error(
+			"Missing Cloudflare configuration - CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_DATABASE_ID, and CLOUDFLARE_API_TOKEN are required in production",
+		);
+	}
+
+	const client = new D1HttpClient({
+		accountId,
+		databaseId,
+		apiToken,
+		logger,
+	});
+
+	return {
+		insertLike: (data) => client.insertLike(data),
+		deleteLike: (rkey, author) => client.deleteLike(rkey, author),
+		upsertGif: (data) => client.upsertGif(data),
+		deleteGif: (uri) => client.deleteGif(uri),
+	};
+}
+
+async function main() {
+	const logger = pino({ name: "firehose", level: env.LOG_LEVEL });
+
+	// Initialize database adapter based on environment
+	let adapter: DatabaseAdapter;
+
+	if (isProduction) {
+		logger.info("Running in PRODUCTION mode - connecting to Cloudflare D1");
+		adapter = createRemoteAdapter(logger);
+	} else {
+		const dbPath = findD1Database();
+		logger.info(
+			{ dbPath },
+			"Running in DEVELOPMENT mode - using local D1 database",
+		);
+		adapter = createLocalAdapter(dbPath);
+	}
 
 	const idResolver = new IdResolver({});
 
@@ -87,14 +195,12 @@ async function main() {
 								? new Date(record.createdAt)
 								: new Date();
 
-							db.insert(likes)
-								.values({
-									subject: subjectUri,
-									author: authorDid,
-									rkey: evt.rkey,
-									createdAt,
-								})
-								.run();
+							await adapter.insertLike({
+								subject: subjectUri,
+								author: authorDid,
+								rkey: evt.rkey,
+								createdAt,
+							});
 						} catch (err: unknown) {
 							logger.error({ err }, "Failed to insert like");
 						}
@@ -102,9 +208,7 @@ async function main() {
 				} else if (evt.event === "delete") {
 					logger.info({ uri: evt.uri.toString() }, "Deleting Like");
 					try {
-						sqlite
-							.prepare("DELETE FROM likes WHERE rkey = ? AND author = ?")
-							.run(evt.rkey, evt.did);
+						await adapter.deleteLike(evt.rkey, evt.did);
 					} catch (err) {
 						logger.error({ err }, "Failed to delete like");
 					}
@@ -122,39 +226,23 @@ async function main() {
 							? new Date(record.createdAt)
 							: new Date();
 
-						db.insert(globalGifs)
-							.values({
-								uri: evt.uri.toString(),
-								cid: evt.cid.toString(),
-								author: evt.did,
-								title: record.title,
-								alt: record.alt,
-								tags: record.tags ? JSON.stringify(record.tags) : null,
-								file: record.file, // Stored as JSON
-								createdAt,
-							})
-							.onConflictDoUpdate({
-								target: globalGifs.uri,
-								set: {
-									cid: evt.cid.toString(),
-									title: record.title,
-									alt: record.alt,
-									tags: record.tags ? JSON.stringify(record.tags) : null,
-									file: record.file,
-									createdAt,
-								},
-							})
-							.run();
+						await adapter.upsertGif({
+							uri: evt.uri.toString(),
+							cid: evt.cid.toString(),
+							author: evt.did,
+							title: record.title,
+							alt: record.alt,
+							tags: record.tags,
+							file: record.file,
+							createdAt,
+						});
 					} catch (err) {
 						logger.error({ err }, "Failed to upsert GIF");
 					}
 				} else if (evt.event === "delete") {
 					logger.info({ uri: evt.uri.toString() }, "Deleting GIF");
 					try {
-						// Use raw SQL for delete operation
-						sqlite
-							.prepare("DELETE FROM global_gifs WHERE uri = ?")
-							.run(evt.uri.toString());
+						await adapter.deleteGif(evt.uri.toString());
 					} catch (err) {
 						logger.error({ err }, "Failed to delete GIF");
 					}
@@ -164,12 +252,15 @@ async function main() {
 		onError: (err) => {
 			logger.error({ err }, "Firehose Error");
 		},
-		service: FIREHOSE_URL,
+		service: env.FIREHOSE_URL,
 		excludeIdentity: true,
 		excludeAccount: true,
 	});
 
-	logger.info("Starting Firehose...");
+	logger.info(
+		{ mode: isProduction ? "production" : "development" },
+		"Starting Firehose...",
+	);
 	firehose.start();
 }
 
