@@ -37,6 +37,16 @@ if (editFormRoot) {
 	render(<EditForm {...props} />, editFormRoot);
 }
 
+// Mount Infinite Scroll if present
+import { InfiniteScroll } from "./islands/InfiniteScroll";
+
+const infiniteScrollRoot = document.getElementById("infinite-scroll-root");
+if (infiniteScrollRoot) {
+	const propsInJSON = infiniteScrollRoot.getAttribute("data-props");
+	const props = propsInJSON ? JSON.parse(propsInJSON) : {};
+	render(<InfiniteScroll {...props} />, infiniteScrollRoot);
+}
+
 // Global Event Delegation for simple interactions (like Card Copy)
 document.addEventListener("click", (e) => {
 	const target = (e.target as HTMLElement).closest(

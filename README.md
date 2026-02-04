@@ -38,11 +38,11 @@ Users own their media on their PDS (Personal Data Server), can easily log in via
 ### Phase 4: Frontend (✅ Completed)
 - [x] **Hono JSX Renderer**: Basic layout and SSR setup
 - [x] **UnoCSS Integration**: Utility-first CSS styling
-- [x] **Main Feed**: Infinite scroll and feed UI (Indexed GIFs)
+- [x] **Main Feed**: Simple feed UI (Indexed GIFs)
 - [x] **Detail Page & Player**: GIF playback and metadata display
 
 ### Phase 5: Enhanced Features (🚧 Planned)
-- [ ] **Infinite Scroll**: Auto-loading more content as users scroll
+- [x] **Infinite Scroll**: Auto-loading more content as users scroll
 - [ ] **Search Functionality**:
   - [ ] Search GIFs by keyword and tags
   - [ ] Search users by DID and handle

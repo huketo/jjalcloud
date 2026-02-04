@@ -64,10 +64,11 @@ app.get("/api/debug/tables", async (c) => {
 	}
 });
 
-// Global Feed API (Load More)
+// Global Feed API (Load More / Infinite Scroll)
 app.get("/api/feed", async (c) => {
 	const cursor = c.req.query("cursor");
-	const limit = 12;
+	const limitParam = c.req.query("limit");
+	const limit = limitParam ? Math.min(Number.parseInt(limitParam, 10), 50) : 12;
 	const db = drizzle(c.env.jjalcloud_db);
 
 	try {

@@ -15,6 +15,10 @@ export const FOLLOW_COLLECTION = "com.jjalcloud.graph.follow";
 export const MAX_GIF_SIZE = 20 * 1024 * 1024; // 20MB
 export const MAX_TAGS_COUNT = 10;
 
+// Pagination Constants
+export const INITIAL_LOAD_COUNT = 20;
+export const LOAD_MORE_COUNT = 12;
+
 // ATProto Related
 export const BSKY_PUBLIC_API = "https://public.api.bsky.app";
 export const BSKY_SOCIAL = "https://bsky.social";
