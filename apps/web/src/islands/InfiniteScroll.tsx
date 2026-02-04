@@ -69,12 +69,15 @@ function createGifCardElement(gif: GifData): HTMLElement {
 	return wrapper;
 }
 
-// Wait for all images in an element to load
-function waitForImagesToLoad(container: Element): Promise<void> {
+// Wait for all images in an element to load (with timeout)
+function waitForImagesToLoad(
+	container: Element,
+	timeout = 3000,
+): Promise<void> {
 	const images = container.querySelectorAll("img");
 	if (images.length === 0) return Promise.resolve();
 
-	const promises = Array.from(images).map((img) => {
+	const imagePromises = Array.from(images).map((img) => {
 		if (img.complete) return Promise.resolve();
 		return new Promise<void>((resolve) => {
 			img.addEventListener("load", () => resolve(), { once: true });
@@ -82,7 +85,15 @@ function waitForImagesToLoad(container: Element): Promise<void> {
 		});
 	});
 
-	return Promise.all(promises).then(() => {});
+	// Race between image loading and timeout
+	const timeoutPromise = new Promise<void>((resolve) =>
+		setTimeout(resolve, timeout),
+	);
+
+	return Promise.race([
+		Promise.all(imagePromises).then(() => {}),
+		timeoutPromise,
+	]);
 }
 
 const LoadingSpinner = () => (
@@ -136,11 +147,17 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 			const data = (await res.json()) as { gifs?: GifData[] };
 
 			if (data.gifs && data.gifs.length > 0) {
+				const newCards: HTMLElement[] = [];
+
 				// Append new cards directly to the existing grid (preserves masonry)
 				for (const gif of data.gifs) {
 					const card = createGifCardElement(gif);
 					grid.appendChild(card);
+					newCards.push(card);
 				}
+
+				// Wait for new images to load before updating state
+				await Promise.all(newCards.map((card) => waitForImagesToLoad(card)));
 
 				// Update last timestamp after adding new items
 				updateLastTimestamp();
