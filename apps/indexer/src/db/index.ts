@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { globalGifs, likes } from "@jjalcloud/common/db/schema";
+import { gifs, likes } from "@jjalcloud/common/db/schema";
 import BetterSqlite3 from "better-sqlite3";
 import { and, eq } from "drizzle-orm";
 import { drizzle as drizzleBetterSqlite } from "drizzle-orm/better-sqlite3";
@@ -38,7 +38,7 @@ function findD1Database() {
 }
 
 // Schema for type inference
-const schema = { likes, globalGifs };
+const schema = { likes, gifs };
 
 // Common database type that works with both sync and async drivers
 // biome-ignore lint/suspicious/noExplicitAny: Required for generic database type
@@ -122,7 +122,7 @@ export const dbOperations = {
 		},
 	) {
 		await db
-			.insert(globalGifs)
+			.insert(gifs)
 			.values({
 				uri: data.uri,
 				cid: data.cid,
@@ -134,7 +134,7 @@ export const dbOperations = {
 				createdAt: data.createdAt,
 			})
 			.onConflictDoUpdate({
-				target: globalGifs.uri,
+				target: gifs.uri,
 				set: {
 					cid: data.cid,
 					title: data.title ?? null,
@@ -147,6 +147,6 @@ export const dbOperations = {
 	},
 
 	async deleteGif(db: Database, uri: string) {
-		await db.delete(globalGifs).where(eq(globalGifs.uri, uri));
+		await db.delete(gifs).where(eq(gifs.uri, uri));
 	},
 };

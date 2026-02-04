@@ -4,6 +4,7 @@ import { Firehose } from "@atproto/sync";
 import type { Record as GifRecord } from "@jjalcloud/common/lexicon/types/com/jjalcloud/feed/gif";
 import type { Record as LikeRecord } from "@jjalcloud/common/lexicon/types/com/jjalcloud/feed/like";
 import pino from "pino";
+import { backfill, parseDids } from "./backfill.js";
 import {
 	createLocalDatabase,
 	createRemoteDatabase,
@@ -12,8 +13,58 @@ import {
 } from "./db/index.js";
 import { env, isProduction } from "./env.js";
 
+type Command = "start" | "backfill";
+
+function parseArgs(): { command: Command; dids?: string; pds?: string } {
+	const args = process.argv.slice(2);
+	const command = (args[0] as Command) || "start";
+
+	let dids: string | undefined;
+	let pds: string | undefined;
+
+	for (let i = 1; i < args.length; i++) {
+		if (args[i] === "--dids" && args[i + 1]) {
+			dids = args[i + 1];
+			i++;
+		} else if (args[i] === "--pds" && args[i + 1]) {
+			pds = args[i + 1];
+			i++;
+		}
+	}
+
+	return { command, dids, pds };
+}
+
+function printUsage() {
+	console.log(`
+Usage: indexer <command> [options]
+
+Commands:
+  start              Start the real-time firehose indexer (default)
+  backfill           Backfill existing records from AT Protocol repos
+
+Options for backfill:
+  --dids <did1,did2> Comma-separated list of DIDs to backfill
+                     If not provided, backfills all authors found in the database
+  --pds <url>        PDS URL to fetch records from (default: https://bsky.social)
+
+Examples:
+  pnpm start                          # Start real-time indexer
+  pnpm backfill                       # Backfill all known authors from DB
+  pnpm backfill --dids did:plc:xxx    # Backfill specific user
+  pnpm backfill --dids did:plc:xxx,did:plc:yyy --pds https://custom.pds
+`);
+}
+
 async function main() {
-	const logger = pino({ name: "firehose", level: env.LOG_LEVEL });
+	const { command, dids, pds } = parseArgs();
+
+	if (command !== "start" && command !== "backfill") {
+		printUsage();
+		process.exit(1);
+	}
+
+	const logger = pino({ name: "indexer", level: env.LOG_LEVEL });
 
 	// Initialize database based on environment
 	let db: Database;
@@ -49,6 +100,20 @@ async function main() {
 		db = createLocalDatabase(logger);
 	}
 
+	// Execute command
+	if (command === "backfill") {
+		logger.info("Starting backfill...");
+		await backfill({
+			db,
+			logger,
+			dids: parseDids(dids),
+			pdsUrl: pds,
+		});
+		logger.info("Backfill finished");
+		return;
+	}
+
+	// Default: start firehose
 	const idResolver = new IdResolver({});
 
 	const firehose = new Firehose({

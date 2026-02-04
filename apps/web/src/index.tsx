@@ -1,5 +1,5 @@
 import type { BlobRef } from "@atproto/lexicon";
-import { globalGifs } from "@jjalcloud/common/db/schema";
+import { gifs as gifsTable } from "@jjalcloud/common/db/schema";
 import { desc, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -73,16 +73,16 @@ app.get("/api/feed", async (c) => {
 	try {
 		const query = db
 			.select()
-			.from(globalGifs)
-			.orderBy(desc(globalGifs.createdAt))
+			.from(gifsTable)
+			.orderBy(desc(gifsTable.createdAt))
 			.limit(limit);
 
 		const results = cursor
 			? await db
 					.select()
-					.from(globalGifs)
-					.where(lt(globalGifs.createdAt, new Date(cursor)))
-					.orderBy(desc(globalGifs.createdAt))
+					.from(gifsTable)
+					.where(lt(gifsTable.createdAt, new Date(cursor)))
+					.orderBy(desc(gifsTable.createdAt))
 					.limit(limit)
 					.all()
 			: await query.all();
@@ -104,7 +104,7 @@ app.get("/api/feed", async (c) => {
 			// Need to reconstruct the structure expected by frontend
 			// g.file is stored as specific object in D1 (JSON)
 			// But types/gif.ts expects `file: BlobRef`.
-			// The `globalGifs` table `file` column is JSON. Cast it.
+			// The `gifs` table `file` column is JSON. Cast it.
 
 			return {
 				uri: g.uri,
@@ -167,8 +167,8 @@ app.get("/", async (c) => {
 		const db = drizzle(c.env.jjalcloud_db);
 		const results = await db
 			.select()
-			.from(globalGifs)
-			.orderBy(desc(globalGifs.createdAt))
+			.from(gifsTable)
+			.orderBy(desc(gifsTable.createdAt))
 			.limit(20)
 			.all();
 

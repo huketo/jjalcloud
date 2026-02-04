@@ -23,14 +23,17 @@ Users own their media on their PDS (Personal Data Server), can easily log in via
 - [x] **Social Interaction API**:
   - [x] Like
 
-### Phase 3: Indexing & Real-time (❌ Planned)
-- [ ] **Monorepo Structure**: Separate `apps/web` (Cloudflare Workers) and `apps/indexer` (Node.js) using pnpm workspace
-- [ ] **Jetstream Indexer (Node.js)**: 
+### Phase 3: Indexing & Real-time (✅ Completed)
+- [x] **Monorepo Structure**: Separate `apps/web` (Cloudflare Workers) and `apps/indexer` (Node.js) using pnpm workspace
+- [x] **Firehose Indexer (Node.js)**: 
   - Standalone service ensuring real-time data synchronization to D1
-  - Built with `@atcute/client` and related libraries
+  - Built with `@atproto/sync` Firehose client
+  - Filters and indexes `com.jjalcloud.feed.gif` and `com.jjalcloud.feed.like` collections
   - Deployed on self-hosted infrastructure (Mini PC)
-- [ ] **Real-time D1 Sync**: Direct database operations from the Indexer
-- [ ] **Global Feed & Search**: D1-based sorting and filtering derived from indexed data
+- [x] **Real-time D1 Sync**: Direct database operations from the Indexer
+- [x] **Backfill Support**: Historical record indexing via `com.atproto.repo.listRecords` API
+- [x] **User Management**: OAuth login saves user info to D1 for backfill targeting
+- [x] **Global Feed**: D1-based sorting and filtering derived from indexed data
 
 ### Phase 4: Frontend (✅ Completed)
 - [x] **Hono JSX Renderer**: Basic layout and SSR setup
@@ -58,6 +61,24 @@ Initialize the D1 database:
 ```bash
 pnpm db:generate
 pnpm db:migrate:local
+```
+
+### Indexer Setup
+
+The indexer runs as a standalone Node.js service that connects to the local D1 database.
+
+**Environment Variables** (`.env` in `apps/indexer`):
+
+```env
+NODE_ENV=development
+FIREHOSE_URL=wss://bsky.network
+LOG_LEVEL=info
+
+# For production
+# NODE_ENV=production
+# CLOUDFLARE_ACCOUNT_ID=your_account_id
+# CLOUDFLARE_DATABASE_ID=your_database_id
+# CLOUDFLARE_API_TOKEN=your_api_token
 ```
 
 ### Development
@@ -101,3 +122,65 @@ Generate TypeScript types from Lexicon definitions:
 ```bash
 pnpm lexgen
 ```
+
+## Database Schema
+
+The D1 database includes the following tables:
+
+- **`users`**: Stores user information from OAuth login (DID, handle, display name, avatar)
+- **`gifs`**: Indexed GIF records from AT Protocol (URI, CID, author, title, alt, tags, file blob)
+- **`likes`**: Indexed like records (subject URI, author DID, rkey)
+
+## Indexer Commands
+
+The indexer supports two main operations:
+
+### Real-time Indexing (Default)
+
+Start the Firehose indexer to capture new records in real-time:
+
+```bash
+pnpm --filter indexer dev    # Development mode with watch
+pnpm --filter indexer start  # Production mode
+```
+
+### Backfill Existing Records
+
+Backfill historical GIF and Like records for specific users:
+
+```bash
+# Backfill all users from the database
+pnpm --filter indexer backfill
+
+# Backfill specific DIDs
+pnpm --filter indexer backfill -- --dids did:plc:xxx,did:plc:yyy
+
+# Backfill from a custom PDS
+pnpm --filter indexer backfill -- --dids did:plc:xxx --pds https://custom.pds
+```
+
+## Project Structure
+
+```
+jjalcloud/
+├── apps/
+│   ├── web/              # Cloudflare Workers (Hono + JSX)
+│   │   ├── src/
+│   │   │   ├── auth/     # OAuth client
+│   │   │   ├── routes/   # API routes
+│   │   │   ├── pages/    # JSX pages
+│   │   │   └── index.tsx
+│   │   └── drizzle/      # D1 migrations
+│   └── indexer/          # Node.js Firehose indexer
+│       └── src/
+│           ├── index.ts  # Main indexer + CLI
+│           ├── backfill.ts
+│           └── db/       # Database operations
+└── packages/
+    └── common/           # Shared code
+        ├── lexicons/     # Lexicon definitions
+        └── src/
+            ├── db/       # Database schema
+            └── lexicon/  # Generated types
+```
+

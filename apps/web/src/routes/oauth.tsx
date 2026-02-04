@@ -1,3 +1,5 @@
+import { users } from "@jjalcloud/common/db/schema";
+import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { HonoEnv } from "../auth";
@@ -83,6 +85,43 @@ oauth.get("/callback", async (c) => {
 		const { session } = await client.callback(params);
 
 		const isLocal = isLocalDevelopment(c.env.PUBLIC_URL);
+
+		// Fetch user profile to store in DB
+		try {
+			const profileResponse = await session.fetchHandler(
+				`${BSKY_PUBLIC_API}/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(session.did)}`,
+			);
+
+			if (profileResponse.ok) {
+				const profile = (await profileResponse.json()) as ProfileResponse;
+
+				// Save or update user in database
+				const db = drizzle(c.env.jjalcloud_db, { schema: { users } });
+				await db
+					.insert(users)
+					.values({
+						did: profile.did,
+						handle: profile.handle,
+						displayName: profile.displayName || null,
+						avatar: profile.avatar || null,
+						lastLoginAt: new Date(),
+					})
+					.onConflictDoUpdate({
+						target: users.did,
+						set: {
+							handle: profile.handle,
+							displayName: profile.displayName || null,
+							avatar: profile.avatar || null,
+							lastLoginAt: new Date(),
+						},
+					});
+
+				console.log(`User saved to DB: ${profile.handle} (${profile.did})`);
+			}
+		} catch (profileError) {
+			// Profile fetch 실패해도 로그인은 계속 진행
+			console.error("Failed to fetch/save profile:", profileError);
+		}
 
 		// Set session cookie (store DID)
 		setCookie(c, SESSION_COOKIE, session.did, {
