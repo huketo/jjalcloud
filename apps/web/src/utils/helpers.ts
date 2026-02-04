@@ -1,6 +1,5 @@
 import { Client, ClientResponseError } from "@atcute/client";
 import type { Context } from "hono";
-import type { StatusCode } from "hono/utils/http-status";
 
 /**
  * Check if running in local development environment.
@@ -68,7 +67,7 @@ export function extractErrorMessage(error: unknown): string {
  */
 export function createErrorResponse(
 	c: Context,
-	statusCode: StatusCode,
+	statusCode: 200 | 201 | 400 | 401 | 403 | 404 | 500,
 	errorType: string,
 	error: unknown,
 ) {
@@ -108,7 +107,13 @@ export async function fetchProfile(did: string) {
 			return null;
 		}
 
-		const data = await response.json();
+		const data = (await response.json()) as {
+			did: string;
+			handle: string;
+			displayName?: string;
+			avatar?: string;
+			description?: string;
+		};
 		return {
 			did: data.did,
 			handle: data.handle,

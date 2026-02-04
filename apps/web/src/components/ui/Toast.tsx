@@ -4,7 +4,7 @@ import { useEffect, useState } from "hono/jsx";
 // Simple event bus for toasts
 type ToastEvent = CustomEvent<{
 	message: string;
-	type?: "success" | "error" | "info";
+	type: "success" | "error" | "info";
 }>;
 const TOAST_EVENT = "show-toast";
 
@@ -13,21 +13,36 @@ export const showToast = (
 	type: "success" | "error" | "info" = "success",
 ) => {
 	if (typeof window !== "undefined") {
-		const event = new CustomEvent(TOAST_EVENT, { detail: { message, type } });
+		const event = new CustomEvent(TOAST_EVENT, {
+			detail: { message, type },
+		});
 		window.dispatchEvent(event);
 	}
 };
 
+interface Toast {
+	id: number;
+	message: string;
+	type: "success" | "error" | "info";
+	closing?: boolean;
+}
+
 export const ToastContainer = () => {
-	const [toasts, setToasts] = useState<
-		{ id: number; message: string; type: string; closing?: boolean }[]
-	>([]);
+	const [toasts, setToasts] = useState<Toast[]>([]);
 
 	useEffect(() => {
 		const handleToast = (e: Event) => {
 			const event = e as ToastEvent;
 			const id = Date.now();
-			setToasts((prev) => [...prev, { id, ...event.detail, closing: false }]);
+			setToasts((prev) => [
+				...prev,
+				{
+					id,
+					message: event.detail.message,
+					type: event.detail.type,
+					closing: false,
+				},
+			]);
 
 			// Start exit animation
 			setTimeout(() => {

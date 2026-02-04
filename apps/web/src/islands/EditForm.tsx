@@ -26,9 +26,11 @@ export const EditForm = ({
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
 	// Controlled inputs state
-	const [title, setTitle] = useState(initialTitle);
-	const [tags, setTags] = useState(initialTags.join(", "));
-	const [alt, setAlt] = useState(initialAlt);
+	const [title, setTitle] = useState<string>(initialTitle);
+	const [tags, setTags] = useState<string>(
+		initialTags ? initialTags.join(", ") : "",
+	);
+	const [alt, setAlt] = useState<string>(initialAlt);
 
 	const handleSubmit = async (e: Event) => {
 		e.preventDefault();
@@ -60,10 +62,16 @@ export const EditForm = ({
 				}),
 			});
 
-			const data = await res.json();
+			const data = (await res.json()) as {
+				success?: boolean;
+				message?: string;
+			};
 
 			if (res.ok) {
-				setStatus({ type: "success", message: "✅ Updated successfully!" });
+				setStatus({
+					type: "success",
+					message: "✅ Updated successfully!",
+				});
 				setTimeout(() => {
 					window.location.href = `/gif/${rkey}`;
 				}, 1000);
@@ -89,10 +97,16 @@ export const EditForm = ({
 				method: "DELETE",
 			});
 
-			const data = await res.json();
+			const data = (await res.json()) as {
+				success?: boolean;
+				message?: string;
+			};
 
 			if (res.ok) {
-				setStatus({ type: "success", message: "✅ Deleted successfully." });
+				setStatus({
+					type: "success",
+					message: "✅ Deleted successfully.",
+				});
 				setTimeout(() => {
 					window.location.href = "/";
 				}, 1000);
@@ -137,7 +151,9 @@ export const EditForm = ({
 						id="title"
 						name="title"
 						value={title}
-						onInput={(e) => setTitle(e.currentTarget.value)}
+						onInput={(e) =>
+							setTitle((e.target as HTMLInputElement)?.value || "")
+						}
 						placeholder="Give it a catchy name..."
 						maxLength={100}
 					/>
@@ -152,7 +168,9 @@ export const EditForm = ({
 							id="tags"
 							name="tags"
 							value={tags}
-							onInput={(e) => setTags(e.currentTarget.value)}
+							onInput={(e) =>
+								setTags((e.target as HTMLInputElement)?.value || "")
+							}
 							placeholder="funny, cat, reaction..."
 						/>
 					</div>
@@ -168,7 +186,9 @@ export const EditForm = ({
 						id="alt"
 						name="alt"
 						value={alt}
-						onInput={(e) => setAlt(e.currentTarget.value)}
+						onInput={(e) =>
+							setAlt((e.target as HTMLTextAreaElement)?.value || "")
+						}
 						placeholder="Add some context..."
 						maxLength={300}
 					/>

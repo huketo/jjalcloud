@@ -1,8 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { IdResolver } from "@atproto/identity";
+import type { Event } from "@atproto/sync";
 import { Firehose } from "@atproto/sync";
-import { likes } from "@jjalcloud/core";
+import { globalGifs, likes } from "@jjalcloud/common/db/schema";
+import type { Record as GifRecord } from "@jjalcloud/common/lexicon/types/com/jjalcloud/feed/gif";
+import type { Record as LikeRecord } from "@jjalcloud/common/lexicon/types/com/jjalcloud/feed/like";
 import Database from "better-sqlite3";
 import dotenv from "dotenv";
 import { drizzle } from "drizzle-orm/better-sqlite3";
@@ -51,27 +55,44 @@ async function main() {
 	const sqlite = new Database(dbPath);
 	const db = drizzle(sqlite);
 
+	const idResolver = new IdResolver({});
+
 	const firehose = new Firehose({
+		idResolver,
 		filterCollections: ["com.jjalcloud.feed.like", "com.jjalcloud.feed.gif"],
-		handleEvent: async (evt) => {
+		handleEvent: async (evt: Event) => {
+			// Only handle commit events (create, update, delete)
+			if (
+				evt.event !== "create" &&
+				evt.event !== "update" &&
+				evt.event !== "delete"
+			) {
+				return;
+			}
+
 			// Handle Like events
 			if (evt.collection === "com.jjalcloud.feed.like") {
 				if (evt.event === "create" || evt.event === "update") {
-					const record = evt.record;
-					const subjectUri = record.subject?.uri;
+					const record = evt.record as LikeRecord;
+					const subjectUri = record.subject?.uri as string | undefined;
 					const authorDid = evt.did;
 
 					if (subjectUri && authorDid) {
-						logger.info({ uri: evt.uri, author: authorDid }, "Indexing Like");
+						logger.info(
+							{ uri: evt.uri.toString(), author: authorDid },
+							"Indexing Like",
+						);
 						try {
+							const createdAt = record.createdAt
+								? new Date(record.createdAt)
+								: new Date();
+
 							db.insert(likes)
 								.values({
 									subject: subjectUri,
 									author: authorDid,
-									rkey: evt.uri.toString().split("/").pop() || "",
-									createdAt: record.createdAt
-										? new Date(record.createdAt)
-										: new Date(),
+									rkey: evt.rkey,
+									createdAt,
 								})
 								.run();
 						} catch (err: unknown) {
@@ -79,22 +100,11 @@ async function main() {
 						}
 					}
 				} else if (evt.event === "delete") {
-					logger.info({ uri: evt.uri }, "Deleting Like");
+					logger.info({ uri: evt.uri.toString() }, "Deleting Like");
 					try {
-						// Simplify delete for now using raw query as 'likes' table might not match exactly what we thought or to be safe
-						// Assuming schema has 'rkey' and 'author' or specific ID?
-						// The previous code had: sqlite.prepare('DELETE FROM likes WHERE uri = ?').run(evt.uri.toString());
-						// But schemas.ts for likes has: subject, author, rkey, createdAt. It DOES NOT have 'uri' column explicitly in the view above unless added?
-						// Let's re-read schema.ts carefully.
-						// schema.ts: likes has id, subject, author, rkey, createdAt. NO URI.
-						// So we must delete by rkey and author? Or just rkey if unique per collection?
-						// Rkey is unique within a collection (author). So author + rkey.
-						const rkey = evt.uri.toString().split("/").pop();
-						if (rkey) {
-							sqlite
-								.prepare("DELETE FROM likes WHERE rkey = ? AND author = ?")
-								.run(rkey, evt.did);
-						}
+						sqlite
+							.prepare("DELETE FROM likes WHERE rkey = ? AND author = ?")
+							.run(evt.rkey, evt.did);
 					} catch (err) {
 						logger.error({ err }, "Failed to delete like");
 					}
@@ -104,35 +114,34 @@ async function main() {
 			// Handle GIF events
 			if (evt.collection === "com.jjalcloud.feed.gif") {
 				if (evt.event === "create" || evt.event === "update") {
-					const record = evt.record;
-					logger.info({ uri: evt.uri }, "Indexing GIF");
+					const record = evt.record as GifRecord;
+					logger.info({ uri: evt.uri.toString() }, "Indexing GIF");
 
 					try {
-						const { globalGifs } = await import("@jjalcloud/core");
+						const createdAt = record.createdAt
+							? new Date(record.createdAt)
+							: new Date();
+
 						db.insert(globalGifs)
 							.values({
 								uri: evt.uri.toString(),
-								cid: evt.cid?.toString() || "",
+								cid: evt.cid.toString(),
 								author: evt.did,
 								title: record.title,
 								alt: record.alt,
 								tags: record.tags ? JSON.stringify(record.tags) : null,
 								file: record.file, // Stored as JSON
-								createdAt: record.createdAt
-									? new Date(record.createdAt)
-									: new Date(),
+								createdAt,
 							})
 							.onConflictDoUpdate({
 								target: globalGifs.uri,
 								set: {
-									cid: evt.cid?.toString(),
+									cid: evt.cid.toString(),
 									title: record.title,
 									alt: record.alt,
 									tags: record.tags ? JSON.stringify(record.tags) : null,
 									file: record.file,
-									createdAt: record.createdAt
-										? new Date(record.createdAt)
-										: new Date(),
+									createdAt,
 								},
 							})
 							.run();
@@ -140,7 +149,7 @@ async function main() {
 						logger.error({ err }, "Failed to upsert GIF");
 					}
 				} else if (evt.event === "delete") {
-					logger.info({ uri: evt.uri }, "Deleting GIF");
+					logger.info({ uri: evt.uri.toString() }, "Deleting GIF");
 					try {
 						// Use raw SQL for delete operation
 						sqlite

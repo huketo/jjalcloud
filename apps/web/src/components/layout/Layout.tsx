@@ -10,6 +10,7 @@ interface LayoutProps {
 	showHeader?: boolean;
 	showSearch?: boolean;
 	showBack?: boolean;
+	showFooter?: boolean;
 	title?: string;
 	avatarUrl?: string;
 }

@@ -2,11 +2,6 @@ import type { FC } from "hono/jsx";
 import { Layout } from "../components";
 import type { GifView } from "../types/gif";
 
-interface BlobRef {
-	$link?: string;
-	link?: string;
-}
-
 interface DetailPageProps {
 	isLoggedIn: boolean;
 	isOwner?: boolean;
@@ -20,8 +15,7 @@ interface GifViewWithAuthor extends GifView {
 	authorHandle?: string;
 	authorAvatar?: string;
 	authorDisplayName?: string;
-	likeCount?: number;
-	isLiked?: boolean;
+	commentCount?: number;
 }
 
 export const DetailPage: FC<DetailPageProps> = ({
@@ -223,7 +217,7 @@ export const DetailPage: FC<DetailPageProps> = ({
 // Helper functions
 function getGifUrl(gif: GifView): string {
 	const did = gif.uri.split("/")[2];
-	const ref = gif.file.ref as BlobRef;
+	const ref = gif.file.ref as unknown as { $link?: string; link?: string };
 	const cid = ref.$link || ref.link;
 	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
 }

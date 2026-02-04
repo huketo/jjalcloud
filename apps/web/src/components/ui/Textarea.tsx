@@ -1,7 +1,14 @@
-import type { JSX } from "hono/jsx";
-
-interface TextareaProps extends JSX.TextareaHTMLAttributes {
+interface TextareaProps {
 	className?: string;
+	id?: string;
+	name?: string;
+	value?: string;
+	placeholder?: string;
+	maxLength?: number;
+	onInput?: (e: Event) => void;
+	disabled?: boolean;
+	required?: boolean;
+	rows?: number;
 }
 
 export const Textarea = (props: TextareaProps) => {

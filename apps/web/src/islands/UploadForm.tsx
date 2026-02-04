@@ -115,12 +115,16 @@ export const UploadForm = ({
 				method: "POST",
 				body: formData,
 			});
-			const data = await res.json();
+			const data = (await res.json()) as {
+				error?: string | boolean;
+				message?: string;
+				uri?: string;
+			};
 
 			if (data.error) {
 				setStatus({
 					type: "error",
-					message: data.message || data.error,
+					message: data.message || String(data.error),
 				});
 				setIsUploading(false);
 			} else {

@@ -1,7 +1,14 @@
-import type { JSX } from "hono/jsx";
-
-interface InputProps extends JSX.InputHTMLAttributes {
+interface InputProps {
 	className?: string;
+	type?: string;
+	id?: string;
+	name?: string;
+	value?: string;
+	placeholder?: string;
+	maxLength?: number;
+	onInput?: (e: Event) => void;
+	disabled?: boolean;
+	required?: boolean;
 }
 
 export const Input = (props: InputProps) => {

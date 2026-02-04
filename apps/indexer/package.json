@@ -3,13 +3,14 @@
 	"type": "module",
 	"scripts": {
 		"dev": "tsx watch src/index.ts",
-		"start": "tsx src/index.ts"
+		"build": "tsc",
+		"start": "node dist/index.js"
 	},
 	"dependencies": {
 		"@atcute/client": "^4.2.1",
 		"@atproto/identity": "^0.4.4",
 		"@atproto/sync": "^0.1.6",
-		"@jjalcloud/core": "workspace:*",
+		"@jjalcloud/common": "workspace:*",
 		"better-sqlite3": "^11.8.1",
 		"dotenv": "^17.2.3",
 		"drizzle-orm": "^0.45.1",
@@ -21,6 +22,7 @@
 		"@types/node": "^22.10.6",
 		"@types/ws": "^8.5.13",
 		"tsx": "^4.19.2",
-		"typescript": "^5.7.3"
+		"typescript": "^5.7.3",
+		"zod": "^4.3.6"
 	}
 }

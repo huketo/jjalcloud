@@ -2,7 +2,7 @@ import type {} from "@atcute/atproto";
 import { ClientResponseError, ok } from "@atcute/client";
 import type { Did } from "@atcute/lexicons/syntax";
 import { TID } from "@atproto/common-web";
-import { likes } from "@jjalcloud/core";
+import { likes } from "@jjalcloud/common/db/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -203,11 +203,11 @@ gif.get("/:rkey", requireAuth, async (c) => {
 			uri: data.uri,
 			cid: data.cid,
 			rkey,
-			title: (data.value as GifRecord).title,
-			alt: (data.value as GifRecord).alt,
-			tags: (data.value as GifRecord).tags || [],
-			file: (data.value as GifRecord).file,
-			createdAt: (data.value as GifRecord).createdAt,
+			title: (data.value as unknown as GifRecord).title,
+			alt: (data.value as unknown as GifRecord).alt,
+			tags: (data.value as unknown as GifRecord).tags || [],
+			file: (data.value as unknown as GifRecord).file,
+			createdAt: (data.value as unknown as GifRecord).createdAt,
 			likeCount: Number(likeCount),
 			isLiked,
 		});
@@ -349,7 +349,7 @@ gif.put("/:rkey", requireAuth, async (c) => {
 			tags?: string[];
 		};
 
-		const existingValue = existingData.value as GifRecord;
+		const existingValue = existingData.value as unknown as GifRecord;
 
 		// Create record to update (preserve existing values, overwrite with new ones)
 		const updatedRecord: Record<string, unknown> = {

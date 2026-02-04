@@ -1,16 +1,24 @@
-import type { JSX } from "hono/jsx";
+import type { Child } from "hono/jsx";
 
-interface LabelProps extends JSX.LabelHTMLAttributes {
+interface LabelProps {
 	className?: string;
-	children: JSX.Element | string;
+	children: Child;
+	for?: string;
+	htmlFor?: string;
 }
 
 export const Label = (props: LabelProps) => {
-	const { className = "", children, ...rest } = props;
+	const {
+		className = "",
+		children,
+		for: htmlForAttr,
+		htmlFor,
+		...rest
+	} = props;
 	return (
-		// biome-ignore lint/a11y/noLabelWithoutControl: generic label component
 		<label
 			class={`block text-sm font-medium text-brand-primary mb-2 ${className}`}
+			for={htmlForAttr || htmlFor}
 			{...rest}
 		>
 			{children}

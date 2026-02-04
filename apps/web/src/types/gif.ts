@@ -24,8 +24,8 @@ export interface GifView {
 	tags: string[];
 	file: BlobRef;
 	createdAt: string;
-	likeCount: number;
-	isLiked: boolean;
+	likeCount?: number;
+	isLiked?: boolean;
 }
 
 /**

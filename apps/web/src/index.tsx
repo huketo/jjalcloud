@@ -1,4 +1,5 @@
-import { globalGifs } from "@jjalcloud/core";
+import type { BlobRef } from "@atproto/lexicon";
+import { globalGifs } from "@jjalcloud/common/db/schema";
 import { desc, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -70,22 +71,21 @@ app.get("/api/feed", async (c) => {
 	const db = drizzle(c.env.jjalcloud_db);
 
 	try {
-		let query = db
+		const query = db
 			.select()
 			.from(globalGifs)
 			.orderBy(desc(globalGifs.createdAt))
 			.limit(limit);
 
-		if (cursor) {
-			query = db
-				.select()
-				.from(globalGifs)
-				.where(lt(globalGifs.createdAt, new Date(cursor)))
-				.orderBy(desc(globalGifs.createdAt))
-				.limit(limit);
-		}
-
-		const results = await query.all();
+		const results = cursor
+			? await db
+					.select()
+					.from(globalGifs)
+					.where(lt(globalGifs.createdAt, new Date(cursor)))
+					.orderBy(desc(globalGifs.createdAt))
+					.limit(limit)
+					.all()
+			: await query.all();
 
 		// Fetch profiles for authors
 		const uniqueDids = [...new Set(results.map((g) => g.author))];
@@ -151,7 +151,9 @@ app.get("/", async (c) => {
 					headers: { Cookie: c.req.header("Cookie") || "" },
 				},
 			);
-			const profileData = await profileRes.json();
+			const profileData = (await profileRes.json()) as ProfileData & {
+				error?: string;
+			};
 			if (!profileData.error) {
 				avatarUrl = profileData.avatar;
 			}
@@ -188,10 +190,10 @@ app.get("/", async (c) => {
 				uri: g.uri,
 				cid: g.cid,
 				rkey: g.uri.split("/").pop() || "",
-				title: g.title,
-				alt: g.alt,
+				title: g.title ?? undefined,
+				alt: g.alt ?? undefined,
 				tags: g.tags ? JSON.parse(g.tags) : [],
-				file: g.file,
+				file: g.file as BlobRef,
 				createdAt: g.createdAt.toISOString(),
 				authorDid: g.author,
 				authorHandle: profile?.handle || "unknown",
@@ -247,7 +249,12 @@ app.get("/gif/:rkey", async (c) => {
 				headers: { Cookie: c.req.header("Cookie") || "" },
 			},
 		);
-		const data = await response.json();
+		const data = (await response.json()) as {
+			error?: boolean;
+			message?: string;
+			uri?: string;
+			[key: string]: unknown;
+		};
 
 		if (data.error) {
 			return c.render(
@@ -267,15 +274,25 @@ app.get("/gif/:rkey", async (c) => {
 
 		// Extract author DID from URI
 		const authorDid = data.uri ? data.uri.split("/")[2] : did;
-		const authorProfile = await fetchProfile(authorDid);
+		const authorProfile = authorDid ? await fetchProfile(authorDid) : null;
 
 		const gif = {
-			...data,
+			uri: data.uri as string,
+			cid: data.cid as string,
+			rkey: rkey,
+			title: data.title as string | undefined,
+			alt: data.alt as string | undefined,
+			tags: (data.tags as string[]) || [],
+			file: data.file as BlobRef,
+			createdAt: data.createdAt as string,
 			authorDid: authorDid,
 			authorHandle: authorProfile?.handle || "unknown",
 			authorAvatar: authorProfile?.avatar,
 			authorDisplayName: authorProfile?.displayName,
-			likeCount: Math.floor(Math.random() * 5000), // Mock for UI
+			likeCount:
+				(data.likeCount as number | undefined) ??
+				Math.floor(Math.random() * 5000),
+			isLiked: (data.isLiked as boolean | undefined) ?? false,
 			commentCount: Math.floor(Math.random() * 200),
 		};
 
@@ -289,7 +306,9 @@ app.get("/gif/:rkey", async (c) => {
 						headers: { Cookie: c.req.header("Cookie") || "" },
 					},
 				);
-				const profileData = await profileRes.json();
+				const profileData = (await profileRes.json()) as ProfileData & {
+					error?: string;
+				};
 				if (!profileData.error) {
 					avatarUrl = profileData.avatar;
 				}
@@ -342,7 +361,10 @@ app.get("/profile", async (c) => {
 				headers: { Cookie: c.req.header("Cookie") || "" },
 			},
 		);
-		const profileData = await profileRes.json();
+		const profileData = (await profileRes.json()) as ProfileData & {
+			error?: string;
+			handle?: string;
+		};
 		if (!profileData.error && profileData.handle) {
 			return c.redirect(`/profile/${profileData.handle}`);
 		}
@@ -378,7 +400,11 @@ app.get("/profile/:handle", async (c) => {
 					headers: { Cookie: c.req.header("Cookie") || "" },
 				},
 			);
-			const profileData = await profileRes.json();
+			const profileData = (await profileRes.json()) as ProfileData & {
+				error?: string;
+				handle?: string;
+				did?: string;
+			};
 
 			if (
 				!profileData.error &&
@@ -398,7 +424,9 @@ app.get("/profile/:handle", async (c) => {
 				const gifsRes = await fetch(new URL("/api/gif", c.req.url).toString(), {
 					headers: { Cookie: c.req.header("Cookie") || "" },
 				});
-				const gifsData = await gifsRes.json();
+				const gifsData = (await gifsRes.json()) as {
+					gifs?: GifViewWithAuthor[];
+				};
 				if (gifsData.gifs) {
 					gifs = gifsData.gifs;
 				}
@@ -441,7 +469,9 @@ app.get("/upload", async (c) => {
 				headers: { Cookie: c.req.header("Cookie") || "" },
 			},
 		);
-		const profileData = await profileRes.json();
+		const profileData = (await profileRes.json()) as ProfileData & {
+			error?: string;
+		};
 		if (!profileData.error) {
 			avatarUrl = profileData.avatar;
 		}
@@ -478,7 +508,12 @@ app.get("/edit/:rkey", async (c) => {
 				headers: { Cookie: c.req.header("Cookie") || "" },
 			},
 		);
-		const data = await response.json();
+		const data = (await response.json()) as {
+			error?: boolean;
+			message?: string;
+			uri?: string;
+			[key: string]: unknown;
+		};
 
 		if (data.error) {
 			return c.render(
@@ -511,7 +546,9 @@ app.get("/edit/:rkey", async (c) => {
 					headers: { Cookie: c.req.header("Cookie") || "" },
 				},
 			);
-			const profileData = await profileRes.json();
+			const profileData = (await profileRes.json()) as ProfileData & {
+				error?: string;
+			};
 			if (!profileData.error) {
 				avatarUrl = profileData.avatar;
 			}
@@ -520,7 +557,14 @@ app.get("/edit/:rkey", async (c) => {
 		}
 
 		const gif = {
-			...data,
+			uri: data.uri as string,
+			cid: data.cid as string,
+			rkey: rkey,
+			title: data.title as string | undefined,
+			alt: data.alt as string | undefined,
+			tags: (data.tags as string[]) || [],
+			file: data.file as BlobRef,
+			createdAt: data.createdAt as string,
 			authorDid: authorDid,
 		};
 

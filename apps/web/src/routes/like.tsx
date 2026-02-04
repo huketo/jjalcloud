@@ -1,6 +1,6 @@
 import { ok } from "@atcute/client";
 import type { Did } from "@atcute/lexicons/syntax";
-import { likes } from "@jjalcloud/core";
+import { likes } from "@jjalcloud/common/db/schema";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -79,7 +79,12 @@ like.post("/", requireAuth, async (c) => {
 			createdAt: new Date(),
 		});
 
-		return c.json({ success: true, uri: result.uri, cid: result.cid, rkey });
+		return c.json({
+			success: true,
+			uri: result.uri,
+			cid: result.cid,
+			rkey,
+		});
 	} catch (error) {
 		console.error("Create Like error:", error);
 		return c.json(

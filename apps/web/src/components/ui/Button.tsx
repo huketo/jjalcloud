@@ -1,11 +1,14 @@
-import type { JSX } from "hono/jsx";
+import type { Child } from "hono/jsx";
 
-interface ButtonProps extends JSX.ButtonHTMLAttributes {
+interface ButtonProps {
 	variant?: "primary" | "secondary" | "destructive" | "ghost" | "outline";
 	size?: "sm" | "md" | "lg"; // default md
 	className?: string;
 	isLoading?: boolean;
-	children: JSX.Element | string;
+	children: Child;
+	type?: "button" | "submit" | "reset";
+	disabled?: boolean;
+	onClick?: (e: MouseEvent) => void | Promise<void>;
 }
 
 export const Button = (props: ButtonProps) => {
@@ -16,7 +19,8 @@ export const Button = (props: ButtonProps) => {
 		isLoading = false,
 		children,
 		disabled,
-		...rest
+		type,
+		onClick,
 	} = props;
 
 	const baseStyles =
@@ -46,7 +50,8 @@ export const Button = (props: ButtonProps) => {
 		<button
 			class={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
 			disabled={disabled || isLoading}
-			{...rest}
+			type={type}
+			onClick={onClick}
 		>
 			{isLoading && loadingSpinner}
 			{children}

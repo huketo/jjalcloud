@@ -8,11 +8,6 @@ import {
 } from "../components";
 import type { GifView } from "../types/gif";
 
-interface BlobRef {
-	$link?: string;
-	link?: string;
-}
-
 interface ProfilePageProps {
 	isLoggedIn: boolean;
 	isOwnProfile: boolean;
@@ -34,8 +29,6 @@ interface GifViewWithAuthor extends GifView {
 	authorDid?: string;
 	authorHandle?: string;
 	authorAvatar?: string;
-	likeCount?: number;
-	isLiked?: boolean;
 }
 
 export const ProfilePage: FC<ProfilePageProps> = ({
@@ -97,6 +90,7 @@ const GifCollectionTab: FC<{
 				<GifGridItem key={gif.rkey}>
 					<GifCard
 						rkey={gif.rkey}
+						cid={gif.cid}
 						title={gif.title}
 						alt={gif.alt}
 						tags={gif.tags}
@@ -117,7 +111,7 @@ const GifCollectionTab: FC<{
 // Helper
 function getGifUrl(gif: GifView): string {
 	const did = gif.uri.split("/")[2];
-	const ref = gif.file.ref as BlobRef;
+	const ref = gif.file.ref as unknown as { $link?: string; link?: string };
 	const cid = ref.$link || ref.link;
 	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
 }
