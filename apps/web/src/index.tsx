@@ -1,6 +1,6 @@
 import type { BlobRef } from "@atproto/lexicon";
 import { gifs as gifsTable } from "@jjalcloud/common/db/schema";
-import { desc, lt } from "drizzle-orm";
+import { desc, eq, lt, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
@@ -47,22 +47,7 @@ app.route("/oauth", oauthRoutes);
 
 // Register GIF API routes
 app.route("/api/gif", gifRoutes);
-app.route("/api/gif", gifRoutes);
 app.route("/api/like", likeRoutes);
-
-// Debug endpoint
-app.get("/api/debug/tables", async (c) => {
-	try {
-		const db = c.env.jjalcloud_db;
-		const result = await db
-			.prepare("SELECT name FROM sqlite_master WHERE type='table'")
-			.all();
-		return c.json(result);
-	} catch (err: unknown) {
-		const message = err instanceof Error ? err.message : "Unknown error";
-		return c.json({ error: message }, 500);
-	}
-});
 
 // Global Feed API (Load More / Infinite Scroll)
 app.get("/api/feed", async (c) => {
@@ -94,7 +79,7 @@ app.get("/api/feed", async (c) => {
 
 		await Promise.all(
 			uniqueDids.map(async (did) => {
-				const profile = await fetchProfile(did);
+				const profile = await fetchProfile(did, db);
 				if (profile) profiles.set(did, profile);
 			}),
 		);
@@ -144,22 +129,11 @@ app.get("/", async (c) => {
 	let avatarUrl: string | undefined;
 
 	// Fetch user profile if logged in
-	if (isLoggedIn) {
-		try {
-			const profileRes = await fetch(
-				new URL("/oauth/profile", c.req.url).toString(),
-				{
-					headers: { Cookie: c.req.header("Cookie") || "" },
-				},
-			);
-			const profileData = (await profileRes.json()) as ProfileData & {
-				error?: string;
-			};
-			if (!profileData.error) {
-				avatarUrl = profileData.avatar;
-			}
-		} catch (err) {
-			console.error("Failed to fetch Profile:", err);
+	if (isLoggedIn && did) {
+		const db = drizzle(c.env.jjalcloud_db);
+		const profileData = await fetchProfile(did, db);
+		if (profileData) {
+			avatarUrl = profileData.avatar;
 		}
 	}
 
@@ -242,28 +216,27 @@ app.get("/gif/:rkey", async (c) => {
 	const rkey = c.req.param("rkey");
 	const isLoggedIn = !!did;
 
-	// Fetch GIF Details
 	try {
-		const response = await fetch(
-			new URL(`/api/gif/${rkey}`, c.req.url).toString(),
-			{
-				headers: { Cookie: c.req.header("Cookie") || "" },
-			},
-		);
-		const data = (await response.json()) as {
-			error?: boolean;
-			message?: string;
-			uri?: string;
-			[key: string]: unknown;
-		};
+		// Use Direct DB Access instead of internal fetch
+		const db = drizzle(c.env.jjalcloud_db);
 
-		if (data.error) {
+		// 1. Find GIF by RKey (Suffix Match)
+		const foundGifs = await db
+			.select()
+			.from(gifsTable)
+			.where(sql`${gifsTable.uri} LIKE ${`%${rkey}`}`)
+			.limit(1)
+			.all();
+
+		if (!foundGifs || foundGifs.length === 0) {
 			return c.render(
 				<div class="app">
 					<main class="main-content">
 						<div class="empty-state">
 							<h3 class="empty-state-title">GIF Not Found</h3>
-							<p class="empty-state-text">{data.message}</p>
+							<p class="empty-state-text">
+								Could not identify GIF with ID: {rkey}
+							</p>
 							<a href="/" class="btn btn-primary">
 								Return to Home
 							</a>
@@ -273,68 +246,56 @@ app.get("/gif/:rkey", async (c) => {
 			);
 		}
 
-		// Extract author DID from URI
-		const authorDid = data.uri ? data.uri.split("/")[2] : did;
-		const authorProfile = authorDid ? await fetchProfile(authorDid) : null;
+		const g = foundGifs[0];
 
+		// 2. Fetch Author Profile
+		const authorProfile = await fetchProfile(g.author);
+
+		// 3. Construct View Model
 		const gif = {
-			uri: data.uri as string,
-			cid: data.cid as string,
+			uri: g.uri,
+			cid: g.cid,
 			rkey: rkey,
-			title: data.title as string | undefined,
-			alt: data.alt as string | undefined,
-			tags: (data.tags as string[]) || [],
-			file: data.file as BlobRef,
-			createdAt: data.createdAt as string,
-			authorDid: authorDid,
+			title: g.title ?? undefined,
+			alt: g.alt ?? undefined,
+			tags: g.tags ? JSON.parse(g.tags as string) : [],
+			file: g.file as BlobRef,
+			createdAt: g.createdAt.toISOString(),
+			authorDid: g.author,
 			authorHandle: authorProfile?.handle || "unknown",
 			authorAvatar: authorProfile?.avatar,
 			authorDisplayName: authorProfile?.displayName,
-			likeCount:
-				(data.likeCount as number | undefined) ??
-				Math.floor(Math.random() * 5000),
-			isLiked: (data.isLiked as boolean | undefined) ?? false,
-			commentCount: Math.floor(Math.random() * 200),
+			likeCount: 0, // Todo: fetch from likes table
+			isLiked: false, // Todo: check if logged in user liked
+			commentCount: 0,
 		};
 
-		// Fetch profile for avatar
+		// Fetch profile for avatar (Navbar)
 		let avatarUrl: string | undefined;
-		if (isLoggedIn) {
-			try {
-				const profileRes = await fetch(
-					new URL("/oauth/profile", c.req.url).toString(),
-					{
-						headers: { Cookie: c.req.header("Cookie") || "" },
-					},
-				);
-				const profileData = (await profileRes.json()) as ProfileData & {
-					error?: string;
-				};
-				if (!profileData.error) {
-					avatarUrl = profileData.avatar;
-				}
-			} catch (err) {
-				console.error("Failed to fetch Profile:", err);
+		if (isLoggedIn && did) {
+			const profileData = await fetchProfile(did, db);
+			if (profileData) {
+				avatarUrl = profileData.avatar;
 			}
 		}
 
 		return c.render(
 			<DetailPage
 				isLoggedIn={isLoggedIn}
-				isOwner={did === authorDid}
+				isOwner={did === g.author}
 				gif={gif}
 				relatedGifs={[]}
 				avatarUrl={avatarUrl}
 			/>,
 		);
 	} catch (err) {
-		console.error("Failed to fetch GIF:", err);
+		console.error("Failed to render GIF page:", err);
 		return c.render(
 			<div class="app">
 				<main class="main-content">
 					<div class="empty-state">
 						<h3 class="empty-state-title">An error occurred</h3>
-						<p class="empty-state-text">Failed to load GIF.</p>
+						<p class="empty-state-text">Failed to load GIF: {String(err)}</p>
 						<a href="/" class="btn btn-primary">
 							Return to Home
 						</a>
@@ -356,17 +317,10 @@ app.get("/profile", async (c) => {
 
 	try {
 		// Fetch profile to get handle
-		const profileRes = await fetch(
-			new URL("/oauth/profile", c.req.url).toString(),
-			{
-				headers: { Cookie: c.req.header("Cookie") || "" },
-			},
-		);
-		const profileData = (await profileRes.json()) as ProfileData & {
-			error?: string;
-			handle?: string;
-		};
-		if (!profileData.error && profileData.handle) {
+		const db = drizzle(c.env.jjalcloud_db);
+		const profileData = await fetchProfile(did, db);
+
+		if (profileData?.handle) {
 			return c.redirect(`/profile/${profileData.handle}`);
 		}
 	} catch (err) {
@@ -393,22 +347,13 @@ app.get("/profile/:handle", async (c) => {
 	let gifs: GifViewWithAuthor[] = [];
 
 	// Check if looking at own profile
-	if (isLoggedIn) {
+	if (isLoggedIn && currentDid) {
 		try {
-			const profileRes = await fetch(
-				new URL("/oauth/profile", c.req.url).toString(),
-				{
-					headers: { Cookie: c.req.header("Cookie") || "" },
-				},
-			);
-			const profileData = (await profileRes.json()) as ProfileData & {
-				error?: string;
-				handle?: string;
-				did?: string;
-			};
+			const db = drizzle(c.env.jjalcloud_db);
+			const profileData = await fetchProfile(currentDid, db);
 
 			if (
-				!profileData.error &&
+				profileData &&
 				(profileData.handle === identifier || profileData.did === identifier)
 			) {
 				isOwnProfile = true;
@@ -421,16 +366,29 @@ app.get("/profile/:handle", async (c) => {
 					isFollowing: false, // Own profile
 				};
 
-				// Fetch GIFs for own profile
-				const gifsRes = await fetch(new URL("/api/gif", c.req.url).toString(), {
-					headers: { Cookie: c.req.header("Cookie") || "" },
-				});
-				const gifsData = (await gifsRes.json()) as {
-					gifs?: GifViewWithAuthor[];
-				};
-				if (gifsData.gifs) {
-					gifs = gifsData.gifs;
-				}
+				// Fetch GIFs for own profile (Direct DB)
+				const userGifs = await db
+					.select()
+					.from(gifsTable)
+					.where(eq(gifsTable.author, currentDid))
+					.orderBy(desc(gifsTable.createdAt))
+					.all();
+
+				gifs = userGifs.map((g) => ({
+					uri: g.uri,
+					cid: g.cid,
+					rkey: g.uri.split("/").pop() || "",
+					title: g.title ?? undefined,
+					alt: g.alt ?? undefined,
+					tags: g.tags ? JSON.parse(g.tags as string) : [],
+					file: g.file as BlobRef,
+					createdAt: g.createdAt.toISOString(),
+					authorDid: g.author,
+					authorHandle: profile.handle,
+					authorAvatar: profile.avatar,
+					likeCount: 0,
+					isLiked: false,
+				}));
 			}
 		} catch (err) {
 			console.error("Failed to check own profile:", err);
@@ -464,16 +422,9 @@ app.get("/upload", async (c) => {
 	// Fetch profile for avatar
 	let avatarUrl: string | undefined;
 	try {
-		const profileRes = await fetch(
-			new URL("/oauth/profile", c.req.url).toString(),
-			{
-				headers: { Cookie: c.req.header("Cookie") || "" },
-			},
-		);
-		const profileData = (await profileRes.json()) as ProfileData & {
-			error?: string;
-		};
-		if (!profileData.error) {
+		const db = drizzle(c.env.jjalcloud_db);
+		const profileData = await fetchProfile(did, db);
+		if (profileData) {
 			avatarUrl = profileData.avatar;
 		}
 	} catch (err) {
@@ -503,26 +454,23 @@ app.get("/edit/:rkey", async (c) => {
 
 	// Fetch GIF Details to verify ownership and populate form
 	try {
-		const response = await fetch(
-			new URL(`/api/gif/${rkey}`, c.req.url).toString(),
-			{
-				headers: { Cookie: c.req.header("Cookie") || "" },
-			},
-		);
-		const data = (await response.json()) as {
-			error?: boolean;
-			message?: string;
-			uri?: string;
-			[key: string]: unknown;
-		};
+		const db = drizzle(c.env.jjalcloud_db);
 
-		if (data.error) {
+		// 1. Fetch GIF (Direct DB)
+		const foundGifs = await db
+			.select()
+			.from(gifsTable)
+			.where(sql`${gifsTable.uri} LIKE ${`%${rkey}`}`)
+			.limit(1)
+			.all();
+
+		if (!foundGifs || foundGifs.length === 0) {
 			return c.render(
 				<div class="app">
 					<main class="main-content">
 						<div class="empty-state">
 							<h3>GIF Not Found</h3>
-							<p>{data.message}</p>
+							<p>Could not find GIF</p>
 							<a href="/" class="btn btn-primary">
 								Return to Home
 							</a>
@@ -532,8 +480,10 @@ app.get("/edit/:rkey", async (c) => {
 			);
 		}
 
+		const data = foundGifs[0];
+
 		// Check Ownership
-		const authorDid = data.uri ? data.uri.split("/")[2] : "";
+		const authorDid = data.author;
 		if (authorDid !== did) {
 			return c.text("Unauthorized", 403);
 		}
@@ -541,16 +491,8 @@ app.get("/edit/:rkey", async (c) => {
 		// Fetch profile for avatar
 		let avatarUrl: string | undefined;
 		try {
-			const profileRes = await fetch(
-				new URL("/oauth/profile", c.req.url).toString(),
-				{
-					headers: { Cookie: c.req.header("Cookie") || "" },
-				},
-			);
-			const profileData = (await profileRes.json()) as ProfileData & {
-				error?: string;
-			};
-			if (!profileData.error) {
+			const profileData = await fetchProfile(did, db);
+			if (profileData) {
 				avatarUrl = profileData.avatar;
 			}
 		} catch (err) {
@@ -558,14 +500,14 @@ app.get("/edit/:rkey", async (c) => {
 		}
 
 		const gif = {
-			uri: data.uri as string,
-			cid: data.cid as string,
+			uri: data.uri,
+			cid: data.cid,
 			rkey: rkey,
-			title: data.title as string | undefined,
-			alt: data.alt as string | undefined,
-			tags: (data.tags as string[]) || [],
+			title: data.title ?? undefined,
+			alt: data.alt ?? undefined,
+			tags: data.tags ? JSON.parse(data.tags as string) : [],
 			file: data.file as BlobRef,
-			createdAt: data.createdAt as string,
+			createdAt: data.createdAt.toISOString(),
 			authorDid: authorDid,
 		};
 

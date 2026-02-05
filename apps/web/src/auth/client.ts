@@ -94,35 +94,28 @@ export async function createOAuthClient(
 
 /**
  * Load keyset for Confidential client.
- * Load JWK from environment variable, or generate new one if missing.
+ * Load JWK from environment variable.
+ *
+ * In production (Worker environment), this MUST be set via wrangler secret.
+ * Creating a new key on every request will invalidate sessions.
  */
 async function loadKeyset(env: CloudflareBindings): Promise<JoseKey[]> {
-	if (env.PRIVATE_KEY_JWK) {
-		try {
-			const jwk = JSON.parse(env.PRIVATE_KEY_JWK);
-			const key = await JoseKey.fromJWK(jwk);
-			return [key];
-		} catch (error) {
-			console.error("Failed to load private key from environment:", error);
-			throw new Error(
-				"Invalid PRIVATE_KEY_JWK format. Please set a valid JWK.",
-			);
-		}
+	if (!env.PRIVATE_KEY_JWK) {
+		throw new Error(
+			"Missing PRIVATE_KEY_JWK environment variable. " +
+				"In production, you must set a persistent private key for OAuth. " +
+				"Run `wrangler secret put PRIVATE_KEY_JWK` with a generated JWK.",
+		);
 	}
 
-	// Generate new key in dev environment (Must set env var in production)
-	console.warn(
-		"No PRIVATE_KEY_JWK found. Generating a new key for development. " +
-			"For production, set PRIVATE_KEY_JWK using `wrangler secret put PRIVATE_KEY_JWK`",
-	);
-
-	const key = await JoseKey.generate(["ES256"]);
-	console.log(
-		"Generated key for development. Save this JWK for production use:",
-		JSON.stringify(key.privateJwk),
-	);
-
-	return [key];
+	try {
+		const jwk = JSON.parse(env.PRIVATE_KEY_JWK);
+		const key = await JoseKey.fromJWK(jwk);
+		return [key];
+	} catch (error) {
+		console.error("Failed to load private key from environment:", error);
+		throw new Error("Invalid PRIVATE_KEY_JWK format. Please set a valid JWK.");
+	}
 }
 
 /**

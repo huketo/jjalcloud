@@ -1,7 +1,7 @@
 import { ok } from "@atcute/client";
 import type { Did } from "@atcute/lexicons/syntax";
 import { likes } from "@jjalcloud/common/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { LIKE_COLLECTION } from "../constants";
@@ -171,16 +171,13 @@ like.get("/", optionalAuth, async (c) => {
 	}
 
 	try {
-		// 1. Get Count
-		// Drizzle count is a bit verbose in SQLite currently without `count()` helper
-		// const countResult = await db.select({ count: sql<number>`count(*)` }).from(likes).where(eq(likes.subject, subjectUri)).get();
-		// Using raw sql or standard method
-		const allLikes = await db
-			.select()
+		// Get like count efficiently
+		const countResult = await db
+			.select({ count: sql<number>`count(*)` })
 			.from(likes)
 			.where(eq(likes.subject, subjectUri))
-			.all(); // Optimization: use count queries if possible
-		const count = allLikes.length;
+			.get();
+		const count = countResult?.count ?? 0;
 
 		// 2. Check if User Liked
 		let isLiked = false;

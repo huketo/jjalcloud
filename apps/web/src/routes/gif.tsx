@@ -2,11 +2,17 @@ import type {} from "@atcute/atproto";
 import { ClientResponseError, ok } from "@atcute/client";
 import type { Did } from "@atcute/lexicons/syntax";
 import { TID } from "@atproto/common-web";
-import { likes } from "@jjalcloud/common/db/schema";
+import { gifs as gifsTable, likes } from "@jjalcloud/common/db/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import { GIF_COLLECTION, MAX_GIF_SIZE, MAX_TAGS_COUNT } from "../constants";
+import { getCookie } from "hono/cookie";
+import {
+	GIF_COLLECTION,
+	MAX_GIF_SIZE,
+	MAX_TAGS_COUNT,
+	SESSION_COOKIE,
+} from "../constants";
 import { type AuthenticatedEnv, requireAuth } from "../middleware";
 import { type GifRecord, parseTags, toGifView } from "../types/gif";
 import { createRpcClient, extractErrorMessage } from "../utils";
@@ -160,28 +166,30 @@ gif.get("/user/:did", requireAuth, async (c) => {
  * Get Single GIF
  * GET /api/gif/:rkey
  */
-gif.get("/:rkey", requireAuth, async (c) => {
-	const session = c.get("session");
-	const did = c.get("did") as Did;
+gif.get("/:rkey", async (c) => {
+	const did = getCookie(c, SESSION_COOKIE);
 	const rkey = c.req.param("rkey");
 
 	try {
-		const rpc = createRpcClient(session);
-
-		const data = await ok(
-			rpc.get("com.atproto.repo.getRecord", {
-				params: {
-					repo: did,
-					collection: GIF_COLLECTION,
-					rkey,
-				},
-			}),
-		);
-
 		const db = drizzle(c.env.jjalcloud_db);
-		const uri = data.uri;
 
-		// Get Like Info
+		// 1. Find GIF in D1 (using LIKE to match rkey at the end of URI)
+		// URI format: at://did:plc:.../collection/rkey
+		const foundGifs = await db
+			.select()
+			.from(gifsTable)
+			.where(sql`${gifsTable.uri} LIKE ${`%${rkey}`}`)
+			.limit(1)
+			.all();
+
+		if (!foundGifs || foundGifs.length === 0) {
+			return c.json({ error: "GIF not found" }, 404);
+		}
+
+		const gifRecord = foundGifs[0];
+		const uri = gifRecord.uri;
+
+		// 2. Get Like Info
 		const likeCountRes = await db
 			.select({ count: sql<number>`count(*)` })
 			.from(likes)
@@ -200,21 +208,19 @@ gif.get("/:rkey", requireAuth, async (c) => {
 		}
 
 		return c.json({
-			uri: data.uri,
-			cid: data.cid,
+			uri: gifRecord.uri,
+			cid: gifRecord.cid,
 			rkey,
-			title: (data.value as unknown as GifRecord).title,
-			alt: (data.value as unknown as GifRecord).alt,
-			tags: (data.value as unknown as GifRecord).tags || [],
-			file: (data.value as unknown as GifRecord).file,
-			createdAt: (data.value as unknown as GifRecord).createdAt,
+			title: gifRecord.title,
+			alt: gifRecord.alt,
+			tags: gifRecord.tags ? JSON.parse(gifRecord.tags as string) : [],
+			file: gifRecord.file,
+			createdAt: gifRecord.createdAt,
+			authorDid: gifRecord.author, // Return author DID for frontend to fetch profile
 			likeCount: Number(likeCount),
 			isLiked,
 		});
 	} catch (error) {
-		if (error instanceof ClientResponseError && error.status === 404) {
-			return c.json({ error: "GIF not found" }, 404);
-		}
 		console.error("Get GIF error:", error);
 		return c.json(
 			{ error: "Failed to get GIF", message: extractErrorMessage(error) },

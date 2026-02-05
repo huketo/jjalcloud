@@ -1,4 +1,5 @@
 import { users } from "@jjalcloud/common/db/schema";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
@@ -90,6 +91,12 @@ oauth.get("/callback", async (c) => {
 		try {
 			const profileResponse = await fetch(
 				`${BSKY_PUBLIC_API}/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(session.did)}`,
+				{
+					headers: {
+						Accept: "application/json",
+						"User-Agent": "jjalcloud/1.0",
+					},
+				},
 			);
 
 			if (profileResponse.ok) {
@@ -115,12 +122,6 @@ oauth.get("/callback", async (c) => {
 							lastLoginAt: new Date(),
 						},
 					});
-
-				console.log(`User saved to DB: ${profile.handle} (${profile.did})`);
-			} else {
-				console.error(
-					`Profile fetch failed: ${profileResponse.status} ${profileResponse.statusText}`,
-				);
 			}
 		} catch (profileError) {
 			// Profile fetch 실패해도 로그인은 계속 진행
@@ -212,34 +213,77 @@ oauth.get("/profile", async (c) => {
 		await client.restore(did);
 
 		// Use regular fetch for public API (not session.fetchHandler which is for authenticated PDS requests)
-		const response = await fetch(
-			`${BSKY_PUBLIC_API}/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`,
-		);
+		try {
+			const response = await fetch(
+				`${BSKY_PUBLIC_API}/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`,
+				{
+					headers: {
+						Accept: "application/json",
+						"User-Agent": "jjalcloud/1.0",
+					},
+				},
+			);
 
-		if (!response.ok) {
-			throw new Error(`Failed to fetch profile: ${response.status}`);
+			if (!response.ok) {
+				throw new Error(`Failed to fetch profile: ${response.status}`);
+			}
+
+			const profile = (await response.json()) as ProfileResponse;
+
+			return c.json({
+				did: profile.did,
+				handle: profile.handle,
+				displayName: profile.displayName || profile.handle,
+				avatar: profile.avatar,
+				description: profile.description,
+				followersCount: profile.followersCount,
+				followsCount: profile.followsCount,
+				postsCount: profile.postsCount,
+			});
+		} catch (error) {
+			console.error("Profile fetch error:", error);
+			// 실패 시 DB에서 폴백 시도
+			const db = drizzle(c.env.jjalcloud_db, { schema: { users } });
+			try {
+				const usersList = await db
+					.select()
+					.from(users)
+					.where(eq(users.did, did))
+					.all();
+				const user = usersList[0];
+
+				if (user) {
+					return c.json({
+						did: user.did,
+						handle: user.handle,
+						displayName: user.displayName || user.handle,
+						avatar: user.avatar || undefined,
+					});
+				}
+			} catch (dbErr) {
+				console.error("DB fallback failed:", dbErr);
+			}
+
+			return c.json(
+				{
+					error: "Failed to fetch profile",
+					message: extractErrorMessage(error),
+				},
+				500,
+			);
 		}
-
-		const profile = (await response.json()) as ProfileResponse;
-
-		return c.json({
-			did: profile.did,
-			handle: profile.handle,
-			displayName: profile.displayName || profile.handle,
-			avatar: profile.avatar,
-			description: profile.description,
-			followersCount: profile.followersCount,
-			followsCount: profile.followsCount,
-			postsCount: profile.postsCount,
-		});
 	} catch (error) {
-		console.error("Profile fetch error:", error);
+		console.error("Session validation failed:", error);
+		// 세션 복원 실패 시, 단순히 401을 리턴하기보다는
+		// 쿠키를 삭제하도록 유도하거나, 상태를 명확히 해야 함.
+		// SSR 상황을 고려하여 DB에 유저가 있다면 읽기 전용으로 정보를 줄 수도 있으나,
+		// 보안상 '로그인 상태'로 착각하게 하는 것은 위험하므로 401 유지.
 		return c.json(
 			{
-				error: "Failed to fetch profile",
-				message: extractErrorMessage(error),
+				error: "Session invalid or expired",
+				details: extractErrorMessage(error),
 			},
-			500,
+			401,
 		);
 	}
 });

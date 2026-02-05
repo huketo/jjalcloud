@@ -53,6 +53,7 @@ export function createD1HttpDriver(config: D1DriverConfig) {
 				{ status: response.status, error: errorText },
 				"D1 API Error",
 			);
+			console.error("D1 API Error Raw:", errorText);
 			throw new Error(`D1 API Error: ${response.status} - ${errorText}`);
 		}
 
@@ -60,10 +61,13 @@ export function createD1HttpDriver(config: D1DriverConfig) {
 
 		if (!data.success) {
 			config.logger?.error({ errors: data.errors }, "D1 Query Failed");
+			console.error("D1 Query Failed Raw:", JSON.stringify(data.errors));
 			throw new Error(`D1 Query Failed: ${JSON.stringify(data.errors)}`);
 		}
 
-		return data.result[0];
+		const result = data.result[0];
+
+		return result;
 	}
 
 	/**
@@ -81,9 +85,20 @@ export function createD1HttpDriver(config: D1DriverConfig) {
 
 		switch (method) {
 			case "all":
-				return { rows: result.results };
+				// Important: sqlite-proxy expects rows to be arrays of values, not objects
+				// We assume Object.values() returns values in the same order as the SELECT query
+				// This is generally true for non-integer keys in JS engines
+				return {
+					rows: result.results.map((row) =>
+						Object.values(row as Record<string, unknown>),
+					),
+				};
 			case "get":
-				return { rows: result.results[0] ? [result.results[0]] : [] };
+				return {
+					rows: result.results[0]
+						? [Object.values(result.results[0] as Record<string, unknown>)]
+						: [],
+				};
 			case "values":
 				return {
 					rows: result.results.map((row) =>

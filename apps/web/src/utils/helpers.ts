@@ -91,38 +91,83 @@ export function createSuccessResponse<T extends Record<string, unknown>>(
 	return c.json(data, statusCode);
 }
 
+import { users } from "@jjalcloud/common/db/schema";
+import { eq } from "drizzle-orm";
 import { BSKY_PUBLIC_API } from "../constants";
 
+export interface ProfileData {
+	did: string;
+	handle: string;
+	displayName?: string;
+	avatar?: string;
+	description?: string;
+	followersCount?: number;
+	followsCount?: number;
+	postsCount?: number;
+	isFollowing?: boolean;
+}
+
 /**
- * Fetch user profile from Bluesky Public API
+ * Fetch user profile from Bluesky Public API or Fallback to DB
  */
-export async function fetchProfile(did: string) {
+export async function fetchProfile(
+	did: string,
+	// biome-ignore lint/suspicious/noExplicitAny: Drizzle DB instance type is complex to import here
+	db?: any,
+): Promise<ProfileData | null> {
+	// 1. Try Public API
 	try {
 		const response = await fetch(
 			`${BSKY_PUBLIC_API}/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`,
+			{
+				headers: {
+					Accept: "application/json",
+					"User-Agent": "jjalcloud/1.0",
+				},
+			},
 		);
 
-		if (!response.ok) {
-			console.error(`Failed to fetch profile for ${did}: ${response.status}`);
-			return null;
+		if (response.ok) {
+			const data = (await response.json()) as ProfileData;
+			return {
+				did: data.did,
+				handle: data.handle,
+				displayName: data.displayName || data.handle,
+				avatar: data.avatar,
+				description: data.description,
+				followersCount: data.followersCount,
+				followsCount: data.followsCount,
+				postsCount: data.postsCount,
+			};
 		}
-
-		const data = (await response.json()) as {
-			did: string;
-			handle: string;
-			displayName?: string;
-			avatar?: string;
-			description?: string;
-		};
-		return {
-			did: data.did,
-			handle: data.handle,
-			displayName: data.displayName || data.handle,
-			avatar: data.avatar,
-			description: data.description,
-		};
-	} catch (error) {
-		console.error("Fetch profile helper error:", error);
-		return null;
+	} catch {
+		// Failed to fetch profile from API, will try DB fallback
 	}
+
+	// 2. Fallback to DB if db instance is provided
+	if (db) {
+		try {
+			// drizzle-orm type safety might be tricky with 'any' db, but we try common methods
+			const usersList = await db
+				.select()
+				.from(users)
+				.where(eq(users.did, did))
+				.limit(1)
+				.all();
+
+			const user = usersList[0];
+			if (user) {
+				return {
+					did: user.did,
+					handle: user.handle,
+					displayName: user.displayName || user.handle,
+					avatar: user.avatar || undefined,
+				};
+			}
+		} catch {
+			// DB fallback failed, return null
+		}
+	}
+
+	return null;
 }
