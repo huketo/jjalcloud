@@ -88,7 +88,7 @@ oauth.get("/callback", async (c) => {
 
 		// Fetch user profile to store in DB
 		try {
-			const profileResponse = await session.fetchHandler(
+			const profileResponse = await fetch(
 				`${BSKY_PUBLIC_API}/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(session.did)}`,
 			);
 
@@ -117,6 +117,10 @@ oauth.get("/callback", async (c) => {
 					});
 
 				console.log(`User saved to DB: ${profile.handle} (${profile.did})`);
+			} else {
+				console.error(
+					`Profile fetch failed: ${profileResponse.status} ${profileResponse.statusText}`,
+				);
 			}
 		} catch (profileError) {
 			// Profile fetch 실패해도 로그인은 계속 진행
@@ -203,10 +207,12 @@ oauth.get("/profile", async (c) => {
 	}
 
 	try {
+		// Verify session is still valid
 		const client = await createOAuthClient(c.env);
-		const session = await client.restore(did);
+		await client.restore(did);
 
-		const response = await session.fetchHandler(
+		// Use regular fetch for public API (not session.fetchHandler which is for authenticated PDS requests)
+		const response = await fetch(
 			`${BSKY_PUBLIC_API}/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`,
 		);
 
