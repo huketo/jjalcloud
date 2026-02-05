@@ -1,5 +1,5 @@
 import { jsxRenderer } from "hono/jsx-renderer";
-import { Link, ViteClient } from "vite-ssr-components/hono";
+import { Link, Script, ViteClient } from "vite-ssr-components/hono";
 
 export const renderer = jsxRenderer(({ children }) => {
 	return (
@@ -22,7 +22,7 @@ export const renderer = jsxRenderer(({ children }) => {
 			<body>
 				{children}
 				<div id="toast-root"></div>
-				<script type="module" src="/src/client.tsx"></script>
+				<Script src="/src/client.tsx" type="module" />
 			</body>
 		</html>
 	);
