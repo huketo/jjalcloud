@@ -3,10 +3,10 @@
 	"type": "module",
 	"scripts": {
 		"dev": "tsx watch src/index.ts start",
-		"start": "tsx src/index.ts start",
-		"backfill": "tsx src/index.ts backfill",
-		"build": "tsc",
-		"start:prod": "node dist/index.js start"
+		"build": "tsup src/index.ts --format esm --clean",
+		"start": "$npm_execpath run build && node dist/index.js start",
+		"backfill:local": "tsx src/index.ts backfill",
+		"backfill:remote": "NODE_ENV=production tsx src/index.ts backfill"
 	},
 	"dependencies": {
 		"@atcute/client": "^4.2.1",
@@ -15,7 +15,7 @@
 		"@jjalcloud/common": "workspace:*",
 		"better-sqlite3": "^11.8.1",
 		"dotenv": "^17.2.3",
-		"drizzle-orm": "^0.45.1",
+		"drizzle-orm": "catalog:",
 		"pino": "^9.6.0",
 		"ws": "^8.18.0"
 	},
@@ -23,6 +23,7 @@
 		"@types/better-sqlite3": "^7.6.12",
 		"@types/node": "^22.10.6",
 		"@types/ws": "^8.5.13",
+		"tsup": "^8.5.1",
 		"tsx": "^4.19.2",
 		"typescript": "^5.7.3",
 		"zod": "^4.3.6"
