@@ -9,6 +9,7 @@ export const GifGrid: FC<GifGridProps> = ({ children }) => {
 		<div
 			id="gif-grid"
 			class="columns-2 gap-2 md:gap-4 sm:columns-3 lg:columns-4"
+			data-masonry="true"
 		>
 			{children}
 		</div>

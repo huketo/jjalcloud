@@ -75,6 +75,8 @@ export const DetailPage: FC<DetailPageProps> = ({
 								src={gifUrl}
 								alt={gif.alt || gif.title || "GIF"}
 								class="max-w-full max-h-[75vh] object-contain block rounded-lg shadow-sm"
+								decoding="async"
+								fetchpriority="high"
 							/>
 						</div>
 
@@ -193,8 +195,10 @@ export const DetailPage: FC<DetailPageProps> = ({
 									<img
 										src={getGifUrl(relatedGif)}
 										alt={relatedGif.title || "GIF"}
-										class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+										class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 text-transparent"
 										loading="lazy"
+										decoding="async"
+										fetchpriority="low"
 									/>
 								</div>
 								<div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">

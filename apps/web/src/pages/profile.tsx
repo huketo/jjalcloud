@@ -86,7 +86,7 @@ const GifCollectionTab: FC<{
 
 	return (
 		<GifGrid>
-			{gifs.map((gif) => (
+			{gifs.map((gif, index) => (
 				<GifGridItem key={gif.rkey}>
 					<GifCard
 						rkey={gif.rkey}
@@ -101,6 +101,7 @@ const GifCollectionTab: FC<{
 						likeCount={gif.likeCount || Math.floor(Math.random() * 500)}
 						isLiked={gif.isLiked}
 						showActions
+						index={index}
 						width={gif.width}
 						height={gif.height}
 					/>

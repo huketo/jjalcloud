@@ -171,3 +171,24 @@ export async function fetchProfile(
 
 	return null;
 }
+
+export const PLACEHOLDER_PASTEL_COLORS = [
+	"#f3bdbd", // Red
+	"#f3e6bd", // Orange/Yellow
+	"#d8f3bd", // Lime
+	"#bdf3cb", // Green
+	"#bdf3f3", // Cyan
+	"#bdcbf3", // Blue
+	"#d8bdf3", // Purple
+	"#f3bde6", // Pink
+] as const;
+
+export function pickPastelColor(rkey: string): string {
+	let hash = 0;
+	for (let i = 0; i < rkey.length; i++) {
+		hash = (hash * 31 + rkey.charCodeAt(i)) | 0;
+	}
+	return PLACEHOLDER_PASTEL_COLORS[
+		Math.abs(hash) % PLACEHOLDER_PASTEL_COLORS.length
+	];
+}

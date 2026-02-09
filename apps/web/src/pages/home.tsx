@@ -34,7 +34,7 @@ export const HomePage: FC<HomePageProps> = ({
 			{/* GIF Grid */}
 			{gifs.length > 0 ? (
 				<GifGrid>
-					{gifs.map((gif) => (
+					{gifs.map((gif, index) => (
 						<GifGridItem
 							key={gif.rkey}
 							passedProps={{ "data-timestamp": gif.createdAt }}
@@ -51,6 +51,7 @@ export const HomePage: FC<HomePageProps> = ({
 								authorAvatar={gif.authorAvatar}
 								likeCount={gif.likeCount || Math.floor(Math.random() * 1000)} // Mock data for UI
 								isLiked={gif.isLiked}
+								index={index}
 								width={gif.width}
 								height={gif.height}
 							/>

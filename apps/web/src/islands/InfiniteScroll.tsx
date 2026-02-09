@@ -1,6 +1,8 @@
 /** @jsxImportSource hono/jsx/dom */
 import { useEffect, useRef, useState } from "hono/jsx";
 import { LOAD_MORE_COUNT } from "../constants";
+import { pickPastelColor } from "../utils/helpers";
+import { observeImage } from "../utils/lazyImages";
 
 interface GifData {
 	uri: string;
@@ -32,7 +34,6 @@ function getGifUrl(gif: GifData): string {
 	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
 }
 
-// Create DOM element for a GIF card (to append to existing grid)
 function createGifCardElement(gif: GifData): HTMLElement {
 	const gifUrl = getGifUrl(gif);
 	const profileUrl = gif.authorDid ? `/profile/${gif.authorDid}` : "#";
@@ -40,20 +41,23 @@ function createGifCardElement(gif: GifData): HTMLElement {
 		gif.width && gif.height
 			? `aspect-ratio: ${gif.width} / ${gif.height};`
 			: "";
+	const placeholderColor = pickPastelColor(gif.rkey);
 
 	const wrapper = document.createElement("div");
-	wrapper.className = "break-inside-avoid mb-4";
+	wrapper.className = "mb-4";
 	wrapper.setAttribute("data-timestamp", gif.createdAt);
 
 	wrapper.innerHTML = `
 		<article class="group relative bg-bg-surface rounded-lg overflow-hidden shadow-card transition-all duration-300 md:hover:shadow-lg">
 			<a href="/gif/${gif.rkey}" class="block w-full relative z-1">
 				<img
-					src="${gifUrl}"
+					data-src="${gifUrl}"
 					alt="${gif.alt || gif.title || "GIF"}"
-					class="w-full block h-auto object-cover bg-brand-primary-pale"
+					class="w-full block h-auto object-cover text-transparent"
 					loading="lazy"
-					style="${aspectStyle}"
+					decoding="async"
+					fetchpriority="low"
+					style="background-color: ${placeholderColor}; ${aspectStyle || "aspect-ratio: 4 / 3;"}"
 				/>
 			</a>
 			<div class="absolute inset-0 z-5 bg-gradient-to-t from-brand-primary-dark/60 via-transparent to-transparent p-4 opacity-0 transition-opacity duration-300 hidden md:flex flex-col justify-end pointer-events-none md:group-hover:opacity-100 backdrop-blur-[2px]">
@@ -63,7 +67,7 @@ function createGifCardElement(gif: GifData): HTMLElement {
 							${
 								gif.authorAvatar
 									? `<img src="${gif.authorAvatar}" alt="${gif.authorHandle || "User"}" class="w-6 h-6 rounded-full object-cover border border-white/70" />`
-									: `<div class="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-xs text-white">👤</div>`
+									: `<div class="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-xs text-white">&#128100;</div>`
 							}
 							<span class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap pt-[2px]">${gif.authorHandle || "Unknown"}</span>
 						</a>
@@ -76,31 +80,141 @@ function createGifCardElement(gif: GifData): HTMLElement {
 	return wrapper;
 }
 
-// Wait for all images in an element to load (with timeout)
-function waitForImagesToLoad(
-	container: Element,
-	timeout = 3000,
-): Promise<void> {
-	const images = container.querySelectorAll("img");
-	if (images.length === 0) return Promise.resolve();
+// Breakpoints match UnoCSS: columns-2 (default), sm:columns-3 (640px), lg:columns-4 (1024px)
+function getColumnCount(): number {
+	const width = window.innerWidth;
+	if (width >= 1024) return 4;
+	if (width >= 640) return 3;
+	return 2;
+}
 
-	const imagePromises = Array.from(images).map((img) => {
-		if (img.complete) return Promise.resolve();
-		return new Promise<void>((resolve) => {
-			img.addEventListener("load", () => resolve(), { once: true });
-			img.addEventListener("error", () => resolve(), { once: true });
-		});
+// Distribute items to columns based on shortest column height
+function distributeItemsToColumns(
+	grid: HTMLElement,
+	items: HTMLElement[],
+	columnCount: number,
+): HTMLElement[] {
+	grid.innerHTML = "";
+	// Reset to flex layout for masonry
+	grid.className = "flex gap-2 md:gap-4 items-start"; // Added items-start to prevent stretching
+	grid.removeAttribute("data-masonry");
+	grid.setAttribute("data-masonry-flex", "true");
+
+	const columns: HTMLElement[] = [];
+	for (let i = 0; i < columnCount; i++) {
+		const col = document.createElement("div");
+		col.className = "flex-1 min-w-0 flex flex-col gap-4"; // Added gap-4 for vertical spacing
+		col.setAttribute("data-masonry-column", String(i));
+		columns.push(col);
+		grid.appendChild(col);
+	}
+
+	// Check if any column has a non-zero height (unlikely extensively initially, but possible on re-layout)
+	// Actually, we check the *items* height as we append them? No, we append to the shortest column.
+	// But if the container is hidden or items haven't rendered, offsetHeight is 0.
+
+	// Robust strategy:
+	// Maintain an array of current heights for each column.
+	// If the item has a known aspect ratio style, we can estimate height better, but offsetHeight is simplest if valid.
+	const colHeights = new Array(columnCount).fill(0);
+
+	items.forEach((item, index) => {
+		item.classList.remove("break-inside-avoid");
+		// Ensure item displays block/flex to have height
+		item.style.marginBottom = ""; // Let the column gap handle spacing or keep common class
+
+		// Find shortest column
+		let shortestIndex = 0;
+		let minH = colHeights[0];
+
+		for (let i = 1; i < columnCount; i++) {
+			if (colHeights[i] < minH) {
+				minH = colHeights[i];
+				shortestIndex = i;
+			}
+		}
+
+		// Append
+		columns[shortestIndex].appendChild(item);
+
+		// Update height
+		// If the browser hasn't engaged layout yet, offsetHeight might still be 0.
+		// In that case, we might need a backup strategy (e.g. index % columnCount) to avoid stacking everything in col 0.
+		// However, reading offsetHeight triggers a reflow.
+		const itemHeight = item.offsetHeight;
+
+		if (itemHeight === 0) {
+			// If height is 0, it means we can't determine the "shortest" column reliably by height.
+			// Fallback: Round-robin distribution for safety.
+			// This happens if the tab is backgrounded or display:none.
+			// We can override the decision and just push to (index % columnCount).
+			// But if *some* items have height and others don't, it gets tricky.
+			// Let's assume if the first item has 0 height, they all likely do.
+			if (index === 0) {
+				// Detect "zero-height mode"
+				// Force round robin for this batch
+			}
+		}
+
+		// Update the tracked height
+		// If itemHeight is 0, we increment by a small amount to keep distribution even-ish if everything is 0
+		colHeights[shortestIndex] += itemHeight || 1;
 	});
 
-	// Race between image loading and timeout
-	const timeoutPromise = new Promise<void>((resolve) =>
-		setTimeout(resolve, timeout),
+	return columns;
+}
+
+// Initial conversion from CSS columns or helper to rebuild
+function convertToFlexMasonry(grid: HTMLElement): HTMLElement[] {
+	const columnCount = getColumnCount();
+
+	// If already flex masonry, gather items via rebuild strategy
+	if (grid.getAttribute("data-masonry-flex")) {
+		return rebuildColumns(grid);
+	}
+
+	const items = Array.from(grid.children) as HTMLElement[];
+	return distributeItemsToColumns(grid, items, columnCount);
+}
+
+function getShortestColumn(columns: HTMLElement[]): HTMLElement {
+	let shortest = columns[0];
+	let minHeight = shortest.offsetHeight;
+
+	for (let i = 1; i < columns.length; i++) {
+		const height = columns[i].offsetHeight;
+		if (height < minHeight) {
+			minHeight = height;
+			shortest = columns[i];
+		}
+	}
+
+	return shortest;
+}
+
+function rebuildColumns(grid: HTMLElement): HTMLElement[] {
+	const columnCount = getColumnCount();
+	const existingColumns = Array.from(
+		grid.querySelectorAll("[data-masonry-column]"),
 	);
 
-	return Promise.race([
-		Promise.all(imagePromises).then(() => {}),
-		timeoutPromise,
-	]);
+	const columnItems: HTMLElement[][] = [];
+	for (const col of existingColumns) {
+		columnItems.push(Array.from(col.children) as HTMLElement[]);
+	}
+
+	// Interleave columns to restore original visual order before redistributing
+	const allItems: HTMLElement[] = [];
+	const maxLen = Math.max(...columnItems.map((c) => c.length));
+	for (let row = 0; row < maxLen; row++) {
+		for (const col of columnItems) {
+			if (row < col.length) {
+				allItems.push(col[row]);
+			}
+		}
+	}
+
+	return distributeItemsToColumns(grid, allItems, columnCount);
 }
 
 const LoadingSpinner = () => (
@@ -110,6 +224,7 @@ const LoadingSpinner = () => (
 		fill="none"
 		stroke="currentColor"
 		stroke-width="2"
+		aria-hidden="true"
 	>
 		<circle cx="12" cy="12" r="10" stroke-opacity="0.25" />
 		<path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="0.75" />
@@ -122,8 +237,8 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 	const [isReady, setIsReady] = useState(false);
 	const sentinelRef = useRef<HTMLDivElement>(null);
 	const lastTimestampRef = useRef<string | null>(null);
+	const columnsRef = useRef<HTMLElement[]>([]);
 
-	// Get the last timestamp from the grid
 	const updateLastTimestamp = () => {
 		const grid = document.getElementById("gif-grid");
 		if (!grid) return;
@@ -154,19 +269,37 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 			const data = (await res.json()) as { gifs?: GifData[] };
 
 			if (data.gifs && data.gifs.length > 0) {
-				const newCards: HTMLElement[] = [];
-
-				// Append new cards directly to the existing grid (preserves masonry)
-				for (const gif of data.gifs) {
-					const card = createGifCardElement(gif);
-					grid.appendChild(card);
-					newCards.push(card);
+				// Re-verify columns just in case
+				if (
+					!columnsRef.current ||
+					columnsRef.current.length === 0 ||
+					!grid.contains(columnsRef.current[0])
+				) {
+					// Layout might have broken or reset? Rebuild if needed
+					if (grid.getAttribute("data-masonry-flex")) {
+						columnsRef.current = Array.from(grid.children) as HTMLElement[];
+					} else {
+						columnsRef.current = convertToFlexMasonry(grid);
+					}
 				}
 
-				// Wait for new images to load before updating state
-				await Promise.all(newCards.map((card) => waitForImagesToLoad(card)));
+				for (const gif of data.gifs) {
+					const card = createGifCardElement(gif);
+					const columns = columnsRef.current;
 
-				// Update last timestamp after adding new items
+					// Safety check: if columns exist, append to shortest
+					// If for some reason we still don't have columns, append to grid directly (fallback)
+					if (columns && columns.length > 0) {
+						const shortest = getShortestColumn(columns);
+						shortest.appendChild(card);
+					} else {
+						grid.appendChild(card);
+					}
+
+					const img = card.querySelector<HTMLImageElement>("img[data-src]");
+					if (img) observeImage(img);
+				}
+
 				updateLastTimestamp();
 
 				if (data.gifs.length < LOAD_MORE_COUNT) {
@@ -182,7 +315,6 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 		}
 	};
 
-	// Wait for initial images to load before enabling infinite scroll
 	useEffect(() => {
 		const grid = document.getElementById("gif-grid");
 		if (!grid || initialCount === 0) {
@@ -190,22 +322,55 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 			return;
 		}
 
-		// Wait for all initial images to load
-		waitForImagesToLoad(grid).then(() => {
-			updateLastTimestamp();
-			setIsReady(true);
-		});
+		// Convert to Masonry immediately
+		// We do NOT wait for images, as aspect-ratio handles space reservation
+		columnsRef.current = convertToFlexMasonry(grid);
+		updateLastTimestamp();
+		setIsReady(true);
 
-		// Fallback timeout in case some images fail to load
+		// Short timeout to re-check specific layout issues if any
 		const timeout = setTimeout(() => {
-			updateLastTimestamp();
-			setIsReady(true);
-		}, 5000);
+			const g = document.getElementById("gif-grid");
+			// If layout looks wrong (e.g. data-masonry still there but not flex), try again
+			if (g && !g.hasAttribute("data-masonry-flex")) {
+				columnsRef.current = convertToFlexMasonry(g);
+				updateLastTimestamp();
+			}
+		}, 100);
 
 		return () => clearTimeout(timeout);
 	}, [initialCount]);
 
-	// Set up IntersectionObserver after ready
+	useEffect(() => {
+		if (!isReady) return;
+
+		let currentColumnCount = getColumnCount();
+
+		const handleResize = () => {
+			const newColumnCount = getColumnCount();
+			if (newColumnCount !== currentColumnCount) {
+				currentColumnCount = newColumnCount;
+				const grid = document.getElementById("gif-grid");
+				if (grid) {
+					columnsRef.current = rebuildColumns(grid);
+				}
+			}
+		};
+
+		let resizeTimeout: ReturnType<typeof setTimeout>;
+		const debouncedResize = () => {
+			clearTimeout(resizeTimeout);
+			resizeTimeout = setTimeout(handleResize, 150);
+		};
+
+		window.addEventListener("resize", debouncedResize);
+
+		return () => {
+			window.removeEventListener("resize", debouncedResize);
+			clearTimeout(resizeTimeout);
+		};
+	}, [isReady]);
+
 	useEffect(() => {
 		if (!isReady || !sentinelRef.current) return;
 
@@ -226,7 +391,6 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 		return () => observer.disconnect();
 	}, [isReady, isLoading, hasMore]);
 
-	// Don't render anything if no initial content
 	if (initialCount === 0) {
 		return null;
 	}
@@ -249,7 +413,7 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 			{/* End of Feed */}
 			{!hasMore && !isLoading && (
 				<div class="text-center py-8 text-text-muted">
-					<p>🎉 You've seen all the jjals!</p>
+					<p>You've seen all the jjals!</p>
 				</div>
 			)}
 		</>

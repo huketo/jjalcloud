@@ -1,4 +1,5 @@
 import type { FC } from "hono/jsx";
+import { pickPastelColor } from "../../utils/helpers";
 import { LikeButton } from "./LikeButton";
 
 interface GifCardProps {
@@ -19,6 +20,7 @@ interface GifCardProps {
 	showActions?: boolean;
 	width?: number;
 	height?: number;
+	index?: number;
 }
 
 export const GifCard: FC<GifCardProps> = ({
@@ -39,16 +41,11 @@ export const GifCard: FC<GifCardProps> = ({
 	showActions = true,
 	width,
 	height,
+	index,
 }) => {
 	const detailUrl = `/gif/${rkey}`;
 	const profileUrl = authorDid ? `/profile/${authorDid}` : "#";
-
-	// Copy functionality script (needs to be handled globally or inline since this is SSR)
-	// We'll add a specific class for the global handler to pick up, or use a tiny inline onclick if allowed.
-	// For now, I'll add a data attribute `data-copy-text` with the full URL.
-	// Assuming the app has a base URL, but we'll use relative or constructing it if possible.
-	// Since we don't have the base URL here, we'll try to use a relative path resolved by client or just copy the path.
-	// A better UX is copying the full link. I'll leave the data attribute for a handler to use `window.location.origin + ...`
+	const placeholderColor = pickPastelColor(rkey);
 
 	return (
 		<article class="group relative bg-bg-surface rounded-lg overflow-hidden shadow-card transition-all duration-300 md:hover:shadow-lg">
@@ -56,13 +53,14 @@ export const GifCard: FC<GifCardProps> = ({
 				<img
 					src={gifUrl}
 					alt={alt || title || "GIF"}
-					class="w-full block h-auto object-cover bg-brand-primary-pale"
+					class="w-full block h-auto object-cover text-transparent"
 					loading="lazy"
-					style={
-						width && height
-							? { aspectRatio: `${width} / ${height}` }
-							: undefined
-					}
+					decoding="async"
+					fetchpriority={index !== undefined && index < 4 ? "high" : "low"}
+					style={{
+						aspectRatio: width && height ? `${width} / ${height}` : "4 / 3",
+						backgroundColor: placeholderColor,
+					}}
 				/>
 			</a>
 

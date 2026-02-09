@@ -47,6 +47,11 @@ if (infiniteScrollRoot) {
 	render(<InfiniteScroll {...props} />, infiniteScrollRoot);
 }
 
+// Initialize viewport-aware lazy image loading
+import { initLazyImages } from "./utils/lazyImages";
+
+initLazyImages();
+
 // Global Event Delegation for simple interactions (like Card Copy)
 document.addEventListener("click", (e) => {
 	const target = (e.target as HTMLElement).closest(
