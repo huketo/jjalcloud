@@ -134,6 +134,14 @@ Generate TypeScript types from Lexicon definitions:
 pnpm lexgen
 ```
 
+#### Lexicon linting:
+
+[goat](https://github.com/bluesky-social/goat): Go AT Protocol CLI tool
+
+```bash
+goat lex lint ./packages/common/lexicons
+```
+
 ## Database Schema
 
 The D1 database includes the following tables:

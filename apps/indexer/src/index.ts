@@ -185,6 +185,8 @@ async function main() {
 							alt: record.alt,
 							tags: record.tags,
 							file: record.file,
+							width: record.width,
+							height: record.height,
 							createdAt,
 						});
 					} catch (err) {

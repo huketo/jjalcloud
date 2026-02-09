@@ -9,6 +9,8 @@ export interface GifRecord {
 	title?: string;
 	alt?: string;
 	tags?: string[];
+	width?: number;
+	height?: number;
 	createdAt: string;
 }
 
@@ -23,6 +25,8 @@ export interface GifView {
 	alt?: string;
 	tags: string[];
 	file: BlobRef;
+	width?: number;
+	height?: number;
 	createdAt: string;
 	likeCount?: number;
 	isLiked?: boolean;
@@ -54,6 +58,8 @@ export function toGifView(record: {
 		alt: value.alt,
 		tags: value.tags || [],
 		file: value.file,
+		width: value.width,
+		height: value.height,
 		createdAt: value.createdAt,
 		likeCount: 0, // Default, needs enrichment
 		isLiked: false, // Default, needs enrichment

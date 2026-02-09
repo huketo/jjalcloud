@@ -19,6 +19,8 @@ export const UploadForm = ({
 		url: string;
 		name: string;
 		size: string;
+		width: number;
+		height: number;
 	} | null>(null);
 	const [isDragOver, setIsDragOver] = useState(false);
 	const [status, setStatus] = useState<{
@@ -48,11 +50,27 @@ export const UploadForm = ({
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			if (e.target?.result && typeof e.target.result === "string") {
-				setPreview({
-					url: e.target.result,
-					name: file.name,
-					size: formatFileSize(file.size),
-				});
+				const dataUrl = e.target.result;
+				const img = new Image();
+				img.onload = () => {
+					setPreview({
+						url: dataUrl,
+						name: file.name,
+						size: formatFileSize(file.size),
+						width: img.naturalWidth,
+						height: img.naturalHeight,
+					});
+				};
+				img.onerror = () => {
+					setPreview({
+						url: dataUrl,
+						name: file.name,
+						size: formatFileSize(file.size),
+						width: 0,
+						height: 0,
+					});
+				};
+				img.src = dataUrl;
 			}
 		};
 		reader.readAsDataURL(file);
@@ -109,6 +127,9 @@ export const UploadForm = ({
 		setStatus({ type: "success", message: "Uploading to the cloud..." }); // Loading state really
 
 		const formData = new FormData(formRef.current);
+
+		if (preview?.width) formData.append("width", String(preview.width));
+		if (preview?.height) formData.append("height", String(preview.height));
 
 		try {
 			const res = await fetch("/api/gif", {

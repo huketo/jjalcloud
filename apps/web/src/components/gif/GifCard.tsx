@@ -17,6 +17,8 @@ interface GifCardProps {
 	createdAt?: string;
 	showAuthor?: boolean;
 	showActions?: boolean;
+	width?: number;
+	height?: number;
 }
 
 export const GifCard: FC<GifCardProps> = ({
@@ -35,6 +37,8 @@ export const GifCard: FC<GifCardProps> = ({
 	createdAt: _createdAt,
 	showAuthor = true,
 	showActions = true,
+	width,
+	height,
 }) => {
 	const detailUrl = `/gif/${rkey}`;
 	const profileUrl = authorDid ? `/profile/${authorDid}` : "#";
@@ -54,6 +58,11 @@ export const GifCard: FC<GifCardProps> = ({
 					alt={alt || title || "GIF"}
 					class="w-full block h-auto object-cover bg-brand-primary-pale"
 					loading="lazy"
+					style={
+						width && height
+							? { aspectRatio: `${width} / ${height}` }
+							: undefined
+					}
 				/>
 			</a>
 

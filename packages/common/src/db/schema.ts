@@ -31,5 +31,7 @@ export const gifs = sqliteTable("gifs", {
 	alt: text("alt"),
 	tags: text("tags"), // Stored as JSON string or comma-separated
 	file: text("file", { mode: "json" }).notNull(), // BlobRef stored as JSON
+	width: integer("width"),
+	height: integer("height"),
 	createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });

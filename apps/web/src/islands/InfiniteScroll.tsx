@@ -18,6 +18,8 @@ interface GifData {
 	authorAvatar?: string;
 	likeCount?: number;
 	isLiked?: boolean;
+	width?: number;
+	height?: number;
 }
 
 interface InfiniteScrollProps {
@@ -34,6 +36,10 @@ function getGifUrl(gif: GifData): string {
 function createGifCardElement(gif: GifData): HTMLElement {
 	const gifUrl = getGifUrl(gif);
 	const profileUrl = gif.authorDid ? `/profile/${gif.authorDid}` : "#";
+	const aspectStyle =
+		gif.width && gif.height
+			? `aspect-ratio: ${gif.width} / ${gif.height};`
+			: "";
 
 	const wrapper = document.createElement("div");
 	wrapper.className = "break-inside-avoid mb-4";
@@ -47,6 +53,7 @@ function createGifCardElement(gif: GifData): HTMLElement {
 					alt="${gif.alt || gif.title || "GIF"}"
 					class="w-full block h-auto object-cover bg-brand-primary-pale"
 					loading="lazy"
+					style="${aspectStyle}"
 				/>
 			</a>
 			<div class="absolute inset-0 z-5 bg-gradient-to-t from-brand-primary-dark/60 via-transparent to-transparent p-4 opacity-0 transition-opacity duration-300 hidden md:flex flex-col justify-end pointer-events-none md:group-hover:opacity-100 backdrop-blur-[2px]">

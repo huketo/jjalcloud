@@ -249,6 +249,8 @@ gif.post("/", requireAuth, async (c) => {
 		const title = formData.get("title") as string | null;
 		const alt = formData.get("alt") as string | null;
 		const tagsStr = formData.get("tags") as string | null;
+		const widthStr = formData.get("width") as string | null;
+		const heightStr = formData.get("height") as string | null;
 
 		if (!file) {
 			return c.json({ error: "File is required" }, 400);
@@ -287,6 +289,8 @@ gif.post("/", requireAuth, async (c) => {
 		if (title) record.title = title;
 		if (alt) record.alt = alt;
 		if (tags && tags.length > 0) record.tags = tags;
+		if (widthStr) record.width = Number.parseInt(widthStr, 10);
+		if (heightStr) record.height = Number.parseInt(heightStr, 10);
 
 		const result = await ok(
 			rpc.post("com.atproto.repo.putRecord", {
@@ -363,6 +367,10 @@ gif.put("/:rkey", requireAuth, async (c) => {
 			file: existingValue.file, // do not change file
 			createdAt: existingValue.createdAt, // preserve creation time
 		};
+
+		// Preserve width/height
+		if (existingValue.width) updatedRecord.width = existingValue.width;
+		if (existingValue.height) updatedRecord.height = existingValue.height;
 
 		// Update optional fields
 		if (body.title !== undefined) {

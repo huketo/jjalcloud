@@ -21,6 +21,10 @@ export interface Main {
   /** Alternative text for accessibility */
   alt?: string
   tags?: string[]
+  /** Width of the GIF in pixels */
+  width?: number
+  /** Height of the GIF in pixels */
+  height?: number
   createdAt: string
   [k: string]: unknown
 }

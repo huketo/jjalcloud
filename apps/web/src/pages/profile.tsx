@@ -101,6 +101,8 @@ const GifCollectionTab: FC<{
 						likeCount={gif.likeCount || Math.floor(Math.random() * 500)}
 						isLiked={gif.isLiked}
 						showActions
+						width={gif.width}
+						height={gif.height}
 					/>
 				</GifGridItem>
 			))}

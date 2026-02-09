@@ -51,6 +51,8 @@ export const HomePage: FC<HomePageProps> = ({
 								authorAvatar={gif.authorAvatar}
 								likeCount={gif.likeCount || Math.floor(Math.random() * 1000)} // Mock data for UI
 								isLiked={gif.isLiked}
+								width={gif.width}
+								height={gif.height}
 							/>
 						</GifGridItem>
 					))}

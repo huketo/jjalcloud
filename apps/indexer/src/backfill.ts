@@ -74,6 +74,8 @@ export async function backfill(options: BackfillOptions): Promise<void> {
 						alt: gifRecord.alt,
 						tags: gifRecord.tags,
 						file: gifRecord.file,
+						width: gifRecord.width,
+						height: gifRecord.height,
 						createdAt,
 					});
 				},

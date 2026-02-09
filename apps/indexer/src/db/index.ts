@@ -118,6 +118,8 @@ export const dbOperations = {
 			alt: string | null | undefined;
 			tags: string[] | null | undefined;
 			file: unknown;
+			width: number | null | undefined;
+			height: number | null | undefined;
 			createdAt: Date;
 		},
 	) {
@@ -131,6 +133,8 @@ export const dbOperations = {
 				alt: data.alt ?? null,
 				tags: data.tags ? JSON.stringify(data.tags) : null,
 				file: data.file,
+				width: data.width ?? null,
+				height: data.height ?? null,
 				createdAt: data.createdAt,
 			})
 			.onConflictDoUpdate({
@@ -141,6 +145,8 @@ export const dbOperations = {
 					alt: data.alt ?? null,
 					tags: data.tags ? JSON.stringify(data.tags) : null,
 					file: data.file,
+					width: data.width ?? null,
+					height: data.height ?? null,
 					createdAt: data.createdAt,
 				},
 			});

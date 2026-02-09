@@ -218,6 +218,14 @@ export const schemaDict = {
               },
               maxLength: 10,
             },
+            width: {
+              type: 'integer',
+              description: 'Width of the GIF in pixels',
+            },
+            height: {
+              type: 'integer',
+              description: 'Height of the GIF in pixels',
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
