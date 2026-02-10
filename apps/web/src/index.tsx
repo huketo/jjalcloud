@@ -57,21 +57,25 @@ app.get("/api/feed", async (c) => {
 	const db = drizzle(c.env.jjalcloud_db);
 
 	try {
-		const query = db
-			.select()
-			.from(gifsTable)
-			.orderBy(desc(gifsTable.createdAt))
-			.limit(limit);
+		let results: (typeof gifsTable.$inferSelect)[];
 
-		const results = cursor
-			? await db
-					.select()
-					.from(gifsTable)
-					.where(lt(gifsTable.createdAt, new Date(cursor)))
-					.orderBy(desc(gifsTable.createdAt))
-					.limit(limit)
-					.all()
-			: await query.all();
+		if (cursor) {
+			const cursorDate = new Date(cursor);
+			results = await db
+				.select()
+				.from(gifsTable)
+				.where(lt(gifsTable.createdAt, cursorDate))
+				.orderBy(desc(gifsTable.createdAt), desc(gifsTable.uri))
+				.limit(limit)
+				.all();
+		} else {
+			results = await db
+				.select()
+				.from(gifsTable)
+				.orderBy(desc(gifsTable.createdAt), desc(gifsTable.uri))
+				.limit(limit)
+				.all();
+		}
 
 		// Fetch profiles for authors
 		const uniqueDids = [...new Set(results.map((g) => g.author))];
@@ -86,11 +90,6 @@ app.get("/api/feed", async (c) => {
 
 		const gifs = results.map((g) => {
 			const profile = profiles.get(g.author);
-			// Parse file blob if needed, but for now assuming we construct URL correctly
-			// Need to reconstruct the structure expected by frontend
-			// g.file is stored as specific object in D1 (JSON)
-			// But types/gif.ts expects `file: BlobRef`.
-			// The `gifs` table `file` column is JSON. Cast it.
 
 			return {
 				uri: g.uri,
@@ -106,12 +105,17 @@ app.get("/api/feed", async (c) => {
 				authorDid: g.author,
 				authorHandle: profile?.handle || "unknown",
 				authorAvatar: profile?.avatar,
-				likeCount: 0, // Todo: join with likes
+				likeCount: 0,
 				isLiked: false,
 			};
 		});
 
-		return c.json({ gifs });
+		const nextCursor =
+			results.length > 0
+				? results[results.length - 1].createdAt.toISOString()
+				: undefined;
+
+		return c.json({ gifs, cursor: nextCursor });
 	} catch (err) {
 		console.error("Feed API Error:", err);
 		return c.json({ error: "Failed to fetch feed" }, 500);

@@ -244,9 +244,20 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 		if (!grid) return;
 
 		const items = grid.querySelectorAll("[data-timestamp]");
-		if (items.length > 0) {
-			lastTimestampRef.current =
-				items[items.length - 1].getAttribute("data-timestamp");
+		if (items.length === 0) return;
+
+		// After masonry layout, DOM order != chronological order.
+		// Find the oldest (min) timestamp among all items as the cursor.
+		let oldest: string | null = null;
+		const itemsArray = Array.from(items);
+		for (const item of itemsArray) {
+			const ts = item.getAttribute("data-timestamp");
+			if (ts && (!oldest || ts < oldest)) {
+				oldest = ts;
+			}
+		}
+		if (oldest) {
+			lastTimestampRef.current = oldest;
 		}
 	};
 
@@ -266,16 +277,17 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 				: `/api/feed?limit=${LOAD_MORE_COUNT}`;
 
 			const res = await fetch(url);
-			const data = (await res.json()) as { gifs?: GifData[] };
+			const data = (await res.json()) as {
+				gifs?: GifData[];
+				cursor?: string;
+			};
 
 			if (data.gifs && data.gifs.length > 0) {
-				// Re-verify columns just in case
 				if (
 					!columnsRef.current ||
 					columnsRef.current.length === 0 ||
 					!grid.contains(columnsRef.current[0])
 				) {
-					// Layout might have broken or reset? Rebuild if needed
 					if (grid.getAttribute("data-masonry-flex")) {
 						columnsRef.current = Array.from(grid.children) as HTMLElement[];
 					} else {
@@ -287,8 +299,6 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 					const card = createGifCardElement(gif);
 					const columns = columnsRef.current;
 
-					// Safety check: if columns exist, append to shortest
-					// If for some reason we still don't have columns, append to grid directly (fallback)
 					if (columns && columns.length > 0) {
 						const shortest = getShortestColumn(columns);
 						shortest.appendChild(card);
@@ -300,7 +310,11 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 					if (img) observeImage(img);
 				}
 
-				updateLastTimestamp();
+				if (data.cursor) {
+					lastTimestampRef.current = data.cursor;
+				} else {
+					updateLastTimestamp();
+				}
 
 				if (data.gifs.length < LOAD_MORE_COUNT) {
 					setHasMore(false);
