@@ -155,4 +155,20 @@ export const dbOperations = {
 	async deleteGif(db: Database, uri: string) {
 		await db.delete(gifs).where(eq(gifs.uri, uri));
 	},
+
+	async getGifUrisByAuthor(db: Database, author: string): Promise<string[]> {
+		const rows = await db
+			.select({ uri: gifs.uri })
+			.from(gifs)
+			.where(eq(gifs.author, author));
+		return rows.map((row) => row.uri);
+	},
+
+	async getLikeRkeysByAuthor(db: Database, author: string): Promise<string[]> {
+		const rows = await db
+			.select({ rkey: likes.rkey })
+			.from(likes)
+			.where(eq(likes.author, author));
+		return rows.map((row) => row.rkey);
+	},
 };

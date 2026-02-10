@@ -23,6 +23,12 @@ interface BackfillOptions {
 	pdsUrl?: string;
 }
 
+interface BackfillCollectionResult {
+	count: number;
+	pdsUris: Set<string>;
+	completed: boolean;
+}
+
 /**
  * AT Protocol repo에서 기존 레코드를 백필합니다.
  */
@@ -48,13 +54,15 @@ export async function backfill(options: BackfillOptions): Promise<void> {
 
 	let totalGifs = 0;
 	let totalLikes = 0;
+	let totalOrphanGifs = 0;
+	let totalOrphanLikes = 0;
 
 	for (const did of dids) {
 		logger.info({ did }, "Backfilling user");
 
 		try {
 			// GIF 레코드 백필
-			const gifCount = await backfillCollection(
+			const gifResult = await backfillCollection(
 				pdsUrl,
 				db,
 				logger,
@@ -80,10 +88,10 @@ export async function backfill(options: BackfillOptions): Promise<void> {
 					});
 				},
 			);
-			totalGifs += gifCount;
+			totalGifs += gifResult.count;
 
 			// Like 레코드 백필
-			const likeCount = await backfillCollection(
+			const likeResult = await backfillCollection(
 				pdsUrl,
 				db,
 				logger,
@@ -117,14 +125,26 @@ export async function backfill(options: BackfillOptions): Promise<void> {
 					});
 				},
 			);
-			totalLikes += likeCount;
+			totalLikes += likeResult.count;
+
+			const orphanGifs = await cleanupOrphanGifs(db, logger, did, gifResult);
+			totalOrphanGifs += orphanGifs;
+
+			const orphanLikes = await cleanupOrphanLikes(db, logger, did, likeResult);
+			totalOrphanLikes += orphanLikes;
 		} catch (err) {
 			logger.error({ did, err }, "Failed to backfill user");
 		}
 	}
 
 	logger.info(
-		{ totalGifs, totalLikes, userCount: dids.length },
+		{
+			totalGifs,
+			totalLikes,
+			totalOrphanGifs,
+			totalOrphanLikes,
+			userCount: dids.length,
+		},
 		"Backfill completed",
 	);
 }
@@ -139,9 +159,11 @@ async function backfillCollection(
 	did: string,
 	collection: string,
 	processRecord: (record: unknown, uri: string, cid: string) => Promise<void>,
-): Promise<number> {
+): Promise<BackfillCollectionResult> {
 	let cursor: string | undefined;
 	let count = 0;
+	const pdsUris = new Set<string>();
+	let completed = false;
 
 	do {
 		try {
@@ -169,6 +191,7 @@ async function backfillCollection(
 			const records = data.records;
 
 			for (const record of records) {
+				pdsUris.add(record.uri);
 				try {
 					await processRecord(record.value, record.uri, record.cid);
 					count++;
@@ -190,11 +213,107 @@ async function backfillCollection(
 		}
 	} while (cursor);
 
+	// Pagination이 정상적으로 완료된 경우에만 completed = true
+	if (!cursor) {
+		completed = true;
+	}
+
 	if (count > 0) {
 		logger.info({ did, collection, count }, "Backfilled collection");
 	}
 
-	return count;
+	return { count, pdsUris, completed };
+}
+
+/**
+ * PDS에서 정상적으로 전체 목록을 가져온 경우, D1에만 존재하는 orphan GIF를 삭제합니다.
+ */
+async function cleanupOrphanGifs(
+	db: Database,
+	logger: Logger,
+	did: string,
+	result: BackfillCollectionResult,
+): Promise<number> {
+	if (!result.completed) {
+		logger.warn(
+			{ did },
+			"Skipping GIF orphan cleanup - PDS fetch did not complete successfully",
+		);
+		return 0;
+	}
+
+	const dbGifUris = await dbOperations.getGifUrisByAuthor(db, did);
+	const orphanUris = dbGifUris.filter((uri) => !result.pdsUris.has(uri));
+
+	if (orphanUris.length === 0) {
+		return 0;
+	}
+
+	logger.info(
+		{ did, count: orphanUris.length },
+		"Removing orphaned GIF records",
+	);
+
+	for (const uri of orphanUris) {
+		try {
+			logger.debug({ uri }, "Deleting orphaned GIF");
+			await dbOperations.deleteGif(db, uri);
+		} catch (err) {
+			logger.error({ uri, err }, "Failed to delete orphaned GIF");
+		}
+	}
+
+	return orphanUris.length;
+}
+
+/**
+ * PDS에서 정상적으로 전체 목록을 가져온 경우, D1에만 존재하는 orphan Like를 삭제합니다.
+ */
+async function cleanupOrphanLikes(
+	db: Database,
+	logger: Logger,
+	did: string,
+	result: BackfillCollectionResult,
+): Promise<number> {
+	if (!result.completed) {
+		logger.warn(
+			{ did },
+			"Skipping Like orphan cleanup - PDS fetch did not complete successfully",
+		);
+		return 0;
+	}
+
+	const dbLikeRkeys = await dbOperations.getLikeRkeysByAuthor(db, did);
+	const pdsRkeys = new Set<string>();
+	for (const uri of result.pdsUris) {
+		const rkey = uri.split("/").pop();
+		if (rkey) pdsRkeys.add(rkey);
+	}
+
+	const orphanRkeys = dbLikeRkeys.filter((rkey) => !pdsRkeys.has(rkey));
+
+	if (orphanRkeys.length === 0) {
+		return 0;
+	}
+
+	logger.info(
+		{ did, count: orphanRkeys.length },
+		"Removing orphaned Like records",
+	);
+
+	for (const rkey of orphanRkeys) {
+		try {
+			logger.debug({ rkey, author: did }, "Deleting orphaned Like");
+			await dbOperations.deleteLike(db, rkey, did);
+		} catch (err) {
+			logger.error(
+				{ rkey, author: did, err },
+				"Failed to delete orphaned Like",
+			);
+		}
+	}
+
+	return orphanRkeys.length;
 }
 
 /**
