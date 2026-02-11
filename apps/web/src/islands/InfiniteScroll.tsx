@@ -44,7 +44,6 @@ function createGifCardElement(gif: GifData): HTMLElement {
 	const placeholderColor = pickPastelColor(gif.rkey);
 
 	const wrapper = document.createElement("div");
-	wrapper.className = "mb-4";
 	wrapper.setAttribute("data-timestamp", gif.createdAt);
 
 	wrapper.innerHTML = `
