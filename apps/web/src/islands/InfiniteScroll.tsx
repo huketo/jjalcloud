@@ -102,7 +102,7 @@ function distributeItemsToColumns(
 	const columns: HTMLElement[] = [];
 	for (let i = 0; i < columnCount; i++) {
 		const col = document.createElement("div");
-		col.className = "flex-1 min-w-0 flex flex-col gap-4"; // Added gap-4 for vertical spacing
+		col.className = "flex-1 min-w-0 flex flex-col";
 		col.setAttribute("data-masonry-column", String(i));
 		columns.push(col);
 		grid.appendChild(col);

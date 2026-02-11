@@ -26,7 +26,7 @@ export const GifGridItem: FC<GifGridItemProps> = ({
 	passedProps,
 }) => {
 	return (
-		<div class="break-inside-avoid" {...(passedProps || {})}>
+		<div class="break-inside-avoid mb-4" {...(passedProps || {})}>
 			{children}
 		</div>
 	);
