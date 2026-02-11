@@ -26,6 +26,11 @@ export interface D1DriverConfig {
 	logger?: Logger;
 }
 
+export interface D1BatchQuery {
+	sql: string;
+	params: unknown[];
+}
+
 /**
  * Cloudflare D1 HTTP API Driver for drizzle-orm/sqlite-proxy
  * @see https://developers.cloudflare.com/api/operations/cloudflare-d1-query-database
@@ -71,10 +76,44 @@ export function createD1HttpDriver(config: D1DriverConfig) {
 	}
 
 	/**
+	 * Execute multiple SQL statements in a single HTTP request.
+	 * D1 treats batch requests as atomic transactions.
+	 * @see https://developers.cloudflare.com/d1/worker-api/d1-database/#batch
+	 */
+	async function executeBatch(queries: D1BatchQuery[]): Promise<void> {
+		if (queries.length === 0) return;
+
+		const response = await fetch(`${baseUrl}/query`, {
+			method: "POST",
+			headers,
+			body: JSON.stringify(queries),
+		});
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			config.logger?.error(
+				{ status: response.status, error: errorText, count: queries.length },
+				"D1 Batch API Error",
+			);
+			throw new Error(`D1 Batch API Error: ${response.status} - ${errorText}`);
+		}
+
+		const data = (await response.json()) as D1Response;
+
+		if (!data.success) {
+			config.logger?.error(
+				{ errors: data.errors, count: queries.length },
+				"D1 Batch Failed",
+			);
+			throw new Error(`D1 Batch Failed: ${JSON.stringify(data.errors)}`);
+		}
+	}
+
+	/**
 	 * SQLite Proxy driver function for drizzle-orm
 	 * @see https://orm.drizzle.team/docs/get-started-sqlite#http-proxy
 	 */
-	return async (
+	const proxyDriver = async (
 		sql: string,
 		params: unknown[],
 		method: "run" | "all" | "values" | "get",
@@ -111,4 +150,6 @@ export function createD1HttpDriver(config: D1DriverConfig) {
 				return { rows: [] };
 		}
 	};
+
+	return { proxyDriver, executeBatch };
 }

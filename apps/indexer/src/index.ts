@@ -5,11 +5,11 @@ import type { Record as GifRecord } from "@jjalcloud/common/lexicon/types/com/jj
 import type { Record as LikeRecord } from "@jjalcloud/common/lexicon/types/com/jjalcloud/feed/like";
 import pino from "pino";
 import { backfill, parseDids } from "./backfill.js";
+import { EventBatcher } from "./batcher.js";
 import {
 	createLocalDatabase,
 	createRemoteDatabase,
-	type Database,
-	dbOperations,
+	type DatabaseClient,
 } from "./db/index.js";
 import { env, isProduction } from "./env.js";
 
@@ -67,7 +67,7 @@ async function main() {
 	const logger = pino({ name: "indexer", level: env.LOG_LEVEL });
 
 	// Initialize database based on environment
-	let db: Database;
+	let dbClient: DatabaseClient;
 
 	if (isProduction) {
 		const {
@@ -87,7 +87,7 @@ async function main() {
 		}
 
 		logger.info("Running in PRODUCTION mode - connecting to Cloudflare D1");
-		db = createRemoteDatabase(
+		dbClient = createRemoteDatabase(
 			{
 				accountId: CLOUDFLARE_ACCOUNT_ID,
 				databaseId: CLOUDFLARE_DATABASE_ID,
@@ -97,8 +97,10 @@ async function main() {
 		);
 	} else {
 		logger.info("Running in DEVELOPMENT mode - using local D1 database");
-		db = createLocalDatabase(logger);
+		dbClient = createLocalDatabase(logger);
 	}
+
+	const { db } = dbClient;
 
 	// Execute command
 	if (command === "backfill") {
@@ -116,11 +118,15 @@ async function main() {
 	// Default: start firehose
 	const idResolver = new IdResolver({});
 
+	const batcher = new EventBatcher({
+		executeBatch: dbClient.executeBatch,
+		logger,
+	});
+
 	const firehose = new Firehose({
 		idResolver,
 		filterCollections: ["com.jjalcloud.feed.like", "com.jjalcloud.feed.gif"],
 		handleEvent: async (evt: Event) => {
-			// Only handle commit events (create, update, delete)
 			if (
 				evt.event !== "create" &&
 				evt.event !== "update" &&
@@ -129,7 +135,6 @@ async function main() {
 				return;
 			}
 
-			// Handle Like events
 			if (evt.collection === "com.jjalcloud.feed.like") {
 				if (evt.event === "create" || evt.event === "update") {
 					const record = evt.record as LikeRecord;
@@ -139,66 +144,49 @@ async function main() {
 					if (subjectUri && authorDid) {
 						logger.info(
 							{ uri: evt.uri.toString(), author: authorDid },
-							"Indexing Like",
+							"Queuing Like",
 						);
-						try {
-							const createdAt = record.createdAt
-								? new Date(record.createdAt)
-								: new Date();
-
-							await dbOperations.insertLike(db, {
-								subject: subjectUri,
-								author: authorDid,
-								rkey: evt.rkey,
-								createdAt,
-							});
-						} catch (err: unknown) {
-							logger.error({ err }, "Failed to insert like");
-						}
-					}
-				} else if (evt.event === "delete") {
-					logger.info({ uri: evt.uri.toString() }, "Deleting Like");
-					try {
-						await dbOperations.deleteLike(db, evt.rkey, evt.did);
-					} catch (err) {
-						logger.error({ err }, "Failed to delete like");
-					}
-				}
-			}
-
-			// Handle GIF events
-			if (evt.collection === "com.jjalcloud.feed.gif") {
-				if (evt.event === "create" || evt.event === "update") {
-					const record = evt.record as GifRecord;
-					logger.info({ uri: evt.uri.toString() }, "Indexing GIF");
-
-					try {
 						const createdAt = record.createdAt
 							? new Date(record.createdAt)
 							: new Date();
 
-						await dbOperations.upsertGif(db, {
-							uri: evt.uri.toString(),
-							cid: evt.cid.toString(),
-							author: evt.did,
-							title: record.title,
-							alt: record.alt,
-							tags: record.tags,
-							file: record.file,
-							width: record.width,
-							height: record.height,
+						batcher.queueLikeInsert({
+							subject: subjectUri,
+							author: authorDid,
+							rkey: evt.rkey,
 							createdAt,
 						});
-					} catch (err) {
-						logger.error({ err }, "Failed to upsert GIF");
 					}
 				} else if (evt.event === "delete") {
-					logger.info({ uri: evt.uri.toString() }, "Deleting GIF");
-					try {
-						await dbOperations.deleteGif(db, evt.uri.toString());
-					} catch (err) {
-						logger.error({ err }, "Failed to delete GIF");
-					}
+					logger.info({ uri: evt.uri.toString() }, "Queuing Like Delete");
+					batcher.queueLikeDelete(evt.rkey, evt.did);
+				}
+			}
+
+			if (evt.collection === "com.jjalcloud.feed.gif") {
+				if (evt.event === "create" || evt.event === "update") {
+					const record = evt.record as GifRecord;
+					logger.info({ uri: evt.uri.toString() }, "Queuing GIF");
+
+					const createdAt = record.createdAt
+						? new Date(record.createdAt)
+						: new Date();
+
+					batcher.queueGifUpsert({
+						uri: evt.uri.toString(),
+						cid: evt.cid.toString(),
+						author: evt.did,
+						title: record.title,
+						alt: record.alt,
+						tags: record.tags,
+						file: record.file,
+						width: record.width,
+						height: record.height,
+						createdAt,
+					});
+				} else if (evt.event === "delete") {
+					logger.info({ uri: evt.uri.toString() }, "Queuing GIF Delete");
+					batcher.queueGifDelete(evt.uri.toString());
 				}
 			}
 		},
@@ -210,10 +198,22 @@ async function main() {
 		excludeAccount: true,
 	});
 
+	const shutdown = async () => {
+		logger.info("Shutting down...");
+		firehose.destroy();
+		await batcher.stop();
+		logger.info("Shutdown complete");
+		process.exit(0);
+	};
+
+	process.on("SIGINT", shutdown);
+	process.on("SIGTERM", shutdown);
+
 	logger.info(
 		{ mode: isProduction ? "production" : "development" },
 		"Starting Firehose...",
 	);
+	batcher.start();
 	firehose.start();
 }
 

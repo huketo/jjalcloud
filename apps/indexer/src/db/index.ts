@@ -8,12 +8,11 @@ import { drizzle as drizzleBetterSqlite } from "drizzle-orm/better-sqlite3";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { drizzle as drizzleSqliteProxy } from "drizzle-orm/sqlite-proxy";
 import type { Logger } from "pino";
-import { createD1HttpDriver } from "./d1-http-driver.js";
+import { createD1HttpDriver, type D1BatchQuery } from "./d1-http-driver.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Find D1 Database File (for development only)
 const WORKSPACE_ROOT = path.resolve(__dirname, "../../../../");
 const WEB_WRANGLER_DIR = path.join(WORKSPACE_ROOT, "apps/web/.wrangler");
 
@@ -37,29 +36,37 @@ function findD1Database() {
 	return path.join(d1StateDir, files[0]);
 }
 
-// Schema for type inference
 const schema = { likes, gifs };
 
-// Common database type that works with both sync and async drivers
 // biome-ignore lint/suspicious/noExplicitAny: Required for generic database type
 export type Database = BaseSQLiteDatabase<"sync" | "async", any, typeof schema>;
 
-/**
- * Create local database client using better-sqlite3
- * Used in development to access the local D1 database file
- */
-export function createLocalDatabase(logger?: Logger): Database {
+export type BatchExecutor = (queries: D1BatchQuery[]) => Promise<void>;
+
+export interface DatabaseClient {
+	db: Database;
+	executeBatch: BatchExecutor;
+}
+
+export function createLocalDatabase(logger?: Logger): DatabaseClient {
 	const dbPath = findD1Database();
 	logger?.info({ dbPath }, "Using local D1 database");
 
 	const sqlite = new BetterSqlite3(dbPath);
-	return drizzleBetterSqlite(sqlite, { schema });
+	const db = drizzleBetterSqlite(sqlite, { schema });
+
+	const executeBatch: BatchExecutor = async (queries) => {
+		const transaction = sqlite.transaction(() => {
+			for (const query of queries) {
+				sqlite.prepare(query.sql).run(...query.params);
+			}
+		});
+		transaction();
+	};
+
+	return { db, executeBatch };
 }
 
-/**
- * Create remote database client using D1 HTTP API
- * Used in production to access Cloudflare D1
- */
 export function createRemoteDatabase(
 	config: {
 		accountId: string;
@@ -67,17 +74,19 @@ export function createRemoteDatabase(
 		apiToken: string;
 	},
 	logger?: Logger,
-): Database {
+): DatabaseClient {
 	logger?.info("Using D1 HTTP API");
 
-	const driver = createD1HttpDriver({
+	const { proxyDriver, executeBatch } = createD1HttpDriver({
 		accountId: config.accountId,
 		databaseId: config.databaseId,
 		apiToken: config.apiToken,
 		logger,
 	});
 
-	return drizzleSqliteProxy(driver, { schema });
+	const db = drizzleSqliteProxy(proxyDriver, { schema });
+
+	return { db, executeBatch };
 }
 
 /**
