@@ -1,6 +1,6 @@
 import type { BlobRef } from "@atproto/lexicon";
 import { gifs as gifsTable } from "@jjalcloud/common/db/schema";
-import { desc, eq, lt, sql } from "drizzle-orm";
+import { and, desc, eq, lt, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
@@ -122,6 +122,91 @@ app.get("/api/feed", async (c) => {
 	}
 });
 
+app.get("/api/search", async (c) => {
+	const q = (c.req.query("q") || "").trim();
+	const cursor = c.req.query("cursor");
+	const limitParam = c.req.query("limit");
+	const limit = limitParam ? Math.min(Number.parseInt(limitParam, 10), 50) : 12;
+
+	if (!q) {
+		return c.json({ gifs: [], cursor: undefined });
+	}
+
+	const db = drizzle(c.env.jjalcloud_db);
+	const likePattern = `%${q}%`;
+
+	try {
+		const searchCondition = or(
+			sql`lower(coalesce(${gifsTable.title}, '')) LIKE lower(${likePattern})`,
+			sql`lower(coalesce(${gifsTable.alt}, '')) LIKE lower(${likePattern})`,
+			sql`lower(coalesce(${gifsTable.tags}, '')) LIKE lower(${likePattern})`,
+		);
+
+		let results: (typeof gifsTable.$inferSelect)[];
+
+		if (cursor) {
+			const cursorDate = new Date(cursor);
+			results = await db
+				.select()
+				.from(gifsTable)
+				.where(and(searchCondition, lt(gifsTable.createdAt, cursorDate)))
+				.orderBy(desc(gifsTable.createdAt), desc(gifsTable.uri))
+				.limit(limit)
+				.all();
+		} else {
+			results = await db
+				.select()
+				.from(gifsTable)
+				.where(searchCondition)
+				.orderBy(desc(gifsTable.createdAt), desc(gifsTable.uri))
+				.limit(limit)
+				.all();
+		}
+
+		const uniqueDids = [...new Set(results.map((g) => g.author))];
+		const profiles = new Map();
+
+		await Promise.all(
+			uniqueDids.map(async (did) => {
+				const profile = await fetchProfile(did, db);
+				if (profile) profiles.set(did, profile);
+			}),
+		);
+
+		const gifs = results.map((g) => {
+			const profile = profiles.get(g.author);
+
+			return {
+				uri: g.uri,
+				cid: g.cid,
+				rkey: g.uri.split("/").pop() || "",
+				title: g.title,
+				alt: g.alt,
+				tags: g.tags ? JSON.parse(g.tags) : [],
+				file: g.file,
+				width: g.width ?? undefined,
+				height: g.height ?? undefined,
+				createdAt: g.createdAt.toISOString(),
+				authorDid: g.author,
+				authorHandle: profile?.handle || "unknown",
+				authorAvatar: profile?.avatar,
+				likeCount: 0,
+				isLiked: false,
+			};
+		});
+
+		const nextCursor =
+			results.length > 0
+				? results[results.length - 1].createdAt.toISOString()
+				: undefined;
+
+		return c.json({ gifs, cursor: nextCursor });
+	} catch (err) {
+		console.error("Search API Error:", err);
+		return c.json({ error: "Failed to search gifs" }, 500);
+	}
+});
+
 // ================================
 // Main Page (Home Feed)
 // ================================
@@ -195,6 +280,86 @@ app.get("/", async (c) => {
 			gifs={gifs}
 			activeTab={activeTab}
 			avatarUrl={avatarUrl}
+		/>,
+	);
+});
+
+app.get("/search", async (c) => {
+	const did = getCookie(c, SESSION_COOKIE);
+	const isLoggedIn = !!did;
+	const q = (c.req.query("q") || "").trim();
+
+	let gifs: GifViewWithAuthor[] = [];
+	let avatarUrl: string | undefined;
+
+	if (isLoggedIn && did) {
+		const db = drizzle(c.env.jjalcloud_db);
+		const profileData = await fetchProfile(did, db);
+		if (profileData) {
+			avatarUrl = profileData.avatar;
+		}
+	}
+
+	if (q) {
+		try {
+			const db = drizzle(c.env.jjalcloud_db);
+			const likePattern = `%${q}%`;
+
+			const results = await db
+				.select()
+				.from(gifsTable)
+				.where(
+					or(
+						sql`lower(coalesce(${gifsTable.title}, '')) LIKE lower(${likePattern})`,
+						sql`lower(coalesce(${gifsTable.alt}, '')) LIKE lower(${likePattern})`,
+						sql`lower(coalesce(${gifsTable.tags}, '')) LIKE lower(${likePattern})`,
+					),
+				)
+				.orderBy(desc(gifsTable.createdAt), desc(gifsTable.uri))
+				.limit(20)
+				.all();
+
+			const uniqueDids = [...new Set(results.map((g) => g.author))];
+			const profiles = new Map();
+
+			await Promise.all(
+				uniqueDids.map(async (did) => {
+					const profile = await fetchProfile(did, db);
+					if (profile) profiles.set(did, profile);
+				}),
+			);
+
+			gifs = results.map((g) => {
+				const profile = profiles.get(g.author);
+				return {
+					uri: g.uri,
+					cid: g.cid,
+					rkey: g.uri.split("/").pop() || "",
+					title: g.title ?? undefined,
+					alt: g.alt ?? undefined,
+					tags: g.tags ? JSON.parse(g.tags) : [],
+					file: g.file as BlobRef,
+					width: g.width ?? undefined,
+					height: g.height ?? undefined,
+					createdAt: g.createdAt.toISOString(),
+					authorDid: g.author,
+					authorHandle: profile?.handle || "unknown",
+					authorAvatar: profile?.avatar,
+					likeCount: 0,
+					isLiked: false,
+				};
+			});
+		} catch (err) {
+			console.error("Failed to search gifs:", err);
+		}
+	}
+
+	return c.render(
+		<HomePage
+			isLoggedIn={isLoggedIn}
+			gifs={gifs}
+			avatarUrl={avatarUrl}
+			searchQuery={q || undefined}
 		/>,
 	);
 });

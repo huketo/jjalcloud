@@ -1,5 +1,6 @@
 import type { FC } from "hono/jsx";
 import type { JSX } from "hono/jsx/jsx-runtime";
+import { Input } from "../ui/Input";
 
 type SVGProps = JSX.IntrinsicElements["svg"];
 
@@ -94,6 +95,21 @@ const MenuIcon = (props: SVGProps) => (
 	</svg>
 );
 
+const SearchIcon = (props: SVGProps) => (
+	<svg
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+		{...props}
+	>
+		<circle cx="11" cy="11" r="8" />
+		<path d="m21 21-4.3-4.3" />
+	</svg>
+);
+
 interface HeaderProps {
 	isLoggedIn?: boolean;
 	showSearch?: boolean;
@@ -104,13 +120,14 @@ interface HeaderProps {
 
 export const Header: FC<HeaderProps> = ({
 	isLoggedIn = false,
+	showSearch = false,
 	showBack = false,
 	title,
 	avatarUrl,
 }) => {
 	return (
-		<header class="fixed top-0 left-0 right-0 h-[60px] bg-bg-glass backdrop-blur-xl border-b border-border-light z-100">
-			<div class="flex items-center justify-between h-full max-w-[1200px] mx-auto px-4 relative box-border">
+		<header class="fixed top-0 left-0 right-0 h-[64px] pt-1 bg-bg-glass backdrop-blur-xl border-b border-border-light z-100">
+			<div class="flex items-center justify-between h-full max-w-[1200px] mx-auto px-4 gap-3 relative box-border">
 				{showBack ? (
 					<a
 						href="/"
@@ -140,6 +157,28 @@ export const Header: FC<HeaderProps> = ({
 						</div>
 						<span>jjalcloud</span>
 					</a>
+				)}
+
+				{showSearch && !title && (
+					<form
+						action="/search"
+						method="get"
+						class="hidden md:flex flex-1 max-w-md"
+					>
+						<label for="global-search" class="sr-only">
+							Search GIFs
+						</label>
+						<div class="relative w-full">
+							<Input
+								id="global-search"
+								type="search"
+								name="q"
+								placeholder="Search GIFs"
+								className="pl-10"
+							/>
+							<SearchIcon class="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+						</div>
+					</form>
 				)}
 
 				{title && (
@@ -233,10 +272,28 @@ export const Header: FC<HeaderProps> = ({
 			{/* Mobile Menu Dropdown */}
 			<div
 				id="mobile-menu"
-				class="hidden md:hidden absolute top-[60px] left-0 right-0 bg-bg-surface border-b border-border shadow-lg animate-fade-in origin-top"
+				class="hidden md:hidden absolute top-[64px] left-0 right-0 bg-bg-surface border-b border-border shadow-lg animate-fade-in origin-top"
 				style="animation-duration: 0.2s"
 			>
 				<div class="flex flex-col p-4 gap-4">
+					{showSearch && (
+						<form action="/search" method="get" class="w-full">
+							<label for="mobile-global-search" class="sr-only">
+								Search GIFs
+							</label>
+							<div class="relative w-full">
+								<Input
+									id="mobile-global-search"
+									type="search"
+									name="q"
+									placeholder="Search GIFs"
+									className="pl-10"
+								/>
+								<SearchIcon class="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+							</div>
+						</form>
+					)}
+
 					{isLoggedIn ? (
 						<>
 							<div class="flex items-center gap-3 px-2 pb-4 border-b border-border-light">

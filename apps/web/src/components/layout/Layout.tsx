@@ -19,7 +19,7 @@ export const Layout: FC<LayoutProps> = ({
 	children,
 	isLoggedIn = false,
 	showHeader = true,
-	showSearch: _showSearch = false,
+	showSearch = true,
 	showBack = false,
 	title,
 	avatarUrl,
@@ -29,13 +29,14 @@ export const Layout: FC<LayoutProps> = ({
 			{showHeader && (
 				<Header
 					isLoggedIn={isLoggedIn}
+					showSearch={showSearch}
 					showBack={showBack}
 					title={title}
 					avatarUrl={avatarUrl}
 				/>
 			)}
 
-			<main class="flex-1 w-full max-w-[1200px] mx-auto p-4 pt-[calc(60px+1rem)] box-border">
+			<main class="flex-1 w-full max-w-[1200px] mx-auto p-4 pt-[calc(64px+1rem)] box-border">
 				{children}
 			</main>
 		</div>

@@ -8,6 +8,7 @@ interface HomePageProps {
 	error?: string;
 	avatarUrl?: string;
 	activeTab?: string;
+	searchQuery?: string;
 }
 
 interface GifViewWithAuthor extends GifView {
@@ -21,6 +22,7 @@ export const HomePage: FC<HomePageProps> = ({
 	gifs,
 	error,
 	avatarUrl,
+	searchQuery,
 }) => {
 	return (
 		<Layout isLoggedIn={isLoggedIn} avatarUrl={avatarUrl}>
@@ -89,7 +91,10 @@ export const HomePage: FC<HomePageProps> = ({
 			{gifs.length > 0 && (
 				<div
 					id="infinite-scroll-root"
-					data-props={JSON.stringify({ initialCount: gifs.length })}
+					data-props={JSON.stringify({
+						initialCount: gifs.length,
+						searchQuery,
+					})}
 				/>
 			)}
 		</Layout>

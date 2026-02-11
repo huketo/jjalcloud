@@ -26,6 +26,7 @@ interface GifData {
 
 interface InfiniteScrollProps {
 	initialCount: number;
+	searchQuery?: string;
 }
 
 function getGifUrl(gif: GifData): string {
@@ -231,7 +232,10 @@ const LoadingSpinner = () => (
 	</svg>
 );
 
-export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
+export const InfiniteScroll = ({
+	initialCount,
+	searchQuery,
+}: InfiniteScrollProps) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [hasMore, setHasMore] = useState(true);
 	const [isReady, setIsReady] = useState(false);
@@ -272,9 +276,14 @@ export const InfiniteScroll = ({ initialCount }: InfiniteScrollProps) => {
 
 		try {
 			const cursor = lastTimestampRef.current;
+			const queryText = (searchQuery || "").trim();
+			const basePath = queryText ? "/api/search" : "/api/feed";
+			const querySuffix = queryText
+				? `&q=${encodeURIComponent(queryText)}`
+				: "";
 			const url = cursor
-				? `/api/feed?cursor=${encodeURIComponent(cursor)}&limit=${LOAD_MORE_COUNT}`
-				: `/api/feed?limit=${LOAD_MORE_COUNT}`;
+				? `${basePath}?cursor=${encodeURIComponent(cursor)}&limit=${LOAD_MORE_COUNT}${querySuffix}`
+				: `${basePath}?limit=${LOAD_MORE_COUNT}${querySuffix}`;
 
 			const res = await fetch(url);
 			const data = (await res.json()) as {
