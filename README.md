@@ -25,9 +25,9 @@ Users own their media on their PDS (Personal Data Server), can easily log in via
 
 ### Phase 3: Indexing & Real-time (✅ Completed)
 - [x] **Monorepo Structure**: Separate `apps/web` (Cloudflare Workers) and `apps/indexer` (Node.js) using pnpm workspace
-- [x] **Firehose Indexer (Node.js)**: 
+- [x] **Jetstream Indexer (Node.js)**: 
   - Standalone service ensuring real-time data synchronization to D1
-  - Built with `@atproto/sync` Firehose client
+  - Built with Jetstream WebSocket client (JSON-based, server-side collection filtering)
   - Filters and indexes `com.jjalcloud.feed.gif` and `com.jjalcloud.feed.like` collections
   - Deployed on self-hosted infrastructure (Mini PC)
 - [x] **Real-time D1 Sync**: Direct database operations from the Indexer
@@ -82,7 +82,7 @@ The indexer runs as a standalone Node.js service that connects to the local D1 d
 
 ```env
 NODE_ENV=development
-FIREHOSE_URL=wss://bsky.network
+JETSTREAM_URL=wss://jetstream2.us-east.bsky.network/subscribe
 LOG_LEVEL=info
 
 # For production
@@ -156,7 +156,7 @@ The indexer supports two main operations:
 
 ### Real-time Indexing (Default)
 
-Start the Firehose indexer to capture new records in real-time:
+Start the Jetstream indexer to capture new records in real-time:
 
 ```bash
 pnpm --filter indexer dev    # Development mode with watch
@@ -190,7 +190,7 @@ jjalcloud/
 │   │   │   ├── pages/    # JSX pages
 │   │   │   └── index.tsx
 │   │   └── drizzle/      # D1 migrations
-│   └── indexer/          # Node.js Firehose indexer
+│   └── indexer/          # Node.js Jetstream indexer
 │       └── src/
 │           ├── index.ts  # Main indexer + CLI
 │           ├── backfill.ts

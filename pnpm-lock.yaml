@@ -29,12 +29,6 @@ importers:
       '@atcute/client':
         specifier: ^4.2.1
         version: 4.2.1
-      '@atproto/identity':
-        specifier: ^0.4.4
-        version: 0.4.10
-      '@atproto/sync':
-        specifier: ^0.1.6
-        version: 0.1.39
       '@jjalcloud/common':
         specifier: workspace:*
         version: link:../../packages/common
@@ -53,6 +47,9 @@ importers:
       ws:
         specifier: ^8.18.0
         version: 8.19.0
+      zstd-napi:
+        specifier: ^0.0.12
+        version: 0.0.12
     devDependencies:
       '@types/better-sqlite3':
         specifier: ^7.6.12
@@ -249,10 +246,6 @@ packages:
   '@atproto/did@0.3.0':
     resolution: {integrity: sha512-raUPzUGegtW/6OxwCmM8bhZvuIMzxG5t9oWsth6Tp91Kb5fTnHV2h/KKNF1C82doeA4BdXCErTyg7ISwLbQkzA==}
 
-  '@atproto/identity@0.4.10':
-    resolution: {integrity: sha512-nQbzDLXOhM8p/wo0cTh5DfMSOSHzj6jizpodX37LJ4S1TZzumSxAjHEZa5Rev3JaoD5uSWMVE0MmKEGWkPPvfQ==}
-    engines: {node: '>=18.7.0'}
-
   '@atproto/jwk-jose@0.1.11':
     resolution: {integrity: sha512-i4Fnr2sTBYmMmHXl7NJh8GrCH+tDQEVWrcDMDnV5DjJfkgT17wIqvojIw9SNbSL4Uf0OtfEv6AgG0A+mgh8b5Q==}
 
@@ -291,14 +284,6 @@ packages:
 
   '@atproto/oauth-types@0.6.2':
     resolution: {integrity: sha512-2cuboM4RQBCYR8NQC5uGRkW6KgCgKyq/B5/+tnMmWZYtZGVUQvsUWQHK/ZiMCnVXbcDNtc/RIEJQJDZ8FXMoxg==}
-
-  '@atproto/repo@0.8.12':
-    resolution: {integrity: sha512-QpVTVulgfz5PUiCTELlDBiRvnsnwrFWi+6CfY88VwXzrRHd9NE8GItK7sfxQ6U65vD/idH8ddCgFrlrsn1REPQ==}
-    engines: {node: '>=18.7.0'}
-
-  '@atproto/sync@0.1.39':
-    resolution: {integrity: sha512-JE0flkb6cDHc1dFNclkX6QB2PYXR+Taa1HDP7prI1lyFtkEASO0AOt+VtbL2JKhEa7VEy8ckko1T9glpCwGNYA==}
-    engines: {node: '>=18.7.0'}
 
   '@atproto/syntax@0.4.3':
     resolution: {integrity: sha512-YoZUz40YAJr5nPwvCDWgodEOlt5IftZqPJvA0JDWjuZKD8yXddTwSzXSaKQAzGOpuM+/A3uXRtPzJJqlScc+iA==}
@@ -1230,9 +1215,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@ipld/dag-cbor@7.0.3':
-    resolution: {integrity: sha512-1VVh2huHsuohdXC1bGJNE8WR72slZ9XE2T3wbBBq31dm7ZBatmKLLxrB+XAqafxfRFjv08RZmj/W/ZqaM13AuA==}
-
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
 
@@ -1603,10 +1585,6 @@ packages:
     resolution: {integrity: sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==}
     engines: {node: '>= 0.4'}
 
-  cborg@1.10.2:
-    resolution: {integrity: sha512-b3tFPA9pUr2zCUiCfRd2+wok2/LBSNUMKOuRRok+WlvvAgEt/PlbgPTsZUcwCOs53IJvLgTp0eotwtosE6njug==}
-    hasBin: true
-
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
@@ -1889,9 +1867,6 @@ packages:
   event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
-
-  eventemitter3@4.0.7:
-    resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
 
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
@@ -2199,6 +2174,9 @@ packages:
     resolution: {integrity: sha512-+CGM1L1CgmtheLcBuleyYOn7NWPVu0s0EJH2C4puxgEZb9h8QpR9G2dBfZJOAUhi7VQxuBPMd0hiISWcTyiYyQ==}
     engines: {node: '>=10'}
 
+  node-addon-api@7.1.1:
+    resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
+
   node-fetch-native@1.6.7:
     resolution: {integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==}
 
@@ -2227,18 +2205,6 @@ packages:
 
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
-
-  p-finally@1.0.0:
-    resolution: {integrity: sha512-LICb2p9CB7FS+0eR1oqWnHhp0FljGLZCWBE9aix0Uye9W8LTQPwMTYVGWQWIw9RdQiDg4+epXQODwIYJtSJaow==}
-    engines: {node: '>=4'}
-
-  p-queue@6.6.2:
-    resolution: {integrity: sha512-RwFpb72c/BhQLEXIZ5K2e+AhgNVmIejGlTgiB9MzZ0e93GRvqZ7uSi0dvRF7/XIXDeNkra2fNHBxTyPDGySpjQ==}
-    engines: {node: '>=8'}
-
-  p-timeout@3.2.0:
-    resolution: {integrity: sha512-rhIwUycgwwKcP9yTOOFK/AKsAopjjCakVqLHePO3CC6Mir1Z99xT+R63jZxAT5lFZLa2inS5h+ZS2GvR99/FBg==}
-    engines: {node: '>=8'}
 
   package-manager-detector@1.6.0:
     resolution: {integrity: sha512-61A5ThoTiDG/C8s8UMZwSorAGwMJ0ERVGj2OjoW5pAalsNOg15+iQiPzrLJ4jhZ1HJzmC2PIHT2oEiH3R5fzNA==}
@@ -2666,9 +2632,6 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
-  varint@6.0.0:
-    resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
-
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
@@ -2817,6 +2780,10 @@ packages:
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
+  zstd-napi@0.0.12:
+    resolution: {integrity: sha512-W4qfyNIJAfu8zB1w4TkjKBuXLRvkWa+owH4o32AEep1hRbAzS/bHNErC4fSKN7ls5s15b77bV0yRXbr9h12Wkg==}
+    engines: {node: ^12.22.0 || ^14.17.0 || ^15.12.0 || >=16}
+
 snapshots:
 
   '@antfu/install-pkg@1.1.0':
@@ -2943,11 +2910,6 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  '@atproto/identity@0.4.10':
-    dependencies:
-      '@atproto/common-web': 0.4.15
-      '@atproto/crypto': 0.4.5
-
   '@atproto/jwk-jose@0.1.11':
     dependencies:
       '@atproto/jwk': 0.6.0
@@ -3039,34 +3001,6 @@ snapshots:
       '@atproto/did': 0.3.0
       '@atproto/jwk': 0.6.0
       zod: 3.25.76
-
-  '@atproto/repo@0.8.12':
-    dependencies:
-      '@atproto/common': 0.5.10
-      '@atproto/common-web': 0.4.15
-      '@atproto/crypto': 0.4.5
-      '@atproto/lexicon': 0.6.1
-      '@ipld/dag-cbor': 7.0.3
-      multiformats: 9.9.0
-      uint8arrays: 3.0.0
-      varint: 6.0.0
-      zod: 3.25.76
-
-  '@atproto/sync@0.1.39':
-    dependencies:
-      '@atproto/common': 0.5.10
-      '@atproto/identity': 0.4.10
-      '@atproto/lexicon': 0.6.1
-      '@atproto/repo': 0.8.12
-      '@atproto/syntax': 0.4.3
-      '@atproto/xrpc-server': 0.10.11
-      multiformats: 9.9.0
-      p-queue: 6.6.2
-      ws: 8.19.0
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
 
   '@atproto/syntax@0.4.3':
     dependencies:
@@ -3668,11 +3602,6 @@ snapshots:
   '@img/sharp-win32-x64@0.34.5':
     optional: true
 
-  '@ipld/dag-cbor@7.0.3':
-    dependencies:
-      cborg: 1.10.2
-      multiformats: 9.9.0
-
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -4081,8 +4010,6 @@ snapshots:
       call-bind-apply-helpers: 1.0.2
       get-intrinsic: 1.3.0
 
-  cborg@1.10.2: {}
-
   chalk@4.1.2:
     dependencies:
       ansi-styles: 4.3.0
@@ -4328,8 +4255,6 @@ snapshots:
   etag@1.8.1: {}
 
   event-target-shim@5.0.1: {}
-
-  eventemitter3@4.0.7: {}
 
   events@3.3.0: {}
 
@@ -4614,6 +4539,8 @@ snapshots:
     dependencies:
       semver: 7.7.3
 
+  node-addon-api@7.1.1: {}
+
   node-fetch-native@1.6.7: {}
 
   npm-run-path@6.0.0:
@@ -4640,17 +4567,6 @@ snapshots:
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
-
-  p-finally@1.0.0: {}
-
-  p-queue@6.6.2:
-    dependencies:
-      eventemitter3: 4.0.7
-      p-timeout: 3.2.0
-
-  p-timeout@3.2.0:
-    dependencies:
-      p-finally: 1.0.0
 
   package-manager-detector@1.6.0: {}
 
@@ -5180,8 +5096,6 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
-  varint@6.0.0: {}
-
   vary@1.1.2: {}
 
   vite-plugin-checker@0.12.0(@biomejs/biome@2.3.13)(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.8)(jiti@2.6.1)(tsx@4.21.0)):
@@ -5274,3 +5188,9 @@ snapshots:
   zod@3.25.76: {}
 
   zod@4.3.6: {}
+
+  zstd-napi@0.0.12:
+    dependencies:
+      '@types/node': 22.19.8
+      node-addon-api: 7.1.1
+      prebuild-install: 7.1.3

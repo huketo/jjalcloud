@@ -5,8 +5,9 @@ dotenv.config();
 
 const envSchema = z.object({
 	NODE_ENV: z.enum(["development", "production"]).default("development"),
-	FIREHOSE_URL: z.string().default("wss://bsky.network"),
-	PLC_URL: z.string().default("https://plc.directory"),
+	JETSTREAM_URL: z
+		.string()
+		.default("wss://jetstream2.us-east.bsky.network/subscribe"),
 	LOG_LEVEL: z.string().default("info"),
 	LOCAL_DB_PATH: z.string().optional(),
 	// Cloudflare D1 (required for production)

@@ -6,7 +6,7 @@ Decentralized GIF sharing platform built on AT Protocol (ATProto). Monorepo with
 
 ```
 apps/web/          # Cloudflare Workers — Hono + JSX SSR, Vite, UnoCSS, Drizzle ORM (D1)
-apps/indexer/      # Node.js — AT Protocol Firehose indexer, better-sqlite3 / D1 HTTP
+apps/indexer/      # Node.js — Jetstream indexer (JSON WebSocket), better-sqlite3 / D1 HTTP
 packages/common/   # Shared — Drizzle schema, Lexicon definitions & generated types
 packages/tools/    # Utility scripts (JWK generation)
 ```
@@ -145,5 +145,5 @@ The web app uses SSR with selective client hydration ("islands"):
 - Collection NSIDs: `com.jjalcloud.feed.gif`, `com.jjalcloud.feed.like`
 - Records created with `TID.nextStr()` as rkey
 - Blob upload → `com.atproto.repo.uploadBlob`, then `putRecord` with BlobRef
-- Firehose indexer filters for `com.jjalcloud.feed.*` collections
+- Jetstream indexer filters for `com.jjalcloud.feed.*` collections via server-side `wantedCollections`
 - Lexicon types auto-generated — do NOT edit `src/lexicon/` manually

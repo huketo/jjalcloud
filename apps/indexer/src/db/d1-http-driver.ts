@@ -75,37 +75,42 @@ export function createD1HttpDriver(config: D1DriverConfig) {
 		return result;
 	}
 
-	/**
-	 * Execute multiple SQL statements in a single HTTP request.
-	 * D1 treats batch requests as atomic transactions.
-	 * @see https://developers.cloudflare.com/d1/worker-api/d1-database/#batch
-	 */
+	/** Execute multiple SQL statements sequentially (D1 REST API has no batch endpoint). */
 	async function executeBatch(queries: D1BatchQuery[]): Promise<void> {
 		if (queries.length === 0) return;
 
-		const response = await fetch(`${baseUrl}/query`, {
-			method: "POST",
-			headers,
-			body: JSON.stringify(queries),
-		});
+		for (const query of queries) {
+			const response = await fetch(`${baseUrl}/query`, {
+				method: "POST",
+				headers,
+				body: JSON.stringify({ sql: query.sql, params: query.params }),
+			});
 
-		if (!response.ok) {
-			const errorText = await response.text();
-			config.logger?.error(
-				{ status: response.status, error: errorText, count: queries.length },
-				"D1 Batch API Error",
-			);
-			throw new Error(`D1 Batch API Error: ${response.status} - ${errorText}`);
-		}
+			if (!response.ok) {
+				const errorText = await response.text();
+				config.logger?.error(
+					{
+						status: response.status,
+						error: errorText,
+						sql: query.sql,
+						count: queries.length,
+					},
+					"D1 Batch API Error",
+				);
+				throw new Error(
+					`D1 Batch API Error: ${response.status} - ${errorText}`,
+				);
+			}
 
-		const data = (await response.json()) as D1Response;
+			const data = (await response.json()) as D1Response;
 
-		if (!data.success) {
-			config.logger?.error(
-				{ errors: data.errors, count: queries.length },
-				"D1 Batch Failed",
-			);
-			throw new Error(`D1 Batch Failed: ${JSON.stringify(data.errors)}`);
+			if (!data.success) {
+				config.logger?.error(
+					{ errors: data.errors, sql: query.sql, count: queries.length },
+					"D1 Batch Failed",
+				);
+				throw new Error(`D1 Batch Failed: ${JSON.stringify(data.errors)}`);
+			}
 		}
 	}
 

@@ -1,6 +1,3 @@
-import { IdResolver } from "@atproto/identity";
-import type { Event } from "@atproto/sync";
-import { Firehose } from "@atproto/sync";
 import type { Record as GifRecord } from "@jjalcloud/common/lexicon/types/com/jjalcloud/feed/gif";
 import type { Record as LikeRecord } from "@jjalcloud/common/lexicon/types/com/jjalcloud/feed/like";
 import pino from "pino";
@@ -12,6 +9,7 @@ import {
 	type DatabaseClient,
 } from "./db/index.js";
 import { env, isProduction } from "./env.js";
+import { JetstreamClient, type JetstreamCommitEvent } from "./jetstream.js";
 
 type Command = "start" | "backfill";
 
@@ -40,7 +38,7 @@ function printUsage() {
 Usage: indexer <command> [options]
 
 Commands:
-  start              Start the real-time firehose indexer (default)
+  start              Start the real-time Jetstream indexer (default)
   backfill           Backfill existing records from AT Protocol repos
 
 Options for backfill:
@@ -115,92 +113,87 @@ async function main() {
 		return;
 	}
 
-	// Default: start firehose
-	const idResolver = new IdResolver({});
+	// Default: start Jetstream indexer
+	const WANTED_COLLECTIONS = [
+		"com.jjalcloud.feed.like",
+		"com.jjalcloud.feed.gif",
+	];
 
 	const batcher = new EventBatcher({
 		executeBatch: dbClient.executeBatch,
 		logger,
 	});
 
-	const firehose = new Firehose({
-		idResolver,
-		filterCollections: ["com.jjalcloud.feed.like", "com.jjalcloud.feed.gif"],
-		handleEvent: async (evt: Event) => {
-			if (
-				evt.event !== "create" &&
-				evt.event !== "update" &&
-				evt.event !== "delete"
-			) {
-				return;
-			}
+	const handleCommitEvent = (evt: JetstreamCommitEvent) => {
+		const { commit, did } = evt;
+		const { operation, collection, rkey } = commit;
+		const uri = `at://${did}/${collection}/${rkey}`;
 
-			if (evt.collection === "com.jjalcloud.feed.like") {
-				if (evt.event === "create" || evt.event === "update") {
-					const record = evt.record as LikeRecord;
-					const subjectUri = record.subject?.uri as string | undefined;
-					const authorDid = evt.did;
+		if (collection === "com.jjalcloud.feed.like") {
+			if (operation === "create" || operation === "update") {
+				const record = commit.record as unknown as LikeRecord;
+				const subjectUri = record.subject?.uri as string | undefined;
 
-					if (subjectUri && authorDid) {
-						logger.info(
-							{ uri: evt.uri.toString(), author: authorDid },
-							"Queuing Like",
-						);
-						const createdAt = record.createdAt
-							? new Date(record.createdAt)
-							: new Date();
-
-						batcher.queueLikeInsert({
-							subject: subjectUri,
-							author: authorDid,
-							rkey: evt.rkey,
-							createdAt,
-						});
-					}
-				} else if (evt.event === "delete") {
-					logger.info({ uri: evt.uri.toString() }, "Queuing Like Delete");
-					batcher.queueLikeDelete(evt.rkey, evt.did);
-				}
-			}
-
-			if (evt.collection === "com.jjalcloud.feed.gif") {
-				if (evt.event === "create" || evt.event === "update") {
-					const record = evt.record as GifRecord;
-					logger.info({ uri: evt.uri.toString() }, "Queuing GIF");
-
+				if (subjectUri && did) {
+					logger.info({ uri, author: did }, "Queuing Like");
 					const createdAt = record.createdAt
 						? new Date(record.createdAt)
 						: new Date();
 
-					batcher.queueGifUpsert({
-						uri: evt.uri.toString(),
-						cid: evt.cid.toString(),
-						author: evt.did,
-						title: record.title,
-						alt: record.alt,
-						tags: record.tags,
-						file: record.file,
-						width: record.width,
-						height: record.height,
+					batcher.queueLikeInsert({
+						subject: subjectUri,
+						author: did,
+						rkey,
 						createdAt,
 					});
-				} else if (evt.event === "delete") {
-					logger.info({ uri: evt.uri.toString() }, "Queuing GIF Delete");
-					batcher.queueGifDelete(evt.uri.toString());
 				}
+			} else if (operation === "delete") {
+				logger.info({ uri }, "Queuing Like Delete");
+				batcher.queueLikeDelete(rkey, did);
 			}
-		},
+		}
+
+		if (collection === "com.jjalcloud.feed.gif") {
+			if (operation === "create" || operation === "update") {
+				const record = commit.record as unknown as GifRecord;
+				logger.info({ uri }, "Queuing GIF");
+
+				const createdAt = record.createdAt
+					? new Date(record.createdAt)
+					: new Date();
+
+				batcher.queueGifUpsert({
+					uri,
+					cid: commit.cid ?? "",
+					author: did,
+					title: record.title,
+					alt: record.alt,
+					tags: record.tags,
+					file: record.file,
+					width: record.width,
+					height: record.height,
+					createdAt,
+				});
+			} else if (operation === "delete") {
+				logger.info({ uri }, "Queuing GIF Delete");
+				batcher.queueGifDelete(uri);
+			}
+		}
+	};
+
+	const jetstream = new JetstreamClient({
+		url: env.JETSTREAM_URL,
+		wantedCollections: WANTED_COLLECTIONS,
+		handleEvent: handleCommitEvent,
 		onError: (err) => {
-			logger.error({ err }, "Firehose Error");
+			logger.error({ err }, "Jetstream Error");
 		},
-		service: env.FIREHOSE_URL,
-		excludeIdentity: true,
-		excludeAccount: true,
+		logger,
 	});
 
 	const shutdown = async () => {
 		logger.info("Shutting down...");
-		firehose.destroy();
+		jetstream.destroy();
 		await batcher.stop();
 		logger.info("Shutdown complete");
 		process.exit(0);
@@ -210,11 +203,14 @@ async function main() {
 	process.on("SIGTERM", shutdown);
 
 	logger.info(
-		{ mode: isProduction ? "production" : "development" },
-		"Starting Firehose...",
+		{
+			mode: isProduction ? "production" : "development",
+			collections: WANTED_COLLECTIONS,
+		},
+		"Starting Jetstream indexer...",
 	);
 	batcher.start();
-	firehose.start();
+	jetstream.start();
 }
 
 main().catch((err) => {
