@@ -68,18 +68,22 @@ async function main() {
 	let dbClient: DatabaseClient;
 
 	if (isProduction) {
-		const {
-			CLOUDFLARE_ACCOUNT_ID,
-			CLOUDFLARE_DATABASE_ID,
-			CLOUDFLARE_API_TOKEN,
-		} = env;
+		const accountId = env.CLOUDFLARE_ACCOUNT_ID;
+		const databaseId = env.CLOUDFLARE_DATABASE_ID;
+		const apiToken = env.CLOUDFLARE_API_TOKEN;
+
+		if (!accountId || !databaseId || !apiToken) {
+			throw new Error(
+				"Production mode requires CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_DATABASE_ID, and CLOUDFLARE_API_TOKEN",
+			);
+		}
 
 		logger.info("Running in PRODUCTION mode - connecting to Cloudflare D1");
 		dbClient = createRemoteDatabase(
 			{
-				accountId: CLOUDFLARE_ACCOUNT_ID,
-				databaseId: CLOUDFLARE_DATABASE_ID,
-				apiToken: CLOUDFLARE_API_TOKEN,
+				accountId,
+				databaseId,
+				apiToken,
 			},
 			logger,
 		);
