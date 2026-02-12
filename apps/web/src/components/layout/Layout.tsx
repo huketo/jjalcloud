@@ -1,4 +1,5 @@
 import type { Child, FC } from "hono/jsx";
+import { Footer } from "./Footer";
 import { Header } from "./Header";
 
 type NavTab = "home" | "explore" | "upload" | "saved" | "profile";
@@ -21,11 +22,12 @@ export const Layout: FC<LayoutProps> = ({
 	showHeader = true,
 	showSearch = true,
 	showBack = false,
+	showFooter = true,
 	title,
 	avatarUrl,
 }) => {
 	return (
-		<div class="flex flex-col min-h-screen pb-[72px] w-full max-w-[100vw] overflow-x-hidden">
+		<div class="flex flex-col min-h-screen w-full max-w-[100vw] overflow-x-hidden">
 			{showHeader && (
 				<Header
 					isLoggedIn={isLoggedIn}
@@ -39,6 +41,8 @@ export const Layout: FC<LayoutProps> = ({
 			<main class="flex-1 w-full max-w-[1200px] mx-auto p-4 pt-[calc(64px+1rem)] box-border">
 				{children}
 			</main>
+
+			{showFooter && <Footer isLoggedIn={isLoggedIn} />}
 		</div>
 	);
 };

@@ -10,7 +10,9 @@ import { DetailPage } from "./pages/detail";
 import { EditPage } from "./pages/edit";
 import { HomePage } from "./pages/home";
 import { LoginPage } from "./pages/login";
+import { PrivacyPage } from "./pages/privacy";
 import { ProfilePage } from "./pages/profile";
+import { TermsPage } from "./pages/terms";
 import { UploadPage } from "./pages/upload";
 import { renderer } from "./renderer";
 import gifRoutes from "./routes/gif";
@@ -395,6 +397,34 @@ app.get("/search", async (c) => {
 			searchQuery={q || undefined}
 		/>,
 	);
+});
+
+app.get("/terms", (c) => {
+	const did = getCookie(c, SESSION_COOKIE);
+	const isLoggedIn = !!did;
+
+	const defaultOpenGraph = createDefaultOpenGraph(c.req.url);
+	c.set("openGraph", {
+		...defaultOpenGraph,
+		title: "Terms of Service | jjalcloud",
+		description: "Terms of Service for using jjalcloud.",
+	});
+
+	return c.render(<TermsPage isLoggedIn={isLoggedIn} />);
+});
+
+app.get("/privacy", (c) => {
+	const did = getCookie(c, SESSION_COOKIE);
+	const isLoggedIn = !!did;
+
+	const defaultOpenGraph = createDefaultOpenGraph(c.req.url);
+	c.set("openGraph", {
+		...defaultOpenGraph,
+		title: "Privacy Policy | jjalcloud",
+		description: "Privacy Policy for using jjalcloud.",
+	});
+
+	return c.render(<PrivacyPage isLoggedIn={isLoggedIn} />);
 });
 
 // ================================

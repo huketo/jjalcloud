@@ -80,6 +80,7 @@
 .mr-2{margin-right:0.5rem;}
 .mt-0{margin-top:0;}
 .mt-1{margin-top:0.25rem;}
+.mt-10{margin-top:2.5rem;}
 .mt-16{margin-top:4rem;}
 .mt-2{margin-top:0.5rem;}
 .mt-4{margin-top:1rem;}
@@ -117,6 +118,7 @@
 .max-w-\[90vw\]{max-width:90vw;}
 .max-w-10{max-width:2.5rem;}
 .max-w-2xl{max-width:42rem;}
+.max-w-3xl{max-width:48rem;}
 .max-w-5xl{max-width:64rem;}
 .max-w-7xl{max-width:80rem;}
 .max-w-full{max-width:100%;}
@@ -188,8 +190,12 @@
 .gap-2{gap:0.5rem;}
 .gap-3{gap:0.75rem;}
 .gap-4{gap:1rem;}
+.gap-6{gap:1.5rem;}
 .gap-8{gap:2rem;}
+.gap-x-4{column-gap:1rem;}
+.gap-y-2{row-gap:0.5rem;}
 .space-y-1>:not([hidden])~:not([hidden]){--un-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--un-space-y-reverse)));margin-bottom:calc(0.25rem * var(--un-space-y-reverse));}
+.space-y-2>:not([hidden])~:not([hidden]){--un-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--un-space-y-reverse)));margin-bottom:calc(0.5rem * var(--un-space-y-reverse));}
 .space-y-6>:not([hidden])~:not([hidden]){--un-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--un-space-y-reverse)));margin-bottom:calc(1.5rem * var(--un-space-y-reverse));}
 .overflow-hidden{overflow:hidden;}
 .overflow-x-hidden{overflow-x:hidden;}
@@ -284,15 +290,16 @@
 .py-3{padding-top:0.75rem;padding-bottom:0.75rem;}
 .py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem;}
 .py-8{padding-top:2rem;padding-bottom:2rem;}
-.pb-\[72px\]{padding-bottom:72px;}
 .pb-12{padding-bottom:3rem;}
 .pb-4{padding-bottom:1rem;}
+.pb-6{padding-bottom:1.5rem;}
 .pl-10{padding-left:2.5rem;}
 .pr-1{padding-right:0.25rem;}
 .pt-\[2px\]{padding-top:2px;}
 .pt-\[calc\(64px\+1rem\)\]{padding-top:calc(64px + 1rem);}
 .pt-1{padding-top:0.25rem;}
 .pt-12{padding-top:3rem;}
+.pt-4{padding-top:1rem;}
 .pt-5{padding-top:1.25rem;}
 .pt-6{padding-top:1.5rem;}
 .text-center{text-align:center;}
@@ -388,7 +395,9 @@
 .md\:flex-row{flex-direction:row;}
 .md\:flex-col{flex-direction:column;}
 .md\:items-start{align-items:flex-start;}
+.md\:items-end{align-items:flex-end;}
 .md\:justify-start{justify-content:flex-start;}
+.md\:justify-between{justify-content:space-between;}
 .md\:gap-12{gap:3rem;}
 .md\:gap-4{gap:1rem;}
 .md\:gap-6{gap:1.5rem;}
