@@ -20,7 +20,7 @@ import {
 	toGifView,
 	toGifViewFromDbRecord,
 } from "../types/gif";
-import { createRpcClient, extractErrorMessage } from "../utils";
+import { createErrorResponse, createRpcClient } from "../utils";
 
 const gif = new Hono<AuthenticatedEnv>();
 
@@ -83,13 +83,7 @@ gif.get("/", requireAuth, async (c) => {
 		return c.json({ gifs, cursor: data.cursor });
 	} catch (error) {
 		console.error("List GIFs error:", error);
-		return c.json(
-			{
-				error: "Failed to list GIFs",
-				message: extractErrorMessage(error),
-			},
-			500,
-		);
+		return createErrorResponse(c, 500, "Failed to list GIFs", error);
 	}
 });
 
@@ -157,13 +151,7 @@ gif.get("/user/:did", requireAuth, async (c) => {
 		return c.json({ gifs, cursor: data.cursor });
 	} catch (error) {
 		console.error("List user GIFs error:", error);
-		return c.json(
-			{
-				error: "Failed to list user GIFs",
-				message: extractErrorMessage(error),
-			},
-			500,
-		);
+		return createErrorResponse(c, 500, "Failed to list user GIFs", error);
 	}
 });
 
@@ -228,10 +216,7 @@ gif.get("/:rkey", async (c) => {
 		});
 	} catch (error) {
 		console.error("Get GIF error:", error);
-		return c.json(
-			{ error: "Failed to get GIF", message: extractErrorMessage(error) },
-			500,
-		);
+		return createErrorResponse(c, 500, "Failed to get GIF", error);
 	}
 });
 
@@ -321,13 +306,7 @@ gif.post("/", requireAuth, async (c) => {
 		);
 	} catch (error) {
 		console.error("Create GIF error:", error);
-		return c.json(
-			{
-				error: "Failed to create GIF",
-				message: extractErrorMessage(error),
-			},
-			500,
-		);
+		return createErrorResponse(c, 500, "Failed to create GIF", error);
 	}
 });
 
@@ -425,13 +404,7 @@ gif.put("/:rkey", requireAuth, async (c) => {
 			return c.json({ error: "GIF not found" }, 404);
 		}
 		console.error("Update GIF error:", error);
-		return c.json(
-			{
-				error: "Failed to update GIF",
-				message: extractErrorMessage(error),
-			},
-			500,
-		);
+		return createErrorResponse(c, 500, "Failed to update GIF", error);
 	}
 });
 
@@ -466,13 +439,7 @@ gif.delete("/:rkey", requireAuth, async (c) => {
 			return c.json({ error: "GIF not found" }, 404);
 		}
 		console.error("Delete GIF error:", error);
-		return c.json(
-			{
-				error: "Failed to delete GIF",
-				message: extractErrorMessage(error),
-			},
-			500,
-		);
+		return createErrorResponse(c, 500, "Failed to delete GIF", error);
 	}
 });
 

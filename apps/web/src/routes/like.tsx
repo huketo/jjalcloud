@@ -10,7 +10,7 @@ import {
 	optionalAuth,
 	requireAuth,
 } from "../middleware";
-import { createRpcClient, extractErrorMessage } from "../utils";
+import { createErrorResponse, createRpcClient } from "../utils";
 
 const like = new Hono<AuthenticatedEnv>();
 
@@ -87,13 +87,7 @@ like.post("/", requireAuth, async (c) => {
 		});
 	} catch (error) {
 		console.error("Create Like error:", error);
-		return c.json(
-			{
-				error: "Failed to create like",
-				message: extractErrorMessage(error),
-			},
-			500,
-		);
+		return createErrorResponse(c, 500, "Failed to create like", error);
 	}
 });
 
@@ -147,13 +141,7 @@ like.delete("/", requireAuth, async (c) => {
 		return c.json({ success: true, message: "Unliked successfully" });
 	} catch (error) {
 		console.error("Delete Like error:", error);
-		return c.json(
-			{
-				error: "Failed to delete like",
-				message: extractErrorMessage(error),
-			},
-			500,
-		);
+		return createErrorResponse(c, 500, "Failed to delete like", error);
 	}
 });
 

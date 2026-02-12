@@ -7,6 +7,7 @@ import type { HonoEnv } from "../auth";
 import { createClientMetadata, createOAuthClient } from "../auth";
 import { BSKY_PUBLIC_API, SESSION_COOKIE, SESSION_MAX_AGE } from "../constants";
 import {
+	createErrorResponse,
 	extractErrorMessage,
 	getRedirectUrl,
 	isLocalDevelopment,
@@ -61,13 +62,7 @@ oauth.get("/login", async (c) => {
 		return c.redirect(authUrl.toString());
 	} catch (error) {
 		console.error("Login error:", error);
-		return c.json(
-			{
-				error: "Failed to start login",
-				message: extractErrorMessage(error),
-			},
-			500,
-		);
+		return createErrorResponse(c, 500, "Failed to start login", error);
 	}
 });
 
@@ -264,13 +259,7 @@ oauth.get("/profile", async (c) => {
 				console.error("DB fallback failed:", dbErr);
 			}
 
-			return c.json(
-				{
-					error: "Failed to fetch profile",
-					message: extractErrorMessage(error),
-				},
-				500,
-			);
+			return createErrorResponse(c, 500, "Failed to fetch profile", error);
 		}
 	} catch (error) {
 		console.error("Session validation failed:", error);
@@ -278,13 +267,7 @@ oauth.get("/profile", async (c) => {
 		// 쿠키를 삭제하도록 유도하거나, 상태를 명확히 해야 함.
 		// SSR 상황을 고려하여 DB에 유저가 있다면 읽기 전용으로 정보를 줄 수도 있으나,
 		// 보안상 '로그인 상태'로 착각하게 하는 것은 위험하므로 401 유지.
-		return c.json(
-			{
-				error: "Session invalid or expired",
-				details: extractErrorMessage(error),
-			},
-			401,
-		);
+		return createErrorResponse(c, 401, "Session invalid or expired", error);
 	}
 });
 

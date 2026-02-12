@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import type { HonoEnv } from "../auth";
 import { toGifViewWithAuthorFromDbRecord } from "../types/gif";
-import { fetchProfile } from "../utils";
+import { createErrorResponse, fetchProfile } from "../utils";
 
 const feed = new Hono<HonoEnv>();
 
@@ -60,7 +60,7 @@ feed.get("/feed", async (c) => {
 		return c.json({ gifs, cursor: nextCursor });
 	} catch (err) {
 		console.error("Feed API Error:", err);
-		return c.json({ error: "Failed to fetch feed" }, 500);
+		return createErrorResponse(c, 500, "Failed to fetch feed", err);
 	}
 });
 
@@ -130,7 +130,7 @@ feed.get("/search", async (c) => {
 		return c.json({ gifs, cursor: nextCursor });
 	} catch (err) {
 		console.error("Search API Error:", err);
-		return c.json({ error: "Failed to search gifs" }, 500);
+		return createErrorResponse(c, 500, "Failed to search gifs", err);
 	}
 });
 
