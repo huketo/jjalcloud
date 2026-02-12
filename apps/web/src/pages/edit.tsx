@@ -1,18 +1,12 @@
 import type { FC } from "hono/jsx";
 import { Layout } from "../components";
 import type { GifView } from "../types/gif";
+import { getGifUrl } from "../utils";
 
 interface EditPageProps {
 	isLoggedIn: boolean;
 	gif: GifView;
 	avatarUrl?: string;
-}
-
-function getGifUrl(gif: GifView): string {
-	const did = gif.uri.split("/")[2];
-	const ref = gif.file.ref as unknown as { $link?: string; link?: string };
-	const cid = ref.$link || ref.link;
-	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
 }
 
 export const EditPage: FC<EditPageProps> = ({ isLoggedIn, gif, avatarUrl }) => {

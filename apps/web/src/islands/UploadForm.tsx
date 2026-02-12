@@ -1,9 +1,16 @@
 /** @jsxImportSource hono/jsx/dom */
 import { useRef, useState } from "hono/jsx";
+import { UploadZone } from "../components/form";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { Textarea } from "../components/ui/Textarea";
+import {
+	createUploadPreview,
+	getInitialUploadStatus,
+	type UploadPreview,
+	type UploadStatus,
+} from "./uploadFormUtils";
 
 interface UploadFormProps {
 	initialError?: string;
@@ -15,65 +22,27 @@ export const UploadForm = ({
 	initialSuccess,
 }: UploadFormProps) => {
 	const [isUploading, setIsUploading] = useState(false);
-	const [preview, setPreview] = useState<{
-		url: string;
-		name: string;
-		size: string;
-		width: number;
-		height: number;
-	} | null>(null);
+	const [preview, setPreview] = useState<UploadPreview | null>(null);
 	const [isDragOver, setIsDragOver] = useState(false);
-	const [status, setStatus] = useState<{
-		type: "error" | "success";
-		message: string;
-	} | null>(
-		initialError
-			? { type: "error", message: initialError }
-			: initialSuccess
-				? { type: "success", message: initialSuccess }
-				: null,
+	const [status, setStatus] = useState<UploadStatus | null>(
+		getInitialUploadStatus(initialError, initialSuccess),
 	);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const formRef = useRef<HTMLFormElement>(null);
 
-	const formatFileSize = (bytes: number) => {
-		if (bytes === 0) return "0 Bytes";
-		const k = 1024;
-		const sizes = ["Bytes", "KB", "MB", "GB"];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
-	};
-
-	const handleFile = (file: File) => {
+	const handleFile = async (file: File) => {
 		if (!file) return;
-		const reader = new FileReader();
-		reader.onload = (e) => {
-			if (e.target?.result && typeof e.target.result === "string") {
-				const dataUrl = e.target.result;
-				const img = new Image();
-				img.onload = () => {
-					setPreview({
-						url: dataUrl,
-						name: file.name,
-						size: formatFileSize(file.size),
-						width: img.naturalWidth,
-						height: img.naturalHeight,
-					});
-				};
-				img.onerror = () => {
-					setPreview({
-						url: dataUrl,
-						name: file.name,
-						size: formatFileSize(file.size),
-						width: 0,
-						height: 0,
-					});
-				};
-				img.src = dataUrl;
-			}
-		};
-		reader.readAsDataURL(file);
+
+		try {
+			const nextPreview = await createUploadPreview(file);
+			setPreview(nextPreview);
+		} catch {
+			setStatus({
+				type: "error",
+				message: "Failed to preview file. Please try again.",
+			});
+		}
 	};
 
 	const handleDrop = (e: Event) => {
@@ -89,7 +58,7 @@ export const UploadForm = ({
 				dataTransfer.items.add(file);
 				fileInputRef.current.files = dataTransfer.files;
 			}
-			handleFile(file);
+			void handleFile(file);
 		}
 	};
 
@@ -108,7 +77,7 @@ export const UploadForm = ({
 	const handleChange = (e: Event) => {
 		const target = e.target as HTMLInputElement;
 		if (target.files && target.files.length > 0) {
-			handleFile(target.files[0]);
+			void handleFile(target.files[0]);
 		}
 	};
 
@@ -199,40 +168,15 @@ export const UploadForm = ({
 				{/* Upload Zone */}
 				{!preview && (
 					<div>
-						<label
-							class={`flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-2xl bg-bg-surface cursor-pointer transition-all duration-200 hover:border-brand-primary hover:bg-brand-primary-pale group ${isDragOver ? "dragover border-brand-primary bg-brand-primary-pale" : ""}`}
-							for="gif-upload-input"
+						<UploadZone
 							id="gif-upload"
+							inputId="gif-upload-input"
+							isDragOver={isDragOver}
 							onDragOver={handleDragOver}
 							onDragLeave={handleDragLeave}
 							onDrop={handleDrop}
 							onDragEnter={handleDragOver}
-						>
-							<div class="w-16 h-16 text-brand-primary-light mb-4">
-								<svg
-									class="upload-zone-icon"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="1.5"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								>
-									<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-									<path d="M12 12v9" />
-									<path d="m16 16-4-4-4 4" />
-								</svg>
-							</div>
-							<div class="text-lg font-medium text-text mb-1">
-								Tap or Drag GIFs Here
-							</div>
-							<div class="text-sm text-text-muted mb-4">
-								Supports .gif, .mp4, .webp up to 15MB
-							</div>
-							<span class="inline-flex items-center justify-center gap-2 px-3 py-1 text-sm font-medium rounded-md bg-bg-surface text-text border border-border transition-all hover:bg-bg-surface-hover hover:border-brand-primary-light">
-								Browse Files
-							</span>
-						</label>
+						/>
 					</div>
 				)}
 
@@ -274,6 +218,7 @@ export const UploadForm = ({
 									stroke-linecap="round"
 									stroke-linejoin="round"
 									style={{ width: "20px", height: "20px" }}
+									aria-hidden="true"
 								>
 									<path d="M18 6 6 18" />
 									<path d="m6 6 12 12" />
@@ -343,6 +288,7 @@ export const UploadForm = ({
 							stroke-linecap="round"
 							stroke-linejoin="round"
 							style={{ width: "18px", height: "18px" }}
+							aria-hidden="true"
 						>
 							<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
 							<path d="M12 12v9" />

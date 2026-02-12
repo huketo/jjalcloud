@@ -1,6 +1,7 @@
 /** @jsxImportSource hono/jsx/dom */
 import { useEffect, useRef, useState } from "hono/jsx";
 import { LOAD_MORE_COUNT } from "../constants";
+import { getGifUrl } from "../utils";
 import { pickPastelColor } from "../utils/helpers";
 import { observeImage } from "../utils/lazyImages";
 
@@ -27,12 +28,6 @@ interface GifData {
 interface InfiniteScrollProps {
 	initialCount: number;
 	searchQuery?: string;
-}
-
-function getGifUrl(gif: GifData): string {
-	const did = gif.uri.split("/")[2];
-	const cid = gif.file?.ref?.$link || gif.file?.ref?.link || gif.cid;
-	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
 }
 
 function createGifCardElement(gif: GifData): HTMLElement {

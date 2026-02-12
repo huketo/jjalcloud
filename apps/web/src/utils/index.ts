@@ -1,3 +1,4 @@
+export { getGifUrl } from "./gifUrl";
 export {
 	createErrorResponse,
 	createRpcClient,

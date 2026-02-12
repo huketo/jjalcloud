@@ -1,6 +1,7 @@
 import type { FC } from "hono/jsx";
 import { Layout } from "../components";
 import type { GifView } from "../types/gif";
+import { getGifUrl } from "../utils";
 
 interface DetailPageProps {
 	isLoggedIn: boolean;
@@ -218,14 +219,6 @@ export const DetailPage: FC<DetailPageProps> = ({
 	);
 };
 
-// Helper functions
-function getGifUrl(gif: GifView): string {
-	const did = gif.uri.split("/")[2];
-	const ref = gif.file.ref as unknown as { $link?: string; link?: string };
-	const cid = ref.$link || ref.link;
-	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
-}
-
 function _formatNumber(num: number): string {
 	if (num >= 1000000) {
 		return `${(num / 1000000).toFixed(1).replace(/\.0$/, "")}M`;
@@ -249,6 +242,7 @@ const HeartIcon: FC<{ filled?: boolean; className?: string }> = ({
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		class={className}
+		aria-hidden="true"
 	>
 		<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
 	</svg>
@@ -263,6 +257,7 @@ const LinkIcon: FC<{ className?: string }> = ({ className }) => (
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		class={className}
+		aria-hidden="true"
 	>
 		<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
 		<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -278,6 +273,7 @@ const DownloadIcon: FC<{ className?: string }> = ({ className }) => (
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		class={className}
+		aria-hidden="true"
 	>
 		<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
 		<polyline points="7 10 12 15 17 10" />
@@ -294,6 +290,7 @@ const _EditIcon: FC<{ className?: string }> = ({ className }) => (
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		class={className}
+		aria-hidden="true"
 	>
 		<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
 		<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />

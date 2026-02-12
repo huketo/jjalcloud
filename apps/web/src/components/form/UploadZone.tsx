@@ -2,6 +2,12 @@ import type { FC } from "hono/jsx";
 
 interface UploadZoneProps {
 	id?: string;
+	inputId?: string;
+	isDragOver?: boolean;
+	onDragOver?: (event: Event) => void;
+	onDragLeave?: (event: Event) => void;
+	onDrop?: (event: Event) => void;
+	onDragEnter?: (event: Event) => void;
 }
 
 const CloudUploadIcon = () => (
@@ -13,6 +19,7 @@ const CloudUploadIcon = () => (
 		stroke-width="1.5"
 		stroke-linecap="round"
 		stroke-linejoin="round"
+		aria-hidden="true"
 	>
 		<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
 		<path d="M12 12v9" />
@@ -20,12 +27,24 @@ const CloudUploadIcon = () => (
 	</svg>
 );
 
-export const UploadZone: FC<UploadZoneProps> = ({ id = "upload-zone" }) => {
+export const UploadZone: FC<UploadZoneProps> = ({
+	id = "upload-zone",
+	inputId = `${id}-input`,
+	isDragOver = false,
+	onDragOver,
+	onDragLeave,
+	onDrop,
+	onDragEnter,
+}) => {
 	return (
 		<label
-			class="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-2xl bg-bg-surface cursor-pointer transition-all duration-200 hover:border-brand-primary hover:bg-brand-primary-pale group"
-			for={`${id}-input`}
+			class={`flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-2xl bg-bg-surface cursor-pointer transition-all duration-200 hover:border-brand-primary hover:bg-brand-primary-pale group ${isDragOver ? "dragover border-brand-primary bg-brand-primary-pale" : ""}`}
+			for={inputId}
 			id={id}
+			onDragOver={onDragOver}
+			onDragLeave={onDragLeave}
+			onDrop={onDrop}
+			onDragEnter={onDragEnter}
 		>
 			<div class="w-16 h-16 text-brand-primary-light mb-4">
 				<CloudUploadIcon />
@@ -39,14 +58,6 @@ export const UploadZone: FC<UploadZoneProps> = ({ id = "upload-zone" }) => {
 			<span class="inline-flex items-center justify-center gap-2 px-3 py-1 text-sm font-medium rounded-md bg-bg-surface text-text border border-border transition-all hover:bg-bg-surface-hover hover:border-brand-primary-light">
 				Browse Files
 			</span>
-			<input
-				type="file"
-				id={`${id}-input`}
-				name="file"
-				accept="image/gif,video/mp4,image/webp"
-				class="hidden"
-				required
-			/>
 		</label>
 	);
 };

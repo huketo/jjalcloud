@@ -1,6 +1,7 @@
 import type { FC } from "hono/jsx";
 import { GifCard, GifGrid, GifGridItem, Layout } from "../components";
 import type { GifView } from "../types/gif";
+import { getGifUrl } from "../utils";
 
 interface HomePageProps {
 	isLoggedIn: boolean;
@@ -101,14 +102,6 @@ export const HomePage: FC<HomePageProps> = ({
 	);
 };
 
-// Helper function to get GIF URL from blob ref
-function getGifUrl(gif: GifView): string {
-	const did = gif.uri.split("/")[2];
-	const ref = gif.file.ref as unknown as { $link?: string; link?: string };
-	const cid = ref.$link || ref.link;
-	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
-}
-
 // Icons
 const EmptyIcon = () => (
 	<svg
@@ -119,6 +112,7 @@ const EmptyIcon = () => (
 		stroke-width="1.5"
 		stroke-linecap="round"
 		stroke-linejoin="round"
+		aria-hidden="true"
 	>
 		<rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
 		<circle cx="9" cy="9" r="2" />

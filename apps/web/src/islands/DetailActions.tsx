@@ -1,5 +1,4 @@
 /** @jsxImportSource hono/jsx/dom */
-import { useState } from "hono/jsx";
 import { showToast } from "../components/ui/Toast";
 
 interface DetailActionsProps {
@@ -17,12 +16,10 @@ export const DetailActions = ({
 	// gifTitle,
 	gifUri,
 	gifCid,
-	isLiked: initialIsLiked = false,
+	isLiked = false,
 	isOwner = false,
 	rkey,
 }: DetailActionsProps) => {
-	const [isLiked, setIsLiked] = useState(initialIsLiked);
-
 	const handleCopy = async () => {
 		try {
 			await navigator.clipboard.writeText(gifUrl);
@@ -52,41 +49,6 @@ export const DetailActions = ({
 		}
 	};
 
-	const handleLike = async () => {
-		if (!gifUri || !gifCid) {
-			showToast("Cannot like this item", "error");
-			return;
-		}
-
-		const nextIsLiked = !isLiked;
-		setIsLiked(nextIsLiked); // Optimistic
-
-		const method = nextIsLiked ? "POST" : "DELETE";
-		const body = nextIsLiked
-			? JSON.stringify({ subject: { uri: gifUri, cid: gifCid } })
-			: JSON.stringify({ subject: { uri: gifUri } });
-
-		try {
-			const res = await fetch("/api/like", {
-				method,
-				headers: { "Content-Type": "application/json" },
-				body,
-			});
-
-			if (!res.ok) {
-				if (res.status === 401) {
-					window.location.href = "/login";
-					return;
-				}
-				throw new Error("Failed to like");
-			}
-		} catch (err) {
-			console.error("Like action failed", err);
-			setIsLiked(!nextIsLiked); // Revert
-			showToast("Failed to update like", "error");
-		}
-	};
-
 	const buttonBaseClass =
 		"group flex items-center gap-3 py-2 font-medium text-text-secondary transition-colors bg-transparent border-none shadow-none cursor-pointer";
 
@@ -94,13 +56,17 @@ export const DetailActions = ({
 		<div class="flex flex-row md:flex-col gap-2 w-full md:w-auto">
 			<button
 				type="button"
-				onClick={handleLike}
-				class={`${buttonBaseClass} ${isLiked ? "text-red-500 hover:text-red-600" : "hover:text-red-500"}`}
+				class={`${buttonBaseClass} like-btn hover:text-status-like ${isLiked ? "text-status-like-active" : "text-text-muted"}`}
+				data-gif-uri={gifUri}
+				data-gif-cid={gifCid}
+				aria-label={isLiked ? "Unlike" : "Like"}
 			>
-				<HeartIcon
-					filled={isLiked}
-					className={`w-6 h-6 transition-transform duration-200 group-hover:scale-110 ${isLiked ? "fill-current" : ""}`}
-				/>
+				<span class="flex items-center justify-center w-6 h-6">
+					<HeartIcon
+						filled={isLiked}
+						className="w-full h-full transition-transform duration-200 group-hover:scale-110"
+					/>
+				</span>
 				<span>Favorite</span>
 			</button>
 
@@ -154,6 +120,7 @@ const HeartIcon = ({
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		class={className}
+		aria-hidden="true"
 	>
 		<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
 	</svg>
@@ -168,6 +135,7 @@ const EditIcon = ({ className }: { className?: string }) => (
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		class={className}
+		aria-hidden="true"
 	>
 		<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
 	</svg>
@@ -182,6 +150,7 @@ const LinkIcon = ({ className }: { className?: string }) => (
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		class={className}
+		aria-hidden="true"
 	>
 		<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
 		<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -197,6 +166,7 @@ const DownloadIcon = ({ className }: { className?: string }) => (
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		class={className}
+		aria-hidden="true"
 	>
 		<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
 		<polyline points="7 10 12 15 17 10" />
