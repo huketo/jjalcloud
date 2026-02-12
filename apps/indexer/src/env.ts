@@ -9,7 +9,7 @@ const envSchema = z.object({
 		.string()
 		.default("wss://jetstream2.us-east.bsky.network/subscribe"),
 	LOG_LEVEL: z.string().default("info"),
-	LOCAL_DB_PATH: z.string().optional(),
+	LOCAL_DB_PATH: z.string().trim().min(1).optional(),
 	// Cloudflare D1 (required for production)
 	CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
 	CLOUDFLARE_DATABASE_ID: z.string().optional(),

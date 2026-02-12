@@ -74,16 +74,6 @@ async function main() {
 			CLOUDFLARE_API_TOKEN,
 		} = env;
 
-		if (
-			!CLOUDFLARE_ACCOUNT_ID ||
-			!CLOUDFLARE_DATABASE_ID ||
-			!CLOUDFLARE_API_TOKEN
-		) {
-			throw new Error(
-				"Missing Cloudflare configuration - CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_DATABASE_ID, and CLOUDFLARE_API_TOKEN are required in production",
-			);
-		}
-
 		logger.info("Running in PRODUCTION mode - connecting to Cloudflare D1");
 		dbClient = createRemoteDatabase(
 			{
@@ -95,7 +85,10 @@ async function main() {
 		);
 	} else {
 		logger.info("Running in DEVELOPMENT mode - using local D1 database");
-		dbClient = createLocalDatabase(logger);
+		dbClient = createLocalDatabase({
+			logger,
+			dbPath: env.LOCAL_DB_PATH,
+		});
 	}
 
 	const { db } = dbClient;

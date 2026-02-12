@@ -8,7 +8,7 @@ import { drizzle as drizzleBetterSqlite } from "drizzle-orm/better-sqlite3";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { drizzle as drizzleSqliteProxy } from "drizzle-orm/sqlite-proxy";
 import type { Logger } from "pino";
-import { createD1HttpDriver, type D1BatchQuery } from "./d1-http-driver.js";
+import { createD1HttpDriver } from "./d1-http-driver.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +16,19 @@ const __dirname = path.dirname(__filename);
 const WORKSPACE_ROOT = path.resolve(__dirname, "../../../../");
 const WEB_WRANGLER_DIR = path.join(WORKSPACE_ROOT, "apps/web/.wrangler");
 
-function findD1Database() {
+function findD1Database(customPath?: string): string {
+	if (customPath) {
+		const resolvedPath = path.isAbsolute(customPath)
+			? customPath
+			: path.resolve(WORKSPACE_ROOT, customPath);
+
+		if (!fs.existsSync(resolvedPath)) {
+			throw new Error(`Local DB file not found: ${resolvedPath}`);
+		}
+
+		return resolvedPath;
+	}
+
 	const d1StateDir = path.join(
 		WEB_WRANGLER_DIR,
 		"state/v3/d1/miniflare-D1DatabaseObject",
@@ -41,28 +53,64 @@ const schema = { likes, gifs };
 // biome-ignore lint/suspicious/noExplicitAny: Required for generic database type
 export type Database = BaseSQLiteDatabase<"sync" | "async", any, typeof schema>;
 
-export type BatchExecutor = (queries: D1BatchQuery[]) => Promise<void>;
+export interface LikeInsertData {
+	subject: string;
+	author: string;
+	rkey: string;
+	createdAt: Date;
+}
+
+export interface LikeDeleteData {
+	rkey: string;
+	author: string;
+}
+
+export interface GifUpsertData {
+	uri: string;
+	cid: string;
+	author: string;
+	title: string | null | undefined;
+	alt: string | null | undefined;
+	tags: string[] | null | undefined;
+	file: unknown;
+	width: number | null | undefined;
+	height: number | null | undefined;
+	createdAt: Date;
+}
+
+export interface GifDeleteData {
+	uri: string;
+}
+
+export interface BatchOperations {
+	gifUpserts: GifUpsertData[];
+	gifDeletes: GifDeleteData[];
+	likeInserts: LikeInsertData[];
+	likeDeletes: LikeDeleteData[];
+}
+
+export type BatchExecutor = (operations: BatchOperations) => Promise<void>;
 
 export interface DatabaseClient {
 	db: Database;
 	executeBatch: BatchExecutor;
 }
 
-export function createLocalDatabase(logger?: Logger): DatabaseClient {
-	const dbPath = findD1Database();
+export interface LocalDatabaseOptions {
+	logger?: Logger;
+	dbPath?: string;
+}
+
+export function createLocalDatabase(
+	options?: LocalDatabaseOptions,
+): DatabaseClient {
+	const dbPath = findD1Database(options?.dbPath);
+	const logger = options?.logger;
 	logger?.info({ dbPath }, "Using local D1 database");
 
 	const sqlite = new BetterSqlite3(dbPath);
 	const db = drizzleBetterSqlite(sqlite, { schema });
-
-	const executeBatch: BatchExecutor = async (queries) => {
-		const transaction = sqlite.transaction(() => {
-			for (const query of queries) {
-				sqlite.prepare(query.sql).run(...query.params);
-			}
-		});
-		transaction();
-	};
+	const executeBatch = createBatchExecutor(db);
 
 	return { db, executeBatch };
 }
@@ -77,7 +125,7 @@ export function createRemoteDatabase(
 ): DatabaseClient {
 	logger?.info("Using D1 HTTP API");
 
-	const { proxyDriver, executeBatch } = createD1HttpDriver({
+	const { proxyDriver } = createD1HttpDriver({
 		accountId: config.accountId,
 		databaseId: config.databaseId,
 		apiToken: config.apiToken,
@@ -85,6 +133,7 @@ export function createRemoteDatabase(
 	});
 
 	const db = drizzleSqliteProxy(proxyDriver, { schema });
+	const executeBatch = createBatchExecutor(db);
 
 	return { db, executeBatch };
 }
@@ -94,15 +143,7 @@ export function createRemoteDatabase(
  * All operations are unified across local and remote databases
  */
 export const dbOperations = {
-	async insertLike(
-		db: Database,
-		data: {
-			subject: string;
-			author: string;
-			rkey: string;
-			createdAt: Date;
-		},
-	) {
+	async insertLike(db: Database, data: LikeInsertData) {
 		await db.insert(likes).values({
 			subject: data.subject,
 			author: data.author,
@@ -117,21 +158,7 @@ export const dbOperations = {
 			.where(and(eq(likes.rkey, rkey), eq(likes.author, author)));
 	},
 
-	async upsertGif(
-		db: Database,
-		data: {
-			uri: string;
-			cid: string;
-			author: string;
-			title: string | null | undefined;
-			alt: string | null | undefined;
-			tags: string[] | null | undefined;
-			file: unknown;
-			width: number | null | undefined;
-			height: number | null | undefined;
-			createdAt: Date;
-		},
-	) {
+	async upsertGif(db: Database, data: GifUpsertData) {
 		await db
 			.insert(gifs)
 			.values({
@@ -181,3 +208,23 @@ export const dbOperations = {
 		return rows.map((row) => row.rkey);
 	},
 };
+
+function createBatchExecutor(db: Database): BatchExecutor {
+	return async (operations) => {
+		for (const gifUpsert of operations.gifUpserts) {
+			await dbOperations.upsertGif(db, gifUpsert);
+		}
+
+		for (const gifDelete of operations.gifDeletes) {
+			await dbOperations.deleteGif(db, gifDelete.uri);
+		}
+
+		for (const likeInsert of operations.likeInserts) {
+			await dbOperations.insertLike(db, likeInsert);
+		}
+
+		for (const likeDelete of operations.likeDeletes) {
+			await dbOperations.deleteLike(db, likeDelete.rkey, likeDelete.author);
+		}
+	};
+}
