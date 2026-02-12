@@ -18,6 +18,17 @@ export interface CloudflareBindings {
 	jjalcloud_db: D1Database;
 }
 
+export type OpenGraphType = "website" | "article";
+
+export interface OpenGraphMeta {
+	title: string;
+	description: string;
+	image: string;
+	imageAlt: string;
+	url: string;
+	type?: OpenGraphType;
+}
+
 /**
  * Hono Environment type used in Context
  */
@@ -28,5 +39,6 @@ export type HonoEnv = {
 			did: string;
 			handle?: string;
 		};
+		openGraph?: OpenGraphMeta;
 	};
 };

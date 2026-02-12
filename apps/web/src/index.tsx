@@ -16,6 +16,7 @@ import { renderer } from "./renderer";
 import gifRoutes from "./routes/gif";
 import likeRoutes from "./routes/like";
 import oauthRoutes from "./routes/oauth";
+import type { OpenGraphMeta } from "./types";
 import type { GifView } from "./types/gif";
 import { fetchProfile } from "./utils";
 
@@ -34,6 +35,38 @@ interface ProfileData {
 	avatar?: string;
 	description?: string;
 	isFollowing?: boolean;
+}
+
+const DEFAULT_OG_DESCRIPTION =
+	"AT Protocol based decentralized GIF sharing platform";
+
+function createDefaultOpenGraph(url: string): OpenGraphMeta {
+	const requestUrl = new URL(url);
+
+	return {
+		title: "jjalcloud",
+		description: DEFAULT_OG_DESCRIPTION,
+		image: new URL("/title.png", requestUrl.origin).toString(),
+		imageAlt: "jjalcloud preview image",
+		url: requestUrl.toString(),
+		type: "website",
+	};
+}
+
+function buildGifBlobUrl(uri: string, file: BlobRef): string | undefined {
+	const did = uri.split("/")[2];
+	if (!did) {
+		return undefined;
+	}
+
+	const ref = file.ref as unknown as { $link?: string; link?: string };
+	const cid = ref.$link || ref.link;
+
+	if (!cid) {
+		return undefined;
+	}
+
+	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
 }
 
 const app = new Hono<HonoEnv>();
@@ -453,6 +486,19 @@ app.get("/gif/:rkey", async (c) => {
 				avatarUrl = profileData.avatar;
 			}
 		}
+
+		const defaultOpenGraph = createDefaultOpenGraph(c.req.url);
+		const gifTitle = gif.title || "Untitled GIF";
+		const gifImage =
+			buildGifBlobUrl(gif.uri, gif.file) || defaultOpenGraph.image;
+		c.set("openGraph", {
+			...defaultOpenGraph,
+			title: `${gifTitle} | jjalcloud`,
+			description: gif.alt || defaultOpenGraph.description,
+			image: gifImage,
+			imageAlt: gif.alt || gifTitle,
+			type: "article",
+		});
 
 		return c.render(
 			<DetailPage
