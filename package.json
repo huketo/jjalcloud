@@ -8,6 +8,9 @@
 		"lint:fix": "biome check --write .",
 		"build": "pnpm -r build",
 		"dev": "pnpm -r dev",
+		"test:e2e:web": "pnpm --filter web test:e2e",
+		"test:e2e:web:oauth:setup": "pnpm --filter web test:e2e:oauth:setup",
+		"test:e2e:web:oauth": "pnpm --filter web test:e2e:oauth",
 		"db:generate": "pnpm --filter web db:generate",
 		"db:migrate:local": "pnpm --filter web db:migrate:local",
 		"db:migrate:remote": "pnpm --filter web db:migrate:remote"

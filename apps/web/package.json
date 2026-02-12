@@ -6,6 +6,12 @@
 		"lint": "biome check",
 		"lint:fix": "biome check --write",
 		"dev": "vite",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:e2e:headed": "playwright test --headed",
+		"test:e2e:install": "playwright install chromium",
+		"test:e2e:oauth:setup": "E2E_OAUTH=1 E2E_OAUTH_BOOTSTRAP=1 playwright test --project=oauth-setup --headed",
+		"test:e2e:oauth": "E2E_OAUTH=1 playwright test --project=oauth-chromium",
 		"build": "$npm_execpath run uno && vite build",
 		"preview": "$npm_execpath run build && vite preview",
 		"deploy": "$npm_execpath run build && wrangler deploy",
@@ -32,6 +38,7 @@
 		"multiformats": "^13.4.2"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.56.0",
 		"@atproto/lex-cli": "^0.9.8",
 		"@biomejs/biome": "2.3.13",
 		"@cloudflare/vite-plugin": "^1.2.3",
