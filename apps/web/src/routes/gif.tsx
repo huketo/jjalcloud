@@ -14,7 +14,12 @@ import {
 	SESSION_COOKIE,
 } from "../constants";
 import { type AuthenticatedEnv, requireAuth } from "../middleware";
-import { type GifRecord, parseTags, toGifView } from "../types/gif";
+import {
+	type GifRecord,
+	parseTags,
+	toGifView,
+	toGifViewFromDbRecord,
+} from "../types/gif";
 import { createRpcClient, extractErrorMessage } from "../utils";
 
 const gif = new Hono<AuthenticatedEnv>();
@@ -188,6 +193,7 @@ gif.get("/:rkey", async (c) => {
 
 		const gifRecord = foundGifs[0];
 		const uri = gifRecord.uri;
+		const gifView = toGifViewFromDbRecord(gifRecord);
 
 		// 2. Get Like Info
 		const likeCountRes = await db
@@ -208,13 +214,13 @@ gif.get("/:rkey", async (c) => {
 		}
 
 		return c.json({
-			uri: gifRecord.uri,
-			cid: gifRecord.cid,
+			uri: gifView.uri,
+			cid: gifView.cid,
 			rkey,
-			title: gifRecord.title,
-			alt: gifRecord.alt,
-			tags: gifRecord.tags ? JSON.parse(gifRecord.tags as string) : [],
-			file: gifRecord.file,
+			title: gifView.title,
+			alt: gifView.alt,
+			tags: gifView.tags,
+			file: gifView.file,
 			createdAt: gifRecord.createdAt,
 			authorDid: gifRecord.author, // Return author DID for frontend to fetch profile
 			likeCount: Number(likeCount),

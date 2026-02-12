@@ -545,9 +545,6 @@ button {
 .flex-wrap {
 	flex-wrap: wrap;
 }
-.table {
-	display: table;
-}
 .origin-top {
 	transform-origin: top;
 }

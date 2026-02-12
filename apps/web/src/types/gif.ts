@@ -32,6 +32,33 @@ export interface GifView {
 	isLiked?: boolean;
 }
 
+export interface GifAuthorProfile {
+	did?: string;
+	handle?: string;
+	displayName?: string;
+	avatar?: string;
+}
+
+export interface GifViewWithAuthor extends GifView {
+	authorDid?: string;
+	authorHandle?: string;
+	authorAvatar?: string;
+	authorDisplayName?: string;
+}
+
+export interface DbGifRecord {
+	uri: string;
+	cid: string;
+	author: string;
+	title: string | null;
+	alt: string | null;
+	tags: unknown;
+	file: unknown;
+	width: number | null;
+	height: number | null;
+	createdAt: Date | string;
+}
+
 /**
  * GIF update request type
  */
@@ -63,6 +90,74 @@ export function toGifView(record: {
 		createdAt: value.createdAt,
 		likeCount: 0, // Default, needs enrichment
 		isLiked: false, // Default, needs enrichment
+	};
+}
+
+function getRkeyFromUri(uri: string): string {
+	return uri.split("/").pop() || "";
+}
+
+function toIsoString(createdAt: Date | string): string {
+	if (createdAt instanceof Date) {
+		return createdAt.toISOString();
+	}
+
+	return createdAt;
+}
+
+export function parseGifTags(tags: unknown): string[] {
+	if (Array.isArray(tags)) {
+		return tags.filter((tag): tag is string => typeof tag === "string");
+	}
+
+	if (typeof tags !== "string") {
+		return [];
+	}
+
+	if (!tags.trim()) {
+		return [];
+	}
+
+	try {
+		const parsed = JSON.parse(tags) as unknown;
+		if (Array.isArray(parsed)) {
+			return parsed.filter((tag): tag is string => typeof tag === "string");
+		}
+	} catch {}
+
+	return tags
+		.split(",")
+		.map((tag) => tag.trim())
+		.filter((tag) => tag.length > 0);
+}
+
+export function toGifViewFromDbRecord(record: DbGifRecord): GifView {
+	return {
+		uri: record.uri,
+		cid: record.cid,
+		rkey: getRkeyFromUri(record.uri),
+		title: record.title ?? undefined,
+		alt: record.alt ?? undefined,
+		tags: parseGifTags(record.tags),
+		file: record.file as BlobRef,
+		width: record.width ?? undefined,
+		height: record.height ?? undefined,
+		createdAt: toIsoString(record.createdAt),
+		likeCount: 0,
+		isLiked: false,
+	};
+}
+
+export function toGifViewWithAuthorFromDbRecord(
+	record: DbGifRecord,
+	profile?: GifAuthorProfile | null,
+): GifViewWithAuthor {
+	return {
+		...toGifViewFromDbRecord(record),
+		authorDid: record.author,
+		authorHandle: profile?.handle || "unknown",
+		authorAvatar: profile?.avatar,
+		authorDisplayName: profile?.displayName,
 	};
 }
 

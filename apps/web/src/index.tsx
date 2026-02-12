@@ -1,6 +1,6 @@
 import type { BlobRef } from "@atproto/lexicon";
 import { gifs as gifsTable } from "@jjalcloud/common/db/schema";
-import { and, desc, eq, lt, or, sql } from "drizzle-orm";
+import { desc, eq, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
@@ -15,19 +15,17 @@ import { ProfilePage } from "./pages/profile";
 import { TermsPage } from "./pages/terms";
 import { UploadPage } from "./pages/upload";
 import { renderer } from "./renderer";
+import feedRoutes from "./routes/feed";
 import gifRoutes from "./routes/gif";
 import likeRoutes from "./routes/like";
 import oauthRoutes from "./routes/oauth";
 import type { OpenGraphMeta } from "./types";
-import type { GifView } from "./types/gif";
+import {
+	type GifViewWithAuthor,
+	toGifViewFromDbRecord,
+	toGifViewWithAuthorFromDbRecord,
+} from "./types/gif";
 import { fetchProfile } from "./utils";
-
-// Extended GifView with author info for internal use
-interface GifViewWithAuthor extends GifView {
-	authorDid?: string;
-	authorHandle?: string;
-	authorAvatar?: string;
-}
 
 // Profile data structure
 interface ProfileData {
@@ -83,164 +81,7 @@ app.route("/oauth", oauthRoutes);
 // Register GIF API routes
 app.route("/api/gif", gifRoutes);
 app.route("/api/like", likeRoutes);
-
-// Global Feed API (Load More / Infinite Scroll)
-app.get("/api/feed", async (c) => {
-	const cursor = c.req.query("cursor");
-	const limitParam = c.req.query("limit");
-	const limit = limitParam ? Math.min(Number.parseInt(limitParam, 10), 50) : 12;
-	const db = drizzle(c.env.jjalcloud_db);
-
-	try {
-		let results: (typeof gifsTable.$inferSelect)[];
-
-		if (cursor) {
-			const cursorDate = new Date(cursor);
-			results = await db
-				.select()
-				.from(gifsTable)
-				.where(lt(gifsTable.createdAt, cursorDate))
-				.orderBy(desc(gifsTable.createdAt), desc(gifsTable.uri))
-				.limit(limit)
-				.all();
-		} else {
-			results = await db
-				.select()
-				.from(gifsTable)
-				.orderBy(desc(gifsTable.createdAt), desc(gifsTable.uri))
-				.limit(limit)
-				.all();
-		}
-
-		// Fetch profiles for authors
-		const uniqueDids = [...new Set(results.map((g) => g.author))];
-		const profiles = new Map();
-
-		await Promise.all(
-			uniqueDids.map(async (did) => {
-				const profile = await fetchProfile(did, db);
-				if (profile) profiles.set(did, profile);
-			}),
-		);
-
-		const gifs = results.map((g) => {
-			const profile = profiles.get(g.author);
-
-			return {
-				uri: g.uri,
-				cid: g.cid,
-				rkey: g.uri.split("/").pop() || "",
-				title: g.title,
-				alt: g.alt,
-				tags: g.tags ? JSON.parse(g.tags) : [],
-				file: g.file,
-				width: g.width ?? undefined,
-				height: g.height ?? undefined,
-				createdAt: g.createdAt.toISOString(),
-				authorDid: g.author,
-				authorHandle: profile?.handle || "unknown",
-				authorAvatar: profile?.avatar,
-				likeCount: 0,
-				isLiked: false,
-			};
-		});
-
-		const nextCursor =
-			results.length > 0
-				? results[results.length - 1].createdAt.toISOString()
-				: undefined;
-
-		return c.json({ gifs, cursor: nextCursor });
-	} catch (err) {
-		console.error("Feed API Error:", err);
-		return c.json({ error: "Failed to fetch feed" }, 500);
-	}
-});
-
-app.get("/api/search", async (c) => {
-	const q = (c.req.query("q") || "").trim();
-	const cursor = c.req.query("cursor");
-	const limitParam = c.req.query("limit");
-	const limit = limitParam ? Math.min(Number.parseInt(limitParam, 10), 50) : 12;
-
-	if (!q) {
-		return c.json({ gifs: [], cursor: undefined });
-	}
-
-	const db = drizzle(c.env.jjalcloud_db);
-	const likePattern = `%${q}%`;
-
-	try {
-		const searchCondition = or(
-			sql`lower(coalesce(${gifsTable.title}, '')) LIKE lower(${likePattern})`,
-			sql`lower(coalesce(${gifsTable.alt}, '')) LIKE lower(${likePattern})`,
-			sql`lower(coalesce(${gifsTable.tags}, '')) LIKE lower(${likePattern})`,
-		);
-
-		let results: (typeof gifsTable.$inferSelect)[];
-
-		if (cursor) {
-			const cursorDate = new Date(cursor);
-			results = await db
-				.select()
-				.from(gifsTable)
-				.where(and(searchCondition, lt(gifsTable.createdAt, cursorDate)))
-				.orderBy(desc(gifsTable.createdAt), desc(gifsTable.uri))
-				.limit(limit)
-				.all();
-		} else {
-			results = await db
-				.select()
-				.from(gifsTable)
-				.where(searchCondition)
-				.orderBy(desc(gifsTable.createdAt), desc(gifsTable.uri))
-				.limit(limit)
-				.all();
-		}
-
-		const uniqueDids = [...new Set(results.map((g) => g.author))];
-		const profiles = new Map();
-
-		await Promise.all(
-			uniqueDids.map(async (did) => {
-				const profile = await fetchProfile(did, db);
-				if (profile) profiles.set(did, profile);
-			}),
-		);
-
-		const gifs = results.map((g) => {
-			const profile = profiles.get(g.author);
-
-			return {
-				uri: g.uri,
-				cid: g.cid,
-				rkey: g.uri.split("/").pop() || "",
-				title: g.title,
-				alt: g.alt,
-				tags: g.tags ? JSON.parse(g.tags) : [],
-				file: g.file,
-				width: g.width ?? undefined,
-				height: g.height ?? undefined,
-				createdAt: g.createdAt.toISOString(),
-				authorDid: g.author,
-				authorHandle: profile?.handle || "unknown",
-				authorAvatar: profile?.avatar,
-				likeCount: 0,
-				isLiked: false,
-			};
-		});
-
-		const nextCursor =
-			results.length > 0
-				? results[results.length - 1].createdAt.toISOString()
-				: undefined;
-
-		return c.json({ gifs, cursor: nextCursor });
-	} catch (err) {
-		console.error("Search API Error:", err);
-		return c.json({ error: "Failed to search gifs" }, 500);
-	}
-});
+app.route("/api", feedRoutes);
 
 // ================================
 // Main Page (Home Feed)
@@ -275,7 +116,10 @@ app.get("/", async (c) => {
 
 		// Fetch profiles for authors
 		const uniqueDids = [...new Set(results.map((g) => g.author))];
-		const profiles = new Map();
+		const profiles = new Map<
+			string,
+			{ handle?: string; avatar?: string; displayName?: string }
+		>();
 
 		await Promise.all(
 			uniqueDids.map(async (did) => {
@@ -284,27 +128,9 @@ app.get("/", async (c) => {
 			}),
 		);
 
-		gifs = results.map((g) => {
-			const profile = profiles.get(g.author);
-			// Assuming g.file is the BlobRef object (parsed from JSON by drizzle mode: "json")
-			return {
-				uri: g.uri,
-				cid: g.cid,
-				rkey: g.uri.split("/").pop() || "",
-				title: g.title ?? undefined,
-				alt: g.alt ?? undefined,
-				tags: g.tags ? JSON.parse(g.tags) : [],
-				file: g.file as BlobRef,
-				width: g.width ?? undefined,
-				height: g.height ?? undefined,
-				createdAt: g.createdAt.toISOString(),
-				authorDid: g.author,
-				authorHandle: profile?.handle || "unknown",
-				authorAvatar: profile?.avatar,
-				likeCount: 0,
-				isLiked: false,
-			};
-		});
+		gifs = results.map((g) =>
+			toGifViewWithAuthorFromDbRecord(g, profiles.get(g.author)),
+		);
 	} catch (err) {
 		console.error("Failed to fetch global feed:", err);
 	}
@@ -355,7 +181,10 @@ app.get("/search", async (c) => {
 				.all();
 
 			const uniqueDids = [...new Set(results.map((g) => g.author))];
-			const profiles = new Map();
+			const profiles = new Map<
+				string,
+				{ handle?: string; avatar?: string; displayName?: string }
+			>();
 
 			await Promise.all(
 				uniqueDids.map(async (did) => {
@@ -364,26 +193,9 @@ app.get("/search", async (c) => {
 				}),
 			);
 
-			gifs = results.map((g) => {
-				const profile = profiles.get(g.author);
-				return {
-					uri: g.uri,
-					cid: g.cid,
-					rkey: g.uri.split("/").pop() || "",
-					title: g.title ?? undefined,
-					alt: g.alt ?? undefined,
-					tags: g.tags ? JSON.parse(g.tags) : [],
-					file: g.file as BlobRef,
-					width: g.width ?? undefined,
-					height: g.height ?? undefined,
-					createdAt: g.createdAt.toISOString(),
-					authorDid: g.author,
-					authorHandle: profile?.handle || "unknown",
-					authorAvatar: profile?.avatar,
-					likeCount: 0,
-					isLiked: false,
-				};
-			});
+			gifs = results.map((g) =>
+				toGifViewWithAuthorFromDbRecord(g, profiles.get(g.author)),
+			);
 		} catch (err) {
 			console.error("Failed to search gifs:", err);
 		}
@@ -489,22 +301,8 @@ app.get("/gif/:rkey", async (c) => {
 
 		// 3. Construct View Model
 		const gif = {
-			uri: g.uri,
-			cid: g.cid,
-			rkey: rkey,
-			title: g.title ?? undefined,
-			alt: g.alt ?? undefined,
-			tags: g.tags ? JSON.parse(g.tags as string) : [],
-			file: g.file as BlobRef,
-			width: g.width ?? undefined,
-			height: g.height ?? undefined,
-			createdAt: g.createdAt.toISOString(),
-			authorDid: g.author,
-			authorHandle: authorProfile?.handle || "unknown",
-			authorAvatar: authorProfile?.avatar,
-			authorDisplayName: authorProfile?.displayName,
-			likeCount: 0, // Todo: fetch from likes table
-			isLiked: false, // Todo: check if logged in user liked
+			...toGifViewWithAuthorFromDbRecord(g, authorProfile),
+			rkey,
 			commentCount: 0,
 		};
 
@@ -625,23 +423,7 @@ app.get("/profile/:handle", async (c) => {
 					.orderBy(desc(gifsTable.createdAt))
 					.all();
 
-				gifs = userGifs.map((g) => ({
-					uri: g.uri,
-					cid: g.cid,
-					rkey: g.uri.split("/").pop() || "",
-					title: g.title ?? undefined,
-					alt: g.alt ?? undefined,
-					tags: g.tags ? JSON.parse(g.tags as string) : [],
-					file: g.file as BlobRef,
-					width: g.width ?? undefined,
-					height: g.height ?? undefined,
-					createdAt: g.createdAt.toISOString(),
-					authorDid: g.author,
-					authorHandle: profile.handle,
-					authorAvatar: profile.avatar,
-					likeCount: 0,
-					isLiked: false,
-				}));
+				gifs = userGifs.map((g) => toGifViewWithAuthorFromDbRecord(g, profile));
 			}
 		} catch (err) {
 			console.error("Failed to check own profile:", err);
@@ -753,17 +535,9 @@ app.get("/edit/:rkey", async (c) => {
 		}
 
 		const gif = {
-			uri: data.uri,
-			cid: data.cid,
-			rkey: rkey,
-			title: data.title ?? undefined,
-			alt: data.alt ?? undefined,
-			tags: data.tags ? JSON.parse(data.tags as string) : [],
-			file: data.file as BlobRef,
-			width: data.width ?? undefined,
-			height: data.height ?? undefined,
-			createdAt: data.createdAt.toISOString(),
-			authorDid: authorDid,
+			...toGifViewFromDbRecord(data),
+			rkey,
+			authorDid,
 		};
 
 		return c.render(
