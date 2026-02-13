@@ -35,6 +35,7 @@ export interface OpenGraphMeta {
 export type HonoEnv = {
 	Bindings: CloudflareBindings;
 	Variables: {
+		did?: string;
 		session?: {
 			did: string;
 			handle?: string;

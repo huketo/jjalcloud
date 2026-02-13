@@ -58,6 +58,17 @@ export const requireAuth = createMiddleware<AuthenticatedEnv>(
 	},
 );
 
+export const requirePageAuth = createMiddleware<HonoEnv>(async (c, next) => {
+	const did = getCookie(c, SESSION_COOKIE);
+
+	if (!did) {
+		return c.redirect("/login");
+	}
+
+	c.set("did", did);
+	await next();
+});
+
 /**
  * Optional Auth Middleware
  * Accessible without login, but provides session info if logged in.
