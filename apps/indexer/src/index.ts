@@ -117,6 +117,10 @@ async function main() {
 	];
 
 	const batcher = new EventBatcher({
+		maxBatchSize: env.INDEXER_MAX_BATCH_SIZE,
+		flushIntervalMs: env.INDEXER_FLUSH_INTERVAL_MS,
+		retryMaxAttempts: env.INDEXER_BATCH_RETRY_MAX_ATTEMPTS,
+		retryBaseDelayMs: env.INDEXER_BATCH_RETRY_BASE_DELAY_MS,
 		executeBatch: dbClient.executeBatch,
 		logger,
 	});
@@ -203,6 +207,12 @@ async function main() {
 		{
 			mode: isProduction ? "production" : "development",
 			collections: WANTED_COLLECTIONS,
+			batchConfig: {
+				maxBatchSize: env.INDEXER_MAX_BATCH_SIZE,
+				flushIntervalMs: env.INDEXER_FLUSH_INTERVAL_MS,
+				retryMaxAttempts: env.INDEXER_BATCH_RETRY_MAX_ATTEMPTS,
+				retryBaseDelayMs: env.INDEXER_BATCH_RETRY_BASE_DELAY_MS,
+			},
 		},
 		"Starting Jetstream indexer...",
 	);

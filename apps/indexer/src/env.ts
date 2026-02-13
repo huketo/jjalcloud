@@ -9,6 +9,14 @@ const envSchema = z.object({
 		.string()
 		.default("wss://jetstream2.us-east.bsky.network/subscribe"),
 	LOG_LEVEL: z.string().default("info"),
+	INDEXER_MAX_BATCH_SIZE: z.coerce.number().int().positive().default(20),
+	INDEXER_FLUSH_INTERVAL_MS: z.coerce.number().int().positive().default(200),
+	INDEXER_BATCH_RETRY_MAX_ATTEMPTS: z.coerce.number().int().min(1).default(3),
+	INDEXER_BATCH_RETRY_BASE_DELAY_MS: z.coerce
+		.number()
+		.int()
+		.positive()
+		.default(250),
 	LOCAL_DB_PATH: z.string().trim().min(1).optional(),
 	// Cloudflare D1 (required for production)
 	CLOUDFLARE_ACCOUNT_ID: z.string().optional(),

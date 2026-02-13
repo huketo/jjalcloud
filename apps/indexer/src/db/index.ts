@@ -144,6 +144,10 @@ export function createRemoteDatabase(
  */
 export const dbOperations = {
 	async insertLike(db: Database, data: LikeInsertData) {
+		await db
+			.delete(likes)
+			.where(and(eq(likes.rkey, data.rkey), eq(likes.author, data.author)));
+
 		await db.insert(likes).values({
 			subject: data.subject,
 			author: data.author,

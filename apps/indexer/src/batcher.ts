@@ -10,12 +10,16 @@ import type {
 interface BatcherConfig {
 	maxBatchSize: number;
 	flushIntervalMs: number;
+	retryMaxAttempts: number;
+	retryBaseDelayMs: number;
 	executeBatch: BatchExecutor;
 	logger: Logger;
 }
 
 const DEFAULT_MAX_BATCH_SIZE = 50;
 const DEFAULT_FLUSH_INTERVAL_MS = 500;
+const DEFAULT_RETRY_MAX_ATTEMPTS = 3;
+const DEFAULT_RETRY_BASE_DELAY_MS = 250;
 
 export class EventBatcher {
 	private gifUpserts: GifUpsertData[] = [];
@@ -33,8 +37,28 @@ export class EventBatcher {
 		this.config = {
 			maxBatchSize: config.maxBatchSize ?? DEFAULT_MAX_BATCH_SIZE,
 			flushIntervalMs: config.flushIntervalMs ?? DEFAULT_FLUSH_INTERVAL_MS,
+			retryMaxAttempts: config.retryMaxAttempts ?? DEFAULT_RETRY_MAX_ATTEMPTS,
+			retryBaseDelayMs: config.retryBaseDelayMs ?? DEFAULT_RETRY_BASE_DELAY_MS,
 			...config,
 		};
+	}
+
+	private async sleep(ms: number): Promise<void> {
+		await new Promise((resolve) => {
+			setTimeout(resolve, ms);
+		});
+	}
+
+	private requeueFailedBatch(
+		upserts: GifUpsertData[],
+		deletes: GifDeleteData[],
+		likeInserts: LikeInsertData[],
+		likeDeletes: LikeDeleteData[],
+	): void {
+		this.gifUpserts = upserts.concat(this.gifUpserts);
+		this.gifDeletes = deletes.concat(this.gifDeletes);
+		this.likeInserts = likeInserts.concat(this.likeInserts);
+		this.likeDeletes = likeDeletes.concat(this.likeDeletes);
 	}
 
 	start(): void {
@@ -128,24 +152,67 @@ export class EventBatcher {
 			upserts.length + deletes.length + likeIns.length + likeDels.length;
 
 		try {
-			this.config.logger.info(
+			let lastError: unknown;
+
+			for (
+				let attempt = 1;
+				attempt <= this.config.retryMaxAttempts;
+				attempt++
+			) {
+				try {
+					this.config.logger.info(
+						{
+							gifUpserts: upserts.length,
+							gifDeletes: deletes.length,
+							likeInserts: likeIns.length,
+							likeDeletes: likeDels.length,
+							total,
+							attempt,
+							maxAttempts: this.config.retryMaxAttempts,
+						},
+						"Flushing batch",
+					);
+
+					await this.config.executeBatch({
+						gifUpserts: upserts,
+						gifDeletes: deletes,
+						likeInserts: likeIns,
+						likeDeletes: likeDels,
+					});
+
+					return;
+				} catch (err) {
+					lastError = err;
+
+					if (attempt >= this.config.retryMaxAttempts) {
+						break;
+					}
+
+					const retryDelayMs =
+						this.config.retryBaseDelayMs * 2 ** (attempt - 1);
+					this.config.logger.warn(
+						{
+							err,
+							total,
+							attempt,
+							maxAttempts: this.config.retryMaxAttempts,
+							retryDelayMs,
+						},
+						"Batch flush attempt failed, retrying",
+					);
+					await this.sleep(retryDelayMs);
+				}
+			}
+
+			this.config.logger.error(
 				{
-					gifUpserts: upserts.length,
-					gifDeletes: deletes.length,
-					likeInserts: likeIns.length,
-					likeDeletes: likeDels.length,
+					err: lastError,
 					total,
+					attempts: this.config.retryMaxAttempts,
 				},
-				"Flushing batch",
+				"Batch flush failed after retries",
 			);
-			await this.config.executeBatch({
-				gifUpserts: upserts,
-				gifDeletes: deletes,
-				likeInserts: likeIns,
-				likeDeletes: likeDels,
-			});
-		} catch (err) {
-			this.config.logger.error({ err, total }, "Batch flush failed");
+			this.requeueFailedBatch(upserts, deletes, likeIns, likeDels);
 		} finally {
 			this.flushing = false;
 		}
