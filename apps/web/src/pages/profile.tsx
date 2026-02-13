@@ -99,7 +99,7 @@ const GifCollectionTab: FC<{
 						authorDid={profile.did}
 						authorHandle={profile.handle}
 						authorAvatar={profile.avatar}
-						likeCount={gif.likeCount || Math.floor(Math.random() * 500)}
+						likeCount={gif.likeCount ?? 0}
 						isLiked={gif.isLiked}
 						showActions
 						index={index}

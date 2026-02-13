@@ -1,6 +1,6 @@
 import type { BlobRef } from "@atproto/lexicon";
-import { gifs as gifsTable } from "@jjalcloud/common/db/schema";
-import { desc, eq, or, sql } from "drizzle-orm";
+import { gifs as gifsTable, likes } from "@jjalcloud/common/db/schema";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
@@ -69,6 +69,48 @@ function buildGifBlobUrl(uri: string, file: BlobRef): string | undefined {
 	return `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`;
 }
 
+async function enrichGifLikeInfo(
+	db: ReturnType<typeof drizzle>,
+	gifs: GifViewWithAuthor[],
+	currentDid?: string,
+): Promise<void> {
+	if (gifs.length === 0) {
+		return;
+	}
+
+	const uris = gifs.map((gif) => gif.uri);
+
+	const likeCounts = await db
+		.select({
+			subject: likes.subject,
+			count: sql<number>`count(*)`,
+		})
+		.from(likes)
+		.where(inArray(likes.subject, uris))
+		.groupBy(likes.subject)
+		.all();
+
+	const likeCountMap = new Map(
+		likeCounts.map((likeCount) => [likeCount.subject, Number(likeCount.count)]),
+	);
+
+	let likedSubjectSet = new Set<string>();
+	if (currentDid) {
+		const userLikes = await db
+			.select({ subject: likes.subject })
+			.from(likes)
+			.where(and(inArray(likes.subject, uris), eq(likes.author, currentDid)))
+			.all();
+
+		likedSubjectSet = new Set(userLikes.map((userLike) => userLike.subject));
+	}
+
+	for (const gif of gifs) {
+		gif.likeCount = likeCountMap.get(gif.uri) ?? 0;
+		gif.isLiked = likedSubjectSet.has(gif.uri);
+	}
+}
+
 const app = new Hono<HonoEnv>();
 
 app.use(renderer);
@@ -131,6 +173,8 @@ app.get("/", async (c) => {
 		gifs = results.map((g) =>
 			toGifViewWithAuthorFromDbRecord(g, profiles.get(g.author)),
 		);
+
+		await enrichGifLikeInfo(db, gifs, did);
 	} catch (err) {
 		console.error("Failed to fetch global feed:", err);
 	}
@@ -196,6 +240,8 @@ app.get("/search", async (c) => {
 			gifs = results.map((g) =>
 				toGifViewWithAuthorFromDbRecord(g, profiles.get(g.author)),
 			);
+
+			await enrichGifLikeInfo(db, gifs, did);
 		} catch (err) {
 			console.error("Failed to search gifs:", err);
 		}
@@ -300,8 +346,11 @@ app.get("/gif/:rkey", async (c) => {
 		const authorProfile = await fetchProfile(g.author);
 
 		// 3. Construct View Model
+		const gifView = toGifViewWithAuthorFromDbRecord(g, authorProfile);
+		await enrichGifLikeInfo(db, [gifView], did);
+
 		const gif = {
-			...toGifViewWithAuthorFromDbRecord(g, authorProfile),
+			...gifView,
 			rkey,
 			commentCount: 0,
 		};
@@ -424,6 +473,7 @@ app.get("/profile/:handle", async (c) => {
 					.all();
 
 				gifs = userGifs.map((g) => toGifViewWithAuthorFromDbRecord(g, profile));
+				await enrichGifLikeInfo(db, gifs, currentDid);
 			}
 		} catch (err) {
 			console.error("Failed to check own profile:", err);
