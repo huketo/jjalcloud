@@ -1,6 +1,7 @@
 import { ok } from "@atcute/client";
 import type { Did } from "@atcute/lexicons/syntax";
 import { likes } from "@jjalcloud/common/db/schema";
+import type { Record as LikeRecord } from "@jjalcloud/common/lexicon/types/com/jjalcloud/feed/like";
 import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -14,6 +15,55 @@ import { createErrorResponse, createRpcClient } from "../utils";
 
 const like = new Hono<AuthenticatedEnv>();
 
+function extractRkeyFromUri(uri: string): string | null {
+	const rkey = uri.split("/").pop();
+	return rkey || null;
+}
+
+async function findLikeRkeysBySubject(
+	rpc: ReturnType<typeof createRpcClient>,
+	did: Did,
+	subjectUri: string,
+	maxMatches = Number.POSITIVE_INFINITY,
+): Promise<string[]> {
+	let cursor: string | undefined;
+	const rkeys: string[] = [];
+
+	do {
+		const data = await ok(
+			rpc.get("com.atproto.repo.listRecords", {
+				params: {
+					repo: did,
+					collection: LIKE_COLLECTION,
+					limit: 100,
+					cursor,
+				},
+			}),
+		);
+
+		for (const record of data.records) {
+			const value = record.value as unknown as LikeRecord;
+			if (value.subject?.uri !== subjectUri) {
+				continue;
+			}
+
+			const rkey = extractRkeyFromUri(record.uri);
+			if (!rkey) {
+				continue;
+			}
+
+			rkeys.push(rkey);
+			if (rkeys.length >= maxMatches) {
+				return rkeys;
+			}
+		}
+
+		cursor = data.cursor;
+	} while (cursor);
+
+	return rkeys;
+}
+
 /**
  * Create Like (Toggle On)
  * POST /api/like
@@ -22,7 +72,6 @@ const like = new Hono<AuthenticatedEnv>();
 like.post("/", requireAuth, async (c) => {
 	const session = c.get("session");
 	const did = c.get("did") as Did;
-	const db = drizzle(c.env.jjalcloud_db);
 
 	try {
 		const body = await c.req.json();
@@ -32,19 +81,19 @@ like.post("/", requireAuth, async (c) => {
 			return c.json({ error: "Invalid subject" }, 400);
 		}
 
-		// 1. Check if already liked in DB (Optional, but good for consistency)
-		const existing = await db
-			.select()
-			.from(likes)
-			.where(and(eq(likes.subject, subject.uri), eq(likes.author, did)))
-			.get();
+		const rpc = createRpcClient(session);
+		const existingRkeys = await findLikeRkeysBySubject(
+			rpc,
+			did,
+			subject.uri,
+			1,
+		);
 
-		if (existing) {
-			return c.json({ message: "Already liked", rkey: existing.rkey });
+		if (existingRkeys.length > 0) {
+			return c.json({ message: "Already liked", rkey: existingRkeys[0] });
 		}
 
 		// 2. Create Record in PDS
-		const rpc = createRpcClient(session);
 		const record = {
 			$type: LIKE_COLLECTION,
 			subject: {
@@ -65,19 +114,11 @@ like.post("/", requireAuth, async (c) => {
 		);
 
 		// Extract rkey from uri
-		const rkey = result.uri.split("/").pop();
+		const rkey = extractRkeyFromUri(result.uri);
 
 		if (!rkey) {
 			throw new Error("Failed to extract rkey from result uri");
 		}
-
-		// 3. Insert into D1
-		await db.insert(likes).values({
-			subject: subject.uri,
-			author: did,
-			rkey: rkey,
-			createdAt: new Date(),
-		});
 
 		return c.json({
 			success: true,
@@ -99,7 +140,6 @@ like.post("/", requireAuth, async (c) => {
 like.delete("/", requireAuth, async (c) => {
 	const session = c.get("session");
 	const did = c.get("did") as Did;
-	const db = drizzle(c.env.jjalcloud_db);
 
 	try {
 		const body = await c.req.json();
@@ -109,34 +149,24 @@ like.delete("/", requireAuth, async (c) => {
 			return c.json({ error: "Invalid subject" }, 400);
 		}
 
-		// 1. Find rkey from D1
-		const existing = await db
-			.select()
-			.from(likes)
-			.where(and(eq(likes.subject, subject.uri), eq(likes.author, did)))
-			.get();
+		const rpc = createRpcClient(session);
+		const rkeys = await findLikeRkeysBySubject(rpc, did, subject.uri);
 
-		if (!existing) {
+		if (rkeys.length === 0) {
 			return c.json({ error: "Like not found" }, 404);
 		}
 
-		// 2. Delete Record from PDS
-		const rpc = createRpcClient(session);
-		await ok(
-			rpc.post("com.atproto.repo.deleteRecord", {
-				input: {
-					repo: did,
-					collection: LIKE_COLLECTION,
-					rkey: existing.rkey,
-				},
-			}),
-		);
-
-		// 3. Delete from D1
-		await db
-			.delete(likes)
-			.where(and(eq(likes.subject, subject.uri), eq(likes.author, did)))
-			.execute();
+		for (const rkey of rkeys) {
+			await ok(
+				rpc.post("com.atproto.repo.deleteRecord", {
+					input: {
+						repo: did,
+						collection: LIKE_COLLECTION,
+						rkey,
+					},
+				}),
+			);
+		}
 
 		return c.json({ success: true, message: "Unliked successfully" });
 	} catch (error) {
