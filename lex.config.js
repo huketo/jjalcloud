@@ -1,8 +1,8 @@
 import { defineLexiconConfig } from "@atcute/lex-cli";
 
 export default defineLexiconConfig({
-	files: ["src/lexicons/**/*.json"],
-	outdir: "src/generated",
+	files: ["lexicons/**/*.json"],
+	outdir: "src/lexicon",
 	mappings: [
 		{
 			nsid: ["com.atproto.*"],
