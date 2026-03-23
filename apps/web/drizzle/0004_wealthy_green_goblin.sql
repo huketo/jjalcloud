@@ -1,1 +1,0 @@
-ALTER TABLE `global_gifs` RENAME TO `gifs`;
