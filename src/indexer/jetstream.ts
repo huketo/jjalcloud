@@ -1,6 +1,7 @@
 import { JetstreamSubscription } from "@atcute/jetstream";
 import type { Database } from "../db/client";
 import { env } from "../env";
+import type { ComJjalcloudFeedGif, ComJjalcloudFeedLike } from "../lexicon";
 import { handleGifCreate, handleGifDelete, handleLikeCreate, handleLikeDelete } from "./handlers";
 
 const COLLECTIONS = ["com.jjalcloud.feed.gif", "com.jjalcloud.feed.like"] as const;
@@ -24,13 +25,20 @@ export function startJetstream(db: Database): JetstreamSubscription {
 						if (collection === "com.jjalcloud.feed.gif") {
 							const uri = `at://${did}/com.jjalcloud.feed.gif/${rkey}`;
 							if (commit.operation === "create" || commit.operation === "update") {
-								await handleGifCreate(db, uri, commit.cid, did, rkey, commit.record as any);
+								await handleGifCreate(
+									db,
+									uri,
+									commit.cid,
+									did,
+									rkey,
+									commit.record as ComJjalcloudFeedGif.Main,
+								);
 							} else if (commit.operation === "delete") {
 								await handleGifDelete(db, uri);
 							}
 						} else if (collection === "com.jjalcloud.feed.like") {
 							if (commit.operation === "create") {
-								await handleLikeCreate(db, did, rkey, commit.record as any);
+								await handleLikeCreate(db, did, rkey, commit.record as ComJjalcloudFeedLike.Main);
 							} else if (commit.operation === "delete") {
 								await handleLikeDelete(db, did, rkey);
 							}

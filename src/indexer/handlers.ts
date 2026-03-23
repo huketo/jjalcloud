@@ -1,22 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import type { Database } from "../db/client";
 import { gifs, likes, tags } from "../db/schema";
+import type { ComJjalcloudFeedGif, ComJjalcloudFeedLike } from "../lexicon";
 import { cacheOriginalGif } from "./media";
 
-interface GifRecord {
-	file: unknown;
-	title?: string;
-	alt?: string;
-	tags?: string[];
-	width?: number;
-	height?: number;
-	createdAt: string;
-}
-
-interface LikeRecord {
-	subject: { uri: string; cid: string };
-	createdAt: string;
-}
+type GifRecord = ComJjalcloudFeedGif.Main;
+type LikeRecord = ComJjalcloudFeedLike.Main;
 
 export async function handleGifCreate(
 	db: Database,
