@@ -140,7 +140,7 @@ OAUTH_CLIENT_ID=http://localhost:3000
 OAUTH_REDIRECT_URI=http://localhost:3000/oauth/callback
 OAUTH_PRIVATE_KEY=<test-jwk>
 PUBLIC_URL=http://localhost:3000
-JETSTREAM_URL=wss://jetstream2.us-east.bsky.network/subscribe
+JETSTREAM_URLS=wss://jetstream1.us-east.bsky.network/subscribe,wss://jetstream2.us-east.bsky.network/subscribe
 ```
 
 Note: `JETSTREAM_URL`은 env 스키마 검증을 위해 필요하나, 통합 테스트에서 Jetstream 연결은 시작하지 않는다. 테스트 서버는 Jetstream 없이 HTTP 라우트만 실행한다.

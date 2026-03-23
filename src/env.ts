@@ -13,8 +13,13 @@ const envSchema = z.object({
 	OAUTH_CLIENT_ID: z.string(),
 	OAUTH_REDIRECT_URI: z.string(),
 	OAUTH_PRIVATE_KEY: z.string(), // JWK for private_key_jwt
-	// Jetstream
-	JETSTREAM_URL: z.string().default("wss://jetstream2.us-east.bsky.network/subscribe"),
+	// Jetstream (comma-separated URLs, first is primary, rest are fallbacks)
+	JETSTREAM_URLS: z
+		.string()
+		.default(
+			"wss://jetstream1.us-east.bsky.network/subscribe,wss://jetstream2.us-east.bsky.network/subscribe,wss://jetstream1.us-west.bsky.network/subscribe,wss://jetstream2.us-west.bsky.network/subscribe",
+		)
+		.transform((s) => s.split(",")),
 	// Public URL
 	PUBLIC_URL: z.string().default("https://jjalcloud.com"),
 });
