@@ -1,23 +1,47 @@
 {
-	"name": "jjalcloud-monorepo",
+	"name": "jjalcloud",
 	"private": true,
 	"scripts": {
-		"prepare": "lefthook install",
-		"format": "biome format --write .",
-		"lint": "biome check .",
-		"lint:fix": "biome check --write .",
-		"build": "pnpm -r build",
-		"dev": "pnpm -r dev",
-		"test:e2e:web": "pnpm --filter web test:e2e",
-		"test:e2e:web:oauth:setup": "pnpm --filter web test:e2e:oauth:setup",
-		"test:e2e:web:oauth": "pnpm --filter web test:e2e:oauth",
-		"db:generate": "pnpm --filter web db:generate",
-		"db:migrate:local": "pnpm --filter web db:migrate:local",
-		"db:migrate:remote": "pnpm --filter web db:migrate:remote"
+		"dev": "bun run --hot src/server.ts",
+		"codegen": "bunx @atcute/lex-cli generate -i src/lexicons -o src/generated",
+		"db:generate": "bunx drizzle-kit generate",
+		"db:migrate": "bunx drizzle-kit migrate"
 	},
 	"devDependencies": {
+		"@atcute/lex-cli": "^2.5.3",
 		"@biomejs/biome": "2.3.13",
+		"@types/bun": "^1.3.11",
+		"biome": "^0.3.3",
+		"drizzle-kit": "^0.31.10",
 		"lefthook": "^2.0.16"
 	},
-	"packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b"
+	"packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b",
+	"module": "index.ts",
+	"type": "module",
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"workspaces": {
+		"packages": [
+			"apps/*",
+			"packages/*"
+		],
+		"catalog": {
+			"drizzle-kit": "^0.31.8",
+			"drizzle-orm": "^0.45.1"
+		}
+	},
+	"dependencies": {
+		"@atcute/client": "^4.2.1",
+		"@atcute/identity-resolver": "^1.2.2",
+		"@atcute/identity-resolver-node": "^1.0.3",
+		"@atcute/jetstream": "^1.1.2",
+		"@atcute/oauth-node-client": "^1.1.0",
+		"@atcute/xrpc-server": "^0.1.11",
+		"@aws-sdk/client-s3": "^3.1014.0",
+		"drizzle-orm": "^0.45.1",
+		"hono": "^4.12.8",
+		"postgres": "^3.4.8",
+		"zod": "^4.3.6"
+	}
 }
