@@ -1,205 +1,156 @@
-# jjalcloud
+# jjalcloud v2
 
-**jjalcloud** is a decentralized GIF sharing and archiving platform based on the AT Protocol (ATProto).
-Users own their media on their PDS (Personal Data Server), can easily log in via **Bluesky OAuth**, and build their own GIF feed.
+AT Protocol 기반 탈중앙 GIF 공유 플랫폼. Tenor API v2 호환으로 Tenor 대체 서비스를 목표합니다.
 
-## Features
+## Tech Stack
 
-### Phase 1: Infra & Auth (✅ Completed)
-- [x] **Cloudflare Workers Setup** (Wrangler, Hono)
-- [x] **Cloudflare KV Setup** (DID_CACHE, HANDLE_CACHE, STATE_STORE, SESSION_STORE)
-- [x] **Cloudflare D1 Setup** (SQLite for metadata storage)
-- [x] **Bluesky OAuth Authentication** (Login, Callback, Logout)
-- [x] **Stateless Session Management**
-
-### Phase 2: Core Logic (✅ Completed)
-- [x] **Lexicon Definitions**: Data model design for `com.jjalcloud.feed.gif`, `like`, `follow`, etc.
-- [x] **Lexicon Type Generation**: TypeScript type definitions using `lex-cli`
-- [x] **GIF Management API**:
-  - [x] List my GIFs (PDS `listRecords`)
-  - [x] GIF Upload (Blob upload and record creation)
-  - [x] GIF Edit
-  - [x] GIF Delete
-- [x] **Social Interaction API**:
-  - [x] Like
-
-### Phase 3: Indexing & Real-time (✅ Completed)
-- [x] **Monorepo Structure**: Separate `apps/web` (Cloudflare Workers) and `apps/indexer` (Node.js) using pnpm workspace
-- [x] **Jetstream Indexer (Node.js)**: 
-  - Standalone service ensuring real-time data synchronization to D1
-  - Built with Jetstream WebSocket client (JSON-based, server-side collection filtering)
-  - Filters and indexes `com.jjalcloud.feed.gif` and `com.jjalcloud.feed.like` collections
-  - Deployed on self-hosted infrastructure (Mini PC)
-- [x] **Real-time D1 Sync**: Direct database operations from the Indexer
-- [x] **Backfill Support**: Historical record indexing via `com.atproto.repo.listRecords` API
-- [x] **User Management**: OAuth login saves user info to D1 for backfill targeting
-- [x] **Global Feed**: D1-based sorting and filtering derived from indexed data
-
-### Phase 4: Frontend (✅ Completed)
-- [x] **Hono JSX Renderer**: Basic layout and SSR setup
-- [x] **UnoCSS Integration**: Utility-first CSS styling
-- [x] **Main Feed**: Simple feed UI (Indexed GIFs)
-- [x] **Detail Page & Player**: GIF playback and metadata display
-
-### Phase 5: Enhanced Features (🚧 Planned)
-- [x] **Infinite Scroll**: Auto-loading more content as users scroll
-- [ ] **Search Functionality**:
-  - [ ] Search GIFs by keyword and tags
-  - [ ] Search users by DID and handle
-- [ ] **Social Features**:
-  - [ ] Follow/Unfollow users
-  - [ ] Profile page enhancements:
-    - [ ] Following/Followers tabs
-    - [ ] Liked GIFs list view
+- **Runtime**: Bun
+- **Framework**: Hono (SSR + API + XRPC)
+- **Database**: PostgreSQL 18 (Drizzle ORM, `bun:sql` native driver)
+- **Storage**: Cloudflare R2 / Garage (`Bun.S3Client` native)
+- **AT Protocol**: atcute ecosystem (OAuth, XRPC server, Jetstream, lexicon codegen)
+- **Deploy**: Railway (Dockerfile)
+- **CDN**: Cloudflare DNS + CDN + Image Resizing
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js & pnpm
-- Cloudflare Wrangler CLI
+- [Bun](https://bun.sh) v1.1+
+- [Docker](https://docs.docker.com/get-docker/) (for local dev)
 
 ### Installation
 
 ```bash
-pnpm install
+bun install
 ```
 
-### Database Setup
-
-Initialize the D1 database:
+### Local Development
 
 ```bash
-pnpm db:generate
-pnpm db:migrate:local
+# Start infrastructure (PostgreSQL, PDS, Garage)
+docker compose up -d
+
+# Initialize Garage S3 storage (first time only)
+bun run scripts/garage-init.ts
+
+# Seed test accounts on PDS
+bun run test:setup
+
+# Start dev server
+bun run dev
 ```
 
-### Indexer Setup
-
-The indexer runs as a standalone Node.js service that connects to the local D1 database.
-
-**Environment Variables** (`.env` in `apps/indexer`):
-
-```env
-NODE_ENV=development
-JETSTREAM_URL=wss://jetstream2.us-east.bsky.network/subscribe
-LOG_LEVEL=info
-
-# For production
-# NODE_ENV=production
-# CLOUDFLARE_ACCOUNT_ID=your_account_id
-# CLOUDFLARE_DATABASE_ID=your_database_id
-# CLOUDFLARE_API_TOKEN=your_api_token
-```
-
-### Development
-
-Start the development environment (Web + Indexer):
+### Testing
 
 ```bash
-pnpm dev
-# This runs both 'apps/web' and 'apps/indexer' concurrently
+# Unit & route tests (no infra needed)
+bun test src/
+
+# Integration tests (requires Docker)
+bun test tests/integration/
 ```
 
-To run individual services:
+### Lexicon Codegen
 
 ```bash
-pnpm --filter web dev
-pnpm --filter indexer dev
+bun run codegen
 ```
 
-> **Note**: The web app must be started at least once to generate the local D1 database file for the indexer to connect to.
-
-### Deployment
-
-Deploy to Cloudflare Workers:
+### Database Migrations
 
 ```bash
-pnpm deploy
-```
-
-### Type Generation
-
-Synchronize types based on your Worker configuration:
-
-```bash
-pnpm cf-typegen
-```
-
-### Lexicon Generation
-
-Generate TypeScript types from Lexicon definitions:
-
-```bash
-pnpm lexgen
-```
-
-#### Lexicon linting:
-
-[goat](https://github.com/bluesky-social/goat): Go AT Protocol CLI tool
-
-```bash
-goat lex lint ./packages/common/lexicons
-```
-
-## Database Schema
-
-The D1 database includes the following tables:
-
-- **`users`**: Stores user information from OAuth login (DID, handle, display name, avatar)
-- **`gifs`**: Indexed GIF records from AT Protocol (URI, CID, author, title, alt, tags, file blob)
-- **`likes`**: Indexed like records (subject URI, author DID, rkey)
-
-## Indexer Commands
-
-The indexer supports two main operations:
-
-### Real-time Indexing (Default)
-
-Start the Jetstream indexer to capture new records in real-time:
-
-```bash
-pnpm --filter indexer dev    # Development mode with watch
-pnpm --filter indexer start  # Production mode
-```
-
-### Backfill Existing Records
-
-Backfill historical GIF and Like records for specific users:
-
-```bash
-# Backfill all users from the database
-pnpm --filter indexer backfill
-
-# Backfill specific DIDs
-pnpm --filter indexer backfill -- --dids did:plc:xxx,did:plc:yyy
-
-# Backfill from a custom PDS
-pnpm --filter indexer backfill -- --dids did:plc:xxx --pds https://custom.pds
+bun run db:generate
+bun run db:migrate
 ```
 
 ## Project Structure
 
 ```
 jjalcloud/
-├── apps/
-│   ├── web/              # Cloudflare Workers (Hono + JSX)
-│   │   ├── src/
-│   │   │   ├── auth/     # OAuth client
-│   │   │   ├── routes/   # API routes
-│   │   │   ├── pages/    # JSX pages
-│   │   │   └── index.tsx
-│   │   └── drizzle/      # D1 migrations
-│   └── indexer/          # Node.js Jetstream indexer
-│       └── src/
-│           ├── index.ts  # Main indexer + CLI
-│           ├── backfill.ts
-│           └── db/       # Database operations
-└── packages/
-    └── common/           # Shared code
-        ├── lexicons/     # Lexicon definitions
-        └── src/
-            ├── db/       # Database schema
-            └── lexicon/  # Generated types
+├── src/
+│   ├── server.ts              # Bun + Hono entrypoint
+│   ├── env.ts                 # Environment validation (Zod)
+│   ├── routes/
+│   │   ├── web/               # SSR pages (Hono JSX)
+│   │   ├── tenor/             # Tenor API v2 compatible endpoints
+│   │   ├── xrpc/              # AT Protocol AppView (XRPC)
+│   │   ├── oauth/             # AT Protocol OAuth flow
+│   │   └── api/               # Internal API
+│   ├── indexer/
+│   │   ├── jetstream.ts       # Jetstream consumer (multi-URL fallback)
+│   │   ├── handlers.ts        # Event handlers (gif/like)
+│   │   └── media.ts           # R2 cache + ffmpeg conversion
+│   ├── db/
+│   │   ├── schema.ts          # Drizzle PostgreSQL schema
+│   │   ├── client.ts          # Database client (bun:sql)
+│   │   └── migrations/        # SQL migrations
+│   ├── auth/                  # OAuth stores + client
+│   ├── lexicon/               # Generated TypeScript types
+│   └── lib/
+│       ├── r2.ts              # S3 client (Bun.S3Client)
+│       ├── search.ts          # Full-text search, trending
+│       ├── tenor-adapter.ts   # AT record → Tenor GifObject
+│       └── identity.ts        # DID/Handle resolution
+├── lexicons/                  # AT Protocol lexicon definitions
+├── tests/
+│   ├── helpers/               # Test utilities (db, s3, pds)
+│   └── integration/           # Integration tests
+├── scripts/
+│   ├── garage-init.ts         # Garage S3 initialization
+│   ├── garage.toml            # Garage configuration
+│   └── init-db.sh             # DB migration for Docker
+├── docker-compose.yml         # PostgreSQL 18 + PDS + Garage
+├── Dockerfile                 # Railway deployment
+├── wrangler.toml              # Cloudflare R2 config
+└── drizzle.config.ts          # Drizzle Kit config
 ```
 
+## API Endpoints
+
+### Tenor API v2 (Compatible)
+
+| Endpoint | Description |
+|---|---|
+| `GET /v2/search` | Search GIFs by keyword |
+| `GET /v2/featured` | Trending GIFs |
+| `GET /v2/categories` | Category list |
+| `GET /v2/autocomplete` | Tag autocomplete |
+| `GET /v2/search_suggestions` | Related tags |
+| `GET /v2/posts` | GIFs by ID |
+| `POST /v2/registershare` | Share event tracking |
+
+### AT Protocol XRPC
+
+| Endpoint | Description |
+|---|---|
+| `GET /xrpc/com.jjalcloud.feed.getGif` | Single GIF |
+| `GET /xrpc/com.jjalcloud.feed.getGifs` | GIF list |
+| `GET /xrpc/com.jjalcloud.feed.searchGifs` | Search |
+| `GET /xrpc/com.jjalcloud.feed.getFeed` | Feed |
+| `GET /xrpc/com.jjalcloud.feed.getTrending` | Trending |
+
+## Lexicons
+
+- `com.jjalcloud.feed.gif` — GIF record (blob, title, alt, tags, dimensions)
+- `com.jjalcloud.feed.like` — Like (strongRef)
+- `com.jjalcloud.feed.defs` — View definitions
+- `com.jjalcloud.graph.follow` — Follow
+
+## Environment Variables
+
+| Variable | Description | Default |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string | — |
+| `R2_ENDPOINT` | S3-compatible endpoint | — |
+| `R2_ACCESS_KEY_ID` | S3 access key | — |
+| `R2_SECRET_ACCESS_KEY` | S3 secret key | — |
+| `R2_BUCKET` | S3 bucket name | — |
+| `R2_PUBLIC_URL` | Public URL for bucket | — |
+| `R2_REGION` | S3 region | `auto` |
+| `OAUTH_CLIENT_ID` | AT Protocol OAuth client ID | — |
+| `OAUTH_REDIRECT_URI` | OAuth callback URL | — |
+| `OAUTH_PRIVATE_KEY` | JWK for private_key_jwt | — |
+| `JETSTREAM_URLS` | Comma-separated Jetstream URLs | 4 default endpoints |
+| `PUBLIC_URL` | Public site URL | `https://jjalcloud.com` |
+| `PORT` | Server port | `3000` |
