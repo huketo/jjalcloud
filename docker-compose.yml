@@ -38,6 +38,8 @@ services:
       PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     volumes:
       - pdsdata:/pds
+    # Ensure data directories exist before PDS starts
+    entrypoint: ["/bin/sh", "-c", "mkdir -p /pds/data /pds/blocks && exec /usr/bin/dumb-init -- node --enable-source-maps /app/index.js"]
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:2583/xrpc/_health"]
       interval: 5s
@@ -48,14 +50,13 @@ services:
     image: dxflrs/garage:v1.1.0
     ports:
       - "3900:3900"
-      - "3902:3902"
-    environment:
-      GARAGE_ALLOW_WORLD_READABLE_BUCKETS: "true"
+      - "3903:3903"
     volumes:
       - garagedata:/var/lib/garage/data
       - garagemeta:/var/lib/garage/meta
+      - ./scripts/garage.toml:/etc/garage.toml
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3902/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3903/health"]
       interval: 5s
       timeout: 5s
       retries: 5

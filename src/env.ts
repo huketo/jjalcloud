@@ -9,6 +9,7 @@ const envSchema = z.object({
 	R2_SECRET_ACCESS_KEY: z.string(),
 	R2_BUCKET: z.string(),
 	R2_PUBLIC_URL: z.string(), // e.g. https://cdn.jjalcloud.com
+	R2_REGION: z.string().optional(), // default "auto" for R2, "garage" for local dev
 	// OAuth
 	OAUTH_CLIENT_ID: z.string(),
 	OAUTH_REDIRECT_URI: z.string(),

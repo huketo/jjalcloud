@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { shareEvents } from "../../src/db/schema";
 import { handleGifCreate, handleLikeCreate, handleLikeDelete } from "../../src/indexer/handlers";
 import { getLikeCount } from "../../src/lib/search";
-import { clearTestData, closeDb, testDb } from "../helpers/db";
+import { clearTestData, ensureUser, testDb } from "../helpers/db";
 import { createTestAccount } from "../helpers/pds";
 
 describe("like and trending", () => {
@@ -13,6 +13,7 @@ describe("like and trending", () => {
 	beforeAll(async () => {
 		await clearTestData();
 		alice = await createTestAccount("alice.test");
+		await ensureUser(alice.did, alice.handle);
 
 		await handleGifCreate(testDb, gifUri, "bafylike", alice.did, "like1", {
 			$type: "com.jjalcloud.feed.gif",
@@ -27,7 +28,6 @@ describe("like and trending", () => {
 
 	afterAll(async () => {
 		await clearTestData();
-		await closeDb();
 	});
 
 	it("creates a like and increments count", async () => {

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { categories } from "../../src/db/schema";
 import { handleGifCreate } from "../../src/indexer/handlers";
 import { tenor } from "../../src/routes/tenor/index";
-import { clearTestData, closeDb, testDb } from "../helpers/db";
+import { clearTestData, ensureUser, testDb } from "../helpers/db";
 import { createTestAccount } from "../helpers/pds";
 
 describe("Tenor API (integration)", () => {
@@ -11,6 +11,7 @@ describe("Tenor API (integration)", () => {
 	beforeAll(async () => {
 		await clearTestData();
 		alice = await createTestAccount("alice.test");
+		await ensureUser(alice.did, alice.handle);
 
 		for (let i = 1; i <= 3; i++) {
 			await handleGifCreate(
@@ -41,7 +42,6 @@ describe("Tenor API (integration)", () => {
 
 	afterAll(async () => {
 		await clearTestData();
-		await closeDb();
 	});
 
 	it("GET /search returns Tenor-format results", async () => {

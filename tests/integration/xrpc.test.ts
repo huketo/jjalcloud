@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { handleGifCreate, handleLikeCreate } from "../../src/indexer/handlers";
 import { xrpc } from "../../src/routes/xrpc/index";
-import { clearTestData, closeDb, testDb } from "../helpers/db";
+import { clearTestData, ensureUser, testDb } from "../helpers/db";
 import { createTestAccount } from "../helpers/pds";
 
 describe("XRPC (integration)", () => {
@@ -11,6 +11,7 @@ describe("XRPC (integration)", () => {
 	beforeAll(async () => {
 		await clearTestData();
 		alice = await createTestAccount("alice.test");
+		await ensureUser(alice.did, alice.handle);
 
 		await handleGifCreate(testDb, gifUri, "bafyxrpc", alice.did, "xrpc1", {
 			$type: "com.jjalcloud.feed.gif",
@@ -31,7 +32,6 @@ describe("XRPC (integration)", () => {
 
 	afterAll(async () => {
 		await clearTestData();
-		await closeDb();
 	});
 
 	it("getGif returns gif with likeCount", async () => {

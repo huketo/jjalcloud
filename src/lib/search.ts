@@ -35,15 +35,15 @@ export async function searchSuggestions(
 	limit = 10,
 ): Promise<string[]> {
 	const results = await db.execute(sql`
-		SELECT DISTINCT t2.name
+		SELECT t2.name, COUNT(*) AS cnt
 		FROM tags t1
 		JOIN tags t2 ON t1.gif_uri = t2.gif_uri AND t1.name != t2.name
 		WHERE t1.name ILIKE ${`%${query}%`}
 		GROUP BY t2.name
-		ORDER BY COUNT(*) DESC
+		ORDER BY cnt DESC
 		LIMIT ${limit}
 	`);
-	return (results as any[]).map((r: any) => r.name);
+	return (results as { name: string }[]).map((r) => r.name);
 }
 
 export async function getFeed(db: Database, limit = 20, cursor?: string) {
@@ -74,7 +74,7 @@ export async function getTrending(db: Database, limit = 20) {
 
 export async function getLikeCount(db: Database, gifUri: string): Promise<number> {
 	const result = await db
-		.select({ count: sql<number>`count(*)` })
+		.select({ count: sql<number>`count(*)::int` })
 		.from(likes)
 		.where(eq(likes.subject, gifUri));
 	return result[0]?.count ?? 0;

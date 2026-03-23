@@ -2,8 +2,8 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
 import { gifs, tags } from "../../src/db/schema";
 import { handleGifCreate, handleGifDelete } from "../../src/indexer/handlers";
-import { clearTestData, closeDb, testDb } from "../helpers/db";
-import { createRecord, createTestAccount, uploadBlob } from "../helpers/pds";
+import { clearTestData, ensureUser, testDb } from "../helpers/db";
+import { createTestAccount, uploadBlob } from "../helpers/pds";
 
 // Minimal 1x1 GIF
 const TINY_GIF = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64");
@@ -14,17 +14,21 @@ describe("GIF lifecycle", () => {
 	beforeAll(async () => {
 		await clearTestData();
 		alice = await createTestAccount("alice.test");
+		await ensureUser(alice.did, alice.handle);
 	});
 
 	afterAll(async () => {
 		await clearTestData();
-		await closeDb();
 	});
 
-	it("uploads GIF to PDS and indexes it", async () => {
+	it("uploads blob to PDS and indexes GIF via handler", async () => {
+		// 1. Upload blob to PDS (standard atproto operation)
 		const blob = await uploadBlob(alice, TINY_GIF, "image/gif");
 		expect(blob).toBeDefined();
 
+		// 2. Simulate Jetstream event: index via handler directly
+		// PDS doesn't know custom lexicons, so we skip createRecord
+		const uri = `at://${alice.did}/com.jjalcloud.feed.gif/test1`;
 		const record = {
 			$type: "com.jjalcloud.feed.gif",
 			file: blob,
@@ -35,14 +39,12 @@ describe("GIF lifecycle", () => {
 			height: 1,
 			createdAt: new Date().toISOString(),
 		};
-		const result = await createRecord(alice, "com.jjalcloud.feed.gif", record, "test1");
-		expect(result.uri).toContain("com.jjalcloud.feed.gif");
 
-		// Index via handler (simulating Jetstream)
-		await handleGifCreate(testDb, result.uri, result.cid, alice.did, "test1", record as any);
+		await handleGifCreate(testDb, uri, "bafytest1", alice.did, "test1", record as any);
 
+		// 3. Verify in DB
 		const dbGif = await testDb.query.gifs.findFirst({
-			where: eq(gifs.uri, result.uri),
+			where: eq(gifs.uri, uri),
 			with: { tags: true },
 		});
 		expect(dbGif).toBeDefined();
