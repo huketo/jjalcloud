@@ -173,16 +173,17 @@ users (
 )
 
 -- GIF 메타데이터 (인덱싱)
+-- lexicon 필드명 `file`을 DB 컬럼명 `file`로 그대로 매핑
 gifs (
   uri           TEXT PRIMARY KEY,     -- at://did/com.jjalcloud.feed.gif/rkey
   cid           TEXT NOT NULL,
   author        TEXT NOT NULL REFERENCES users(did),
-  rkey          TEXT NOT NULL,
+  rkey          TEXT NOT NULL,         -- denormalized from uri, Tenor API id로 사용
   title         TEXT,
   alt           TEXT,
   width         INTEGER,
   height        INTEGER,
-  blobRef       JSONB NOT NULL,       -- PDS blob reference
+  file          JSONB NOT NULL,        -- lexicon `file` 필드 (BlobRef) 그대로 저장
   createdAt     TIMESTAMPTZ NOT NULL,
   indexedAt     TIMESTAMPTZ DEFAULT NOW(),
   search_vector TSVECTOR,             -- full-text search
@@ -190,6 +191,7 @@ gifs (
 )
 
 -- 태그 (정규화, GIN 인덱스)
+-- Jetstream indexer가 gif create 시 gifs + tags를 트랜잭션으로 함께 삽입
 tags (
   id     SERIAL PRIMARY KEY,
   gif_uri TEXT NOT NULL REFERENCES gifs(uri) ON DELETE CASCADE,
@@ -198,9 +200,10 @@ tags (
 CREATE INDEX idx_tags_name ON tags USING GIN (name gin_trgm_ops);
 
 -- 좋아요
+-- lexicon의 subject는 strongRef(uri+cid)이나, cid는 인덱싱 불필요하므로 uri만 저장
 likes (
   id        SERIAL PRIMARY KEY,
-  subject   TEXT NOT NULL,            -- GIF uri
+  subject   TEXT NOT NULL,            -- GIF uri (strongRef에서 uri만 추출)
   author    TEXT NOT NULL,
   rkey      TEXT NOT NULL,
   createdAt TIMESTAMPTZ NOT NULL,
@@ -224,7 +227,15 @@ share_events (
   createdAt TIMESTAMPTZ DEFAULT NOW()
 )
 
--- OAuth 세션 (@atcute/oauth-node-client용)
+-- OAuth 상태 저장 (@atcute/oauth-node-client StateStore 구현용)
+oauth_states (
+  key        TEXT PRIMARY KEY,
+  state      JSONB NOT NULL,
+  createdAt  TIMESTAMPTZ DEFAULT NOW()
+)
+
+-- OAuth 세션 저장 (@atcute/oauth-node-client SessionStore 구현용)
+-- StateStore와 SessionStore 인터페이스를 PostgreSQL 기반으로 구현하여 주입
 oauth_sessions (
   did        TEXT PRIMARY KEY,
   session    JSONB NOT NULL,
@@ -277,6 +288,14 @@ Tenor API 요청 시:
 **변환 전략: 하이브리드**
 - GIF 리사이즈: Cloudflare Image Resizing (on-the-fly, 엣지 캐싱)
 - 비디오 변환: ffmpeg on Railway (lazy, 첫 요청 시 변환 후 R2 캐싱)
+
+**비디오 변환 응답 전략:**
+- 첫 요청 시 R2에 variant가 없으면 동기적으로 ffmpeg 변환 수행 후 응답 (GIF→mp4 변환은 수 초 이내)
+- 변환 완료 후 R2에 업로드하여 이후 요청은 R2 URL로 직접 응답
+- Tenor API의 media_formats에서 아직 변환되지 않은 variant는 원본 GIF URL로 fallback
+
+**Trending 갱신:**
+- materialized view는 Bun의 `setInterval`로 1시간마다 `REFRESH MATERIALIZED VIEW CONCURRENTLY` 실행 (pg_cron 불필요)
 
 ## Project Structure
 
@@ -341,6 +360,6 @@ v2는 완전 재설계이므로 v1 코드를 마이그레이션하지 않고 새
 - `com.jjalcloud.feed.gif` — GIF 레코드 (blob, title, alt, tags, dimensions)
 - `com.jjalcloud.feed.like` — 좋아요
 - `com.jjalcloud.feed.defs` — View 정의
-- `com.jjalcloud.graph.follow` — 팔로우
+- `com.jjalcloud.graph.follow` — 팔로우 (v2 초기에는 인덱싱하지 않음, 향후 확장 시 follows 테이블 추가)
 
 `@atcute/lex-cli`를 사용하여 lexicon JSON에서 TypeScript 타입을 자동 생성한다.
