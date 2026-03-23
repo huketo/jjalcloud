@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Database } from "../db/client";
 import { gifs, likes, tags } from "../db/schema";
 
@@ -56,13 +56,20 @@ export async function getFeed(db: Database, limit = 20, cursor?: string) {
 }
 
 export async function getTrending(db: Database, limit = 20) {
-	const results = await db.execute(sql`
-		SELECT g.* FROM trending_gifs t
-		JOIN gifs g ON g.uri = t.uri
-		ORDER BY t.score DESC
+	// Get trending URIs from materialized view
+	const trending = await db.execute(sql`
+		SELECT uri FROM trending_gifs
+		ORDER BY score DESC
 		LIMIT ${limit}
 	`);
-	return results as any[];
+	const uris = (trending as { uri: string }[]).map((r) => r.uri);
+	if (uris.length === 0) return [];
+
+	// Fetch full gifs with tags via relational query
+	return db.query.gifs.findMany({
+		where: inArray(gifs.uri, uris),
+		with: { tags: true },
+	});
 }
 
 export async function getLikeCount(db: Database, gifUri: string): Promise<number> {

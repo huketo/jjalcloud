@@ -17,6 +17,24 @@ CREATE TRIGGER gifs_search_vector_trigger
 
 CREATE INDEX gifs_search_vector_idx ON gifs USING GIN (search_vector);
 
+-- Update gifs search_vector when tags change
+CREATE OR REPLACE FUNCTION tags_update_search_vector() RETURNS trigger AS $$
+BEGIN
+  UPDATE gifs SET search_vector =
+    setweight(to_tsvector('simple', COALESCE(title, '')), 'A') ||
+    setweight(to_tsvector('simple', COALESCE(alt, '')), 'B') ||
+    setweight(to_tsvector('simple', COALESCE(
+      (SELECT string_agg(t.name, ' ') FROM tags t WHERE t.gif_uri = gifs.uri), ''
+    )), 'C')
+  WHERE uri = COALESCE(NEW.gif_uri, OLD.gif_uri);
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tags_search_vector_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON tags
+  FOR EACH ROW EXECUTE FUNCTION tags_update_search_vector();
+
 -- Trigram index on tags for fuzzy/prefix search
 CREATE INDEX tags_name_trgm_idx ON tags USING GIN (name gin_trgm_ops);
 

@@ -18,15 +18,16 @@ oauth.get("/login", async (c) => {
 
 oauth.get("/callback", async (c) => {
 	const params = new URLSearchParams(c.req.url.split("?")[1]);
-	const { session } = await oauthClient.callback(params);
+	const { session, info } = await oauthClient.callback(params);
 	const did = session.sub;
+	const handle = info?.handle ?? did;
 
 	await db
 		.insert(users)
-		.values({ did, handle: did, lastLoginAt: new Date() })
+		.values({ did, handle, lastLoginAt: new Date() })
 		.onConflictDoUpdate({
 			target: users.did,
-			set: { lastLoginAt: new Date() },
+			set: { handle, lastLoginAt: new Date() },
 		});
 
 	setCookie(c, "did", did, {
