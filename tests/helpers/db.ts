@@ -1,13 +1,11 @@
 import { sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/bun-sql";
 import * as schema from "../../src/db/schema";
 
 const DATABASE_URL =
 	process.env.DATABASE_URL ?? "postgres://jjalcloud:jjalcloud@localhost:5432/jjalcloud_test";
 
-const client = postgres(DATABASE_URL);
-export const testDb = drizzle(client, { schema });
+export const testDb = drizzle(DATABASE_URL, { schema });
 
 export async function ensureUser(did: string, handle?: string) {
 	await testDb
