@@ -3,9 +3,16 @@
 	"private": true,
 	"scripts": {
 		"dev": "bun run --hot src/server.ts",
+		"dev:infra": "docker compose up -d",
+		"dev:infra:down": "docker compose down",
+		"dev:seed": "bun run tests/setup.ts",
+		"test": "bun test src/",
+		"test:integration": "bun test tests/integration/",
+		"test:setup": "bun run tests/setup.ts",
 		"codegen": "bunx @atcute/lex-cli generate",
 		"db:generate": "bunx drizzle-kit generate",
-		"db:migrate": "bunx drizzle-kit migrate"
+		"db:migrate": "bunx drizzle-kit migrate",
+		"deploy:r2": "wrangler r2 bucket create jjalcloud-gifs"
 	},
 	"devDependencies": {
 		"@atcute/lex-cli": "^2.5.3",
