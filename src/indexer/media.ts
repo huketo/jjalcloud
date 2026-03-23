@@ -1,5 +1,9 @@
-import { env } from "../env";
 import { existsInR2, r2Key, uploadToR2 } from "../lib/r2";
+
+function getEnv() {
+	const { env } = require("../env");
+	return env;
+}
 
 export async function cacheOriginalGif(
 	pdsUrl: string,
@@ -8,7 +12,7 @@ export async function cacheOriginalGif(
 ): Promise<string> {
 	const key = r2Key(author, rkey, "original.gif");
 	const exists = await existsInR2(key);
-	if (exists) return `${env.R2_PUBLIC_URL}/${key}`;
+	if (exists) return `${getEnv().R2_PUBLIC_URL}/${key}`;
 
 	const response = await fetch(pdsUrl);
 	if (!response.ok) throw new Error(`Failed to fetch blob: ${response.status}`);
@@ -24,10 +28,10 @@ export async function convertToVideo(
 ): Promise<string> {
 	const key = r2Key(author, rkey, variant);
 	const exists = await existsInR2(key);
-	if (exists) return `${env.R2_PUBLIC_URL}/${key}`;
+	if (exists) return `${getEnv().R2_PUBLIC_URL}/${key}`;
 
 	const originalKey = r2Key(author, rkey, "original.gif");
-	const originalUrl = `${env.R2_PUBLIC_URL}/${originalKey}`;
+	const originalUrl = `${getEnv().R2_PUBLIC_URL}/${originalKey}`;
 
 	const response = await fetch(originalUrl);
 	if (!response.ok) throw new Error("Original GIF not found in R2");

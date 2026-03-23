@@ -1,14 +1,18 @@
+import type { OAuthSession } from "@atcute/oauth-node-client";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
+import { createMiddleware } from "hono/factory";
 import { oauthClient } from "../../auth/client";
 import { db } from "../../db/client";
 import { likes } from "../../db/schema";
 import { getFeed, getLikeCount } from "../../lib/search";
 
-const api = new Hono();
+type AuthEnv = { Variables: { did: string; session: OAuthSession } };
 
-const requireAuth = async (c: any, next: any) => {
+const api = new Hono<AuthEnv>();
+
+const requireAuth = createMiddleware<AuthEnv>(async (c, next) => {
 	const did = getCookie(c, "did");
 	if (!did) return c.json({ error: "unauthorized" }, 401);
 	try {
@@ -19,7 +23,7 @@ const requireAuth = async (c: any, next: any) => {
 		return c.json({ error: "session expired" }, 401);
 	}
 	await next();
-};
+});
 
 api.get("/feed", async (c) => {
 	const limit = Number(c.req.query("limit") ?? 20);
@@ -39,7 +43,7 @@ api.get("/feed", async (c) => {
 });
 
 api.post("/like", requireAuth, async (c) => {
-	const did = c.get("did") as string;
+	const did = c.get("did");
 	const session = c.get("session");
 	const { uri, cid } = await c.req.json();
 	if (!uri || !cid) return c.json({ error: "uri and cid required" }, 400);
@@ -52,10 +56,10 @@ api.post("/like", requireAuth, async (c) => {
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
 			repo: did,
-			collection: "app.bsky.feed.like",
+			collection: "com.jjalcloud.feed.like",
 			rkey,
 			record: {
-				$type: "app.bsky.feed.like",
+				$type: "com.jjalcloud.feed.like",
 				subject: { uri, cid },
 				createdAt: new Date().toISOString(),
 			},
@@ -82,7 +86,7 @@ api.post("/like", requireAuth, async (c) => {
 });
 
 api.delete("/like", requireAuth, async (c) => {
-	const did = c.get("did") as string;
+	const did = c.get("did");
 	const session = c.get("session");
 	const { rkey } = await c.req.json();
 	if (!rkey) return c.json({ error: "rkey required" }, 400);
@@ -93,7 +97,7 @@ api.delete("/like", requireAuth, async (c) => {
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
 			repo: did,
-			collection: "app.bsky.feed.like",
+			collection: "com.jjalcloud.feed.like",
 			rkey,
 		}),
 	});

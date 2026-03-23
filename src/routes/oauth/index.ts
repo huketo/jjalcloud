@@ -11,7 +11,7 @@ oauth.get("/login", async (c) => {
 	if (!handle) return c.text("handle required", 400);
 
 	const { url } = await oauthClient.authorize({
-		target: { type: "account", identifier: handle },
+		target: { type: "account", identifier: handle as any },
 	});
 	return c.redirect(url.toString());
 });

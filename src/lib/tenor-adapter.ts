@@ -56,13 +56,16 @@ export function toTenorGifObject(gif: GifRow): TenorGifObject {
 			gif: { url: originalUrl, dims: [w, h] },
 			mediumgif: { url: cfResizeUrl(originalUrl, mediumW), dims: [mediumW, mediumH] },
 			tinygif: { url: cfResizeUrl(originalUrl, tinyW), dims: [tinyW, tinyH] },
-			mp4: { url: `${env.R2_PUBLIC_URL}/${r2Key(gif.author, gif.rkey, "mp4")}`, dims: [w, h] },
+			mp4: {
+				url: `${env.PUBLIC_URL}/media/${gif.author}/${gif.rkey}/mp4`,
+				dims: [w, h],
+			},
 			tinymp4: {
-				url: `${env.R2_PUBLIC_URL}/${r2Key(gif.author, gif.rkey, "tinymp4")}`,
+				url: `${env.PUBLIC_URL}/media/${gif.author}/${gif.rkey}/tinymp4`,
 				dims: [mediumW, mediumH],
 			},
 			webm: {
-				url: `${env.R2_PUBLIC_URL}/${r2Key(gif.author, gif.rkey, "webm")}`,
+				url: `${env.PUBLIC_URL}/media/${gif.author}/${gif.rkey}/webm`,
 				dims: [w, h],
 			},
 		},

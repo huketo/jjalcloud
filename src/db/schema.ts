@@ -32,9 +32,7 @@ export const gifs = pgTable(
 	{
 		uri: text("uri").primaryKey(),
 		cid: text("cid").notNull(),
-		author: text("author")
-			.notNull()
-			.references(() => users.did),
+		author: text("author").notNull(),
 		rkey: text("rkey").notNull(),
 		title: text("title"),
 		alt: text("alt"),

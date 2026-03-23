@@ -1,4 +1,5 @@
 {
 	"editor.defaultFormatter": "biomejs.biome",
-	"editor.formatOnSave": true
+	"editor.formatOnSave": true,
+	"livePreview.defaultPreviewPath": "/.superpowers/brainstorm/179-1774250708/infra-approaches.html"
 }

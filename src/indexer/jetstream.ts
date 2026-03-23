@@ -12,25 +12,36 @@ export function startJetstream(db: Database): JetstreamSubscription {
 	});
 
 	void (async () => {
-		for await (const event of jetstream) {
-			if (event.kind !== "commit") continue;
+		while (true) {
+			try {
+				for await (const event of jetstream) {
+					if (event.kind !== "commit") continue;
 
-			const { did, commit } = event;
-			const { collection, rkey } = commit;
+					const { did, commit } = event;
+					const { collection, rkey } = commit;
 
-			if (collection === "com.jjalcloud.feed.gif") {
-				const uri = `at://${did}/com.jjalcloud.feed.gif/${rkey}`;
-				if (commit.operation === "create" || commit.operation === "update") {
-					await handleGifCreate(db, uri, commit.cid, did, rkey, commit.record as any);
-				} else if (commit.operation === "delete") {
-					await handleGifDelete(db, uri);
+					try {
+						if (collection === "com.jjalcloud.feed.gif") {
+							const uri = `at://${did}/com.jjalcloud.feed.gif/${rkey}`;
+							if (commit.operation === "create" || commit.operation === "update") {
+								await handleGifCreate(db, uri, commit.cid, did, rkey, commit.record as any);
+							} else if (commit.operation === "delete") {
+								await handleGifDelete(db, uri);
+							}
+						} else if (collection === "com.jjalcloud.feed.like") {
+							if (commit.operation === "create") {
+								await handleLikeCreate(db, did, rkey, commit.record as any);
+							} else if (commit.operation === "delete") {
+								await handleLikeDelete(db, did, rkey);
+							}
+						}
+					} catch (e) {
+						console.error(`[indexer] Error processing ${collection} event:`, e);
+					}
 				}
-			} else if (collection === "com.jjalcloud.feed.like") {
-				if (commit.operation === "create") {
-					await handleLikeCreate(db, did, rkey, commit.record as any);
-				} else if (commit.operation === "delete") {
-					await handleLikeDelete(db, did, rkey);
-				}
+			} catch (e) {
+				console.error("[indexer] Jetstream connection error, reconnecting in 5s:", e);
+				await new Promise((r) => setTimeout(r, 5000));
 			}
 		}
 	})();

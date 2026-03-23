@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import type { Database } from "../db/client";
 import { gifs, likes, tags } from "../db/schema";
+import { cacheOriginalGif } from "./media";
 
 interface GifRecord {
 	file: unknown;
@@ -46,6 +47,15 @@ export async function handleGifCreate(
 			await tx.insert(tags).values(record.tags.map((name) => ({ gifUri: uri, name })));
 		}
 	});
+
+	// Cache original GIF to R2 in background (don't block indexing)
+	const blobRef = record.file as { ref: { $link: string }; mimeType: string };
+	if (blobRef?.ref?.$link) {
+		const pdsUrl = `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${author}&cid=${blobRef.ref.$link}`;
+		cacheOriginalGif(pdsUrl, author, rkey).catch((e) =>
+			console.error(`[media] Failed to cache GIF ${uri}:`, e),
+		);
+	}
 }
 
 export async function handleGifDelete(db: Database, uri: string): Promise<void> {
