@@ -1,48 +1,29 @@
-import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { S3Client } from "bun";
 
-function getR2Client(): S3Client {
-	const { env } = require("../env");
-	return new S3Client({
-		region: env.R2_REGION ?? "auto",
-		endpoint: env.R2_ENDPOINT,
-		credentials: {
-			accessKeyId: env.R2_ACCESS_KEY_ID,
-			secretAccessKey: env.R2_SECRET_ACCESS_KEY,
-		},
-		forcePathStyle: true,
-	});
-}
-
-let _r2: S3Client | null = null;
+let _client: S3Client | null = null;
 
 export function getClient(): S3Client {
-	if (!_r2) {
-		_r2 = getR2Client();
+	if (!_client) {
+		const { env } = require("../env");
+		_client = new S3Client({
+			accessKeyId: env.R2_ACCESS_KEY_ID,
+			secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+			bucket: env.R2_BUCKET,
+			endpoint: env.R2_ENDPOINT,
+			region: env.R2_REGION ?? "auto",
+		});
 	}
-	return _r2;
+	return _client;
 }
 
 export async function uploadToR2(key: string, body: Buffer, contentType: string): Promise<string> {
 	const { env } = require("../env");
-	await getClient().send(
-		new PutObjectCommand({
-			Bucket: env.R2_BUCKET,
-			Key: key,
-			Body: body,
-			ContentType: contentType,
-		}),
-	);
+	await getClient().write(key, body, { type: contentType });
 	return `${env.R2_PUBLIC_URL}/${key}`;
 }
 
 export async function existsInR2(key: string): Promise<boolean> {
-	const { env } = require("../env");
-	try {
-		await getClient().send(new HeadObjectCommand({ Bucket: env.R2_BUCKET, Key: key }));
-		return true;
-	} catch {
-		return false;
-	}
+	return getClient().exists(key);
 }
 
 export function r2Key(author: string, rkey: string, variant: string): string {
