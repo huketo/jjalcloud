@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { Database } from "../db/client";
 import { gifs, likes, tags } from "../db/schema";
 import type { ComJjalcloudFeedGif, ComJjalcloudFeedLike } from "../lexicon";
+import { getPdsEndpoint } from "../lib/identity";
 import { cacheOriginalGif } from "./media";
 
 type GifRecord = ComJjalcloudFeedGif.Main;
@@ -40,10 +41,12 @@ export async function handleGifCreate(
 	// Cache original GIF to R2 in background (don't block indexing)
 	const blobRef = record.file as { ref: { $link: string }; mimeType: string };
 	if (blobRef?.ref?.$link) {
-		const pdsUrl = `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${author}&cid=${blobRef.ref.$link}`;
-		cacheOriginalGif(pdsUrl, author, rkey).catch((e) =>
-			console.error(`[media] Failed to cache GIF ${uri}:`, e),
-		);
+		getPdsEndpoint(author)
+			.then((pds) => {
+				const pdsUrl = `${pds}/xrpc/com.atproto.sync.getBlob?did=${author}&cid=${blobRef.ref.$link}`;
+				return cacheOriginalGif(pdsUrl, author, rkey);
+			})
+			.catch((e) => console.error(`[media] Failed to cache GIF ${uri}:`, e));
 	}
 }
 

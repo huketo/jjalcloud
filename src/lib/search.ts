@@ -56,7 +56,6 @@ export async function getFeed(db: Database, limit = 20, cursor?: string) {
 }
 
 export async function getTrending(db: Database, limit = 20) {
-	// Get trending URIs from materialized view
 	const trending = await db.execute(sql`
 		SELECT uri FROM trending_gifs
 		ORDER BY score DESC
@@ -65,7 +64,6 @@ export async function getTrending(db: Database, limit = 20) {
 	const uris = (trending as { uri: string }[]).map((r) => r.uri);
 	if (uris.length === 0) return [];
 
-	// Fetch full gifs with tags via relational query
 	return db.query.gifs.findMany({
 		where: inArray(gifs.uri, uris),
 		with: { tags: true },

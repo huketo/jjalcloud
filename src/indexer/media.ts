@@ -47,27 +47,27 @@ export async function convertToVideo(
 	const ext = variant === "webm" ? "webm" : "mp4";
 	const tmpOutput = `/tmp/${uid}-output.${ext}`;
 
-	const proc = Bun.spawn([
-		"ffmpeg",
-		"-y",
-		"-i",
-		tmpInput,
-		"-vf",
-		scale,
-		"-c:v",
-		codec,
-		"-an",
-		"-movflags",
-		"+faststart",
-		tmpOutput,
-	]);
-	await proc.exited;
+	try {
+		const proc = Bun.spawn([
+			"ffmpeg",
+			"-y",
+			"-i",
+			tmpInput,
+			"-vf",
+			scale,
+			"-c:v",
+			codec,
+			"-an",
+			"-movflags",
+			"+faststart",
+			tmpOutput,
+		]);
+		await proc.exited;
 
-	const outputBuffer = await Bun.file(tmpOutput).arrayBuffer();
-	const contentType = variant === "webm" ? "video/webm" : "video/mp4";
-	const url = await uploadToR2(key, Buffer.from(outputBuffer), contentType);
-
-	await Bun.spawn(["rm", "-f", tmpInput, tmpOutput]).exited;
-
-	return url;
+		const outputBuffer = await Bun.file(tmpOutput).arrayBuffer();
+		const contentType = variant === "webm" ? "video/webm" : "video/mp4";
+		return await uploadToR2(key, Buffer.from(outputBuffer), contentType);
+	} finally {
+		await Bun.spawn(["rm", "-f", tmpInput, tmpOutput]).exited;
+	}
 }
