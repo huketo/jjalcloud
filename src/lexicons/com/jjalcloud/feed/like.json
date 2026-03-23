@@ -1,0 +1,22 @@
+{
+	"lexicon": 1,
+	"id": "com.jjalcloud.feed.like",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "Like reaction to a jjal",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["subject", "createdAt"],
+				"properties": {
+					"subject": {
+						"type": "ref",
+						"ref": "com.atproto.repo.strongRef"
+					},
+					"createdAt": { "type": "string", "format": "datetime" }
+				}
+			}
+		}
+	}
+}

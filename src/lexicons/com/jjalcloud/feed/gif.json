@@ -1,0 +1,46 @@
+{
+	"lexicon": 1,
+	"id": "com.jjalcloud.feed.gif",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "GIF record uploaded by the user",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["file", "createdAt"],
+				"properties": {
+					"file": {
+						"type": "blob",
+						"accept": ["image/gif"],
+						"maxSize": 20000000
+					},
+					"title": {
+						"type": "string",
+						"maxGraphemes": 100,
+						"maxLength": 1000
+					},
+					"alt": {
+						"type": "string",
+						"description": "Alternative text for accessibility",
+						"maxGraphemes": 300
+					},
+					"tags": {
+						"type": "array",
+						"items": { "type": "string", "maxLength": 100 },
+						"maxLength": 10
+					},
+					"width": {
+						"type": "integer",
+						"description": "Width of the GIF in pixels"
+					},
+					"height": {
+						"type": "integer",
+						"description": "Height of the GIF in pixels"
+					},
+					"createdAt": { "type": "string", "format": "datetime" }
+				}
+			}
+		}
+	}
+}
