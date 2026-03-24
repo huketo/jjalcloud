@@ -6,9 +6,9 @@ import { existsInR2, r2Key } from "../../../../lib/r2";
 const app = new Hono();
 
 app.get("/", async (c) => {
-	const author = c.req.param("author");
-	const rkey = c.req.param("rkey");
-	const variant = c.req.param("variant");
+	const author = c.req.param("author") ?? "";
+	const rkey = c.req.param("rkey") ?? "";
+	const variant = c.req.param("variant") ?? "";
 
 	if (variant !== "mp4" && variant !== "tinymp4" && variant !== "webm") {
 		return c.text("invalid variant", 400);
