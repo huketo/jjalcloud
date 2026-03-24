@@ -9,6 +9,7 @@ const posts = new Hono();
 posts.get("/posts", async (c) => {
 	const ids = c.req.query("ids")?.split(",") ?? [];
 	if (ids.length === 0) return c.json(tenorResponse([], null));
+	if (ids.length > 50) return c.json({ error: "too many ids" }, 400);
 	const results = await db.query.gifs.findMany({
 		where: inArray(gifs.rkey, ids),
 		with: { tags: true },

@@ -2,6 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "../../db/client";
 import { gifs } from "../../db/schema";
+import { nextCursor, parseLimit } from "../../lib/pagination";
 import { getFeed, getLikeCount, getTrending, searchGifs } from "../../lib/search";
 
 const app = new Hono();
@@ -17,7 +18,7 @@ app.get("/com.jjalcloud.feed.getGif", async (c) => {
 
 app.get("/com.jjalcloud.feed.getGifs", async (c) => {
 	const author = c.req.query("author");
-	const limit = Number(c.req.query("limit") ?? 50);
+	const limit = parseLimit(c.req.query("limit"), 50);
 	const cursor = c.req.query("cursor");
 	const results = await db
 		.select()
@@ -30,33 +31,27 @@ app.get("/com.jjalcloud.feed.getGifs", async (c) => {
 		)
 		.orderBy(desc(gifs.createdAt))
 		.limit(limit);
-	const nextCursor =
-		results.length === limit ? results[results.length - 1]?.createdAt.toISOString() : undefined;
-	return c.json({ gifs: results, cursor: nextCursor });
+	return c.json({ gifs: results, cursor: nextCursor(results, limit) });
 });
 
 app.get("/com.jjalcloud.feed.searchGifs", async (c) => {
 	const q = c.req.query("q");
 	if (!q) return c.json({ error: "q required" }, 400);
-	const limit = Number(c.req.query("limit") ?? 25);
+	const limit = parseLimit(c.req.query("limit"), 25);
 	const cursor = c.req.query("cursor");
 	const results = await searchGifs(db, q, limit, cursor ?? undefined);
-	const nextCursor =
-		results.length === limit ? results[results.length - 1]?.createdAt.toISOString() : undefined;
-	return c.json({ gifs: results, cursor: nextCursor });
+	return c.json({ gifs: results, cursor: nextCursor(results, limit) });
 });
 
 app.get("/com.jjalcloud.feed.getFeed", async (c) => {
-	const limit = Number(c.req.query("limit") ?? 50);
+	const limit = parseLimit(c.req.query("limit"), 50);
 	const cursor = c.req.query("cursor");
 	const results = await getFeed(db, limit, cursor ?? undefined);
-	const nextCursor =
-		results.length === limit ? results[results.length - 1]?.createdAt.toISOString() : undefined;
-	return c.json({ feed: results, cursor: nextCursor });
+	return c.json({ feed: results, cursor: nextCursor(results, limit) });
 });
 
 app.get("/com.jjalcloud.feed.getTrending", async (c) => {
-	const limit = Number(c.req.query("limit") ?? 50);
+	const limit = parseLimit(c.req.query("limit"), 50);
 	const results = await getTrending(db, limit);
 	return c.json({ gifs: results });
 });

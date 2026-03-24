@@ -2,13 +2,14 @@ import { asc } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "../../db/client";
 import { categories as categoriesTable } from "../../db/schema";
+import { parseLimit } from "../../lib/pagination";
 import { getTrending } from "../../lib/search";
 import { tenorResponse, toTenorGifObject } from "../../lib/tenor-adapter";
 
 const featured = new Hono();
 
 featured.get("/featured", async (c) => {
-	const limit = Number(c.req.query("limit") ?? 20);
+	const limit = parseLimit(c.req.query("limit"), 20);
 	const results = await getTrending(db, limit);
 	const tenorResults = results.map(toTenorGifObject);
 	return c.json(tenorResponse(tenorResults, null));

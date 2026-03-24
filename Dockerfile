@@ -10,7 +10,8 @@ COPY . .
 RUN bun run build
 
 FROM base AS release
-COPY --from=build /app/node_modules node_modules
+COPY --from=build /app/package.json /app/bun.lock ./
+RUN bun install --frozen-lockfile --production
 COPY --from=build /app/dist dist
 
 # Install ffmpeg for video conversion

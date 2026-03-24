@@ -6,7 +6,8 @@ import { createMiddleware } from "hono/factory";
 import { oauthClient } from "../../auth/client";
 import { db } from "../../db/client";
 import { likes } from "../../db/schema";
-import { getFeed, getLikeCount } from "../../lib/search";
+import { nextCursor, parseLimit } from "../../lib/pagination";
+import { getFeed, getLikeCounts } from "../../lib/search";
 
 type AuthEnv = { Variables: { did: string; session: OAuthSession } };
 
@@ -26,20 +27,18 @@ const requireAuth = createMiddleware<AuthEnv>(async (c, next) => {
 });
 
 app.get("/feed", async (c) => {
-	const limit = Number(c.req.query("limit") ?? 20);
+	const limit = parseLimit(c.req.query("limit"), 20);
 	const cursor = c.req.query("cursor");
 	const results = await getFeed(db, limit, cursor ?? undefined);
-	const withLikes = await Promise.all(
-		results.map(async (gif) => ({
-			...gif,
-			likeCount: await getLikeCount(db, gif.uri),
-		})),
+	const likeCounts = await getLikeCounts(
+		db,
+		results.map((g) => g.uri),
 	);
-	const next =
-		results.length === limit
-			? (results[results.length - 1]?.createdAt.toISOString() ?? null)
-			: null;
-	return c.json({ gifs: withLikes, cursor: next });
+	const withLikes = results.map((gif) => ({
+		...gif,
+		likeCount: likeCounts.get(gif.uri) ?? 0,
+	}));
+	return c.json({ gifs: withLikes, cursor: nextCursor(results, limit) });
 });
 
 app.post("/like", requireAuth, async (c) => {
@@ -50,7 +49,6 @@ app.post("/like", requireAuth, async (c) => {
 
 	const rkey = Date.now().toString(36);
 
-	// Write like record to PDS
 	const response = await session.handle("/xrpc/com.atproto.repo.createRecord", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
@@ -71,7 +69,6 @@ app.post("/like", requireAuth, async (c) => {
 		return c.json({ error: `PDS write failed: ${text}` }, 502);
 	}
 
-	// Mirror to local DB
 	await db
 		.insert(likes)
 		.values({
@@ -91,7 +88,6 @@ app.delete("/like", requireAuth, async (c) => {
 	const { rkey } = await c.req.json();
 	if (!rkey) return c.json({ error: "rkey required" }, 400);
 
-	// Delete like record from PDS
 	const response = await session.handle("/xrpc/com.atproto.repo.deleteRecord", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
@@ -107,7 +103,6 @@ app.delete("/like", requireAuth, async (c) => {
 		return c.json({ error: `PDS delete failed: ${text}` }, 502);
 	}
 
-	// Remove from local DB
 	await db.delete(likes).where(and(eq(likes.author, did), eq(likes.rkey, rkey)));
 
 	return c.json({ ok: true });

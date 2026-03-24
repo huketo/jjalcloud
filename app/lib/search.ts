@@ -77,3 +77,17 @@ export async function getLikeCount(db: Database, gifUri: string): Promise<number
 		.where(eq(likes.subject, gifUri));
 	return result[0]?.count ?? 0;
 }
+
+export async function getLikeCounts(db: Database, uris: string[]): Promise<Map<string, number>> {
+	if (uris.length === 0) return new Map();
+	const rows = await db
+		.select({ subject: likes.subject, count: sql<number>`count(*)::int` })
+		.from(likes)
+		.where(inArray(likes.subject, uris))
+		.groupBy(likes.subject);
+	const map = new Map<string, number>();
+	for (const row of rows) {
+		map.set(row.subject, row.count);
+	}
+	return map;
+}
