@@ -18,9 +18,9 @@ oauth.get("/login", async (c) => {
 
 oauth.get("/callback", async (c) => {
 	const params = new URLSearchParams(c.req.url.split("?")[1]);
-	const { session, info } = await oauthClient.callback(params);
+	const { session } = await oauthClient.callback(params);
 	const did = session.sub;
-	const handle = info?.handle ?? did;
+	const handle = (session as any).info?.handle ?? did;
 
 	await db
 		.insert(users)

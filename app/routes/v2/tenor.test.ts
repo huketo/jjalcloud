@@ -26,8 +26,8 @@ mockSelectDistinctChain.limit = mock(() => Promise.resolve([]));
 const mockDb = {
 	query: {
 		gifs: {
-			findMany: mock(() => Promise.resolve([])),
-			findFirst: mock(() => Promise.resolve(null)),
+			findMany: mock(() => Promise.resolve([] as any[])),
+			findFirst: mock(() => Promise.resolve(null as any)),
 		},
 	},
 	select: mock(() => mockSelectChain),

@@ -1,2 +1,2 @@
 [test]
-preload = ["./src/routes/tenor/test-preload.ts"]
+preload = ["./app/routes/v2/test-preload.ts"]
