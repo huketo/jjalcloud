@@ -4,9 +4,9 @@ import { db } from "../../db/client";
 import { gifs } from "../../db/schema";
 import { getFeed, getLikeCount, getTrending, searchGifs } from "../../lib/search";
 
-const xrpc = new Hono();
+const app = new Hono();
 
-xrpc.get("/xrpc/com.jjalcloud.feed.getGif", async (c) => {
+app.get("/com.jjalcloud.feed.getGif", async (c) => {
 	const uri = c.req.query("uri");
 	if (!uri) return c.json({ error: "uri required" }, 400);
 	const gif = await db.query.gifs.findFirst({ where: eq(gifs.uri, uri), with: { tags: true } });
@@ -15,7 +15,7 @@ xrpc.get("/xrpc/com.jjalcloud.feed.getGif", async (c) => {
 	return c.json({ gif: { ...gif, likeCount } });
 });
 
-xrpc.get("/xrpc/com.jjalcloud.feed.getGifs", async (c) => {
+app.get("/com.jjalcloud.feed.getGifs", async (c) => {
 	const author = c.req.query("author");
 	const limit = Number(c.req.query("limit") ?? 50);
 	const cursor = c.req.query("cursor");
@@ -35,7 +35,7 @@ xrpc.get("/xrpc/com.jjalcloud.feed.getGifs", async (c) => {
 	return c.json({ gifs: results, cursor: nextCursor });
 });
 
-xrpc.get("/xrpc/com.jjalcloud.feed.searchGifs", async (c) => {
+app.get("/com.jjalcloud.feed.searchGifs", async (c) => {
 	const q = c.req.query("q");
 	if (!q) return c.json({ error: "q required" }, 400);
 	const limit = Number(c.req.query("limit") ?? 25);
@@ -46,7 +46,7 @@ xrpc.get("/xrpc/com.jjalcloud.feed.searchGifs", async (c) => {
 	return c.json({ gifs: results, cursor: nextCursor });
 });
 
-xrpc.get("/xrpc/com.jjalcloud.feed.getFeed", async (c) => {
+app.get("/com.jjalcloud.feed.getFeed", async (c) => {
 	const limit = Number(c.req.query("limit") ?? 50);
 	const cursor = c.req.query("cursor");
 	const results = await getFeed(db, limit, cursor ?? undefined);
@@ -55,10 +55,10 @@ xrpc.get("/xrpc/com.jjalcloud.feed.getFeed", async (c) => {
 	return c.json({ feed: results, cursor: nextCursor });
 });
 
-xrpc.get("/xrpc/com.jjalcloud.feed.getTrending", async (c) => {
+app.get("/com.jjalcloud.feed.getTrending", async (c) => {
 	const limit = Number(c.req.query("limit") ?? 50);
 	const results = await getTrending(db, limit);
 	return c.json({ gifs: results });
 });
 
-export { xrpc };
+export default app;

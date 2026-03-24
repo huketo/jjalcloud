@@ -4,9 +4,9 @@ import { oauthClient } from "../../auth/client";
 import { db } from "../../db/client";
 import { users } from "../../db/schema";
 
-const oauth = new Hono();
+const app = new Hono();
 
-oauth.get("/login", async (c) => {
+app.get("/login", async (c) => {
 	const handle = c.req.query("handle");
 	if (!handle) return c.text("handle required", 400);
 
@@ -16,7 +16,7 @@ oauth.get("/login", async (c) => {
 	return c.redirect(url.toString());
 });
 
-oauth.get("/callback", async (c) => {
+app.get("/callback", async (c) => {
 	const params = new URLSearchParams(c.req.url.split("?")[1]);
 	const { session } = await oauthClient.callback(params);
 	const did = session.sub;
@@ -41,13 +41,13 @@ oauth.get("/callback", async (c) => {
 	return c.redirect("/");
 });
 
-oauth.get("/logout", (c) => {
+app.get("/logout", (c) => {
 	deleteCookie(c, "did", { path: "/" });
 	return c.redirect("/");
 });
 
-oauth.get("/client-metadata.json", (c) => {
+app.get("/client-metadata.json", (c) => {
 	return c.json(oauthClient.metadata);
 });
 
-export { oauth };
+export default app;

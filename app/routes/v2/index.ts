@@ -1,11 +1,11 @@
 import { Hono } from "hono";
-import { featured } from "./featured";
-import { posts } from "./posts";
-import { search } from "./search";
+import featured from "./featured";
+import posts from "./posts";
+import search from "./search";
 
-const tenor = new Hono();
-tenor.route("/", search);
-tenor.route("/", featured);
-tenor.route("/", posts);
+const app = new Hono();
+app.route("/", search);
+app.route("/", featured);
+app.route("/", posts);
 
-export { tenor };
+export default app;

@@ -25,4 +25,4 @@ featured.get("/categories", async (c) => {
 	return c.json({ tags: results });
 });
 
-export { featured };
+export default featured;

@@ -66,11 +66,11 @@ mock.module("../../lib/search", () => ({
 	getLikeCount: mockGetLikeCount,
 }));
 
-const { xrpc } = await import("./index");
+const { default: app } = await import("./index");
 
 describe("com.jjalcloud.feed.getGif", () => {
 	it("returns gif with likeCount", async () => {
-		const res = await xrpc.request(`/xrpc/com.jjalcloud.feed.getGif?uri=${mockGif.uri}`);
+		const res = await app.request(`/com.jjalcloud.feed.getGif?uri=${mockGif.uri}`);
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.gif).toBeDefined();
@@ -79,7 +79,7 @@ describe("com.jjalcloud.feed.getGif", () => {
 	});
 
 	it("returns 400 without uri", async () => {
-		const res = await xrpc.request("/xrpc/com.jjalcloud.feed.getGif");
+		const res = await app.request("/com.jjalcloud.feed.getGif");
 		expect(res.status).toBe(400);
 		const body = await res.json();
 		expect(body.error).toBe("uri required");
@@ -87,8 +87,8 @@ describe("com.jjalcloud.feed.getGif", () => {
 
 	it("returns 404 for non-existent gif", async () => {
 		mockFindFirstResult = null;
-		const res = await xrpc.request(
-			"/xrpc/com.jjalcloud.feed.getGif?uri=at://did:plc:test/com.jjalcloud.feed.gif/nonexistent",
+		const res = await app.request(
+			"/com.jjalcloud.feed.getGif?uri=at://did:plc:test/com.jjalcloud.feed.gif/nonexistent",
 		);
 		mockFindFirstResult = mockGif;
 		expect(res.status).toBe(404);
@@ -100,7 +100,7 @@ describe("com.jjalcloud.feed.getGif", () => {
 describe("com.jjalcloud.feed.getGifs", () => {
 	it("returns gifs list with cursor", async () => {
 		// Use a limit equal to result count to trigger cursor generation
-		const res = await xrpc.request("/xrpc/com.jjalcloud.feed.getGifs?limit=1");
+		const res = await app.request("/com.jjalcloud.feed.getGifs?limit=1");
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(Array.isArray(body.gifs)).toBe(true);
@@ -109,7 +109,7 @@ describe("com.jjalcloud.feed.getGifs", () => {
 	});
 
 	it("filters by author", async () => {
-		const res = await xrpc.request("/xrpc/com.jjalcloud.feed.getGifs?author=did:plc:test");
+		const res = await app.request("/com.jjalcloud.feed.getGifs?author=did:plc:test");
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(Array.isArray(body.gifs)).toBe(true);
@@ -122,7 +122,7 @@ describe("com.jjalcloud.feed.searchGifs", () => {
 	});
 
 	it("returns search results", async () => {
-		const res = await xrpc.request("/xrpc/com.jjalcloud.feed.searchGifs?q=funny");
+		const res = await app.request("/com.jjalcloud.feed.searchGifs?q=funny");
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(Array.isArray(body.gifs)).toBe(true);
@@ -130,7 +130,7 @@ describe("com.jjalcloud.feed.searchGifs", () => {
 	});
 
 	it("returns 400 without q", async () => {
-		const res = await xrpc.request("/xrpc/com.jjalcloud.feed.searchGifs");
+		const res = await app.request("/com.jjalcloud.feed.searchGifs");
 		expect(res.status).toBe(400);
 		const body = await res.json();
 		expect(body.error).toBe("q required");
@@ -143,7 +143,7 @@ describe("com.jjalcloud.feed.getFeed", () => {
 	});
 
 	it("returns feed with cursor", async () => {
-		const res = await xrpc.request("/xrpc/com.jjalcloud.feed.getFeed?limit=1");
+		const res = await app.request("/com.jjalcloud.feed.getFeed?limit=1");
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(Array.isArray(body.feed)).toBe(true);
@@ -159,7 +159,7 @@ describe("com.jjalcloud.feed.getTrending", () => {
 	});
 
 	it("returns trending gifs", async () => {
-		const res = await xrpc.request("/xrpc/com.jjalcloud.feed.getTrending");
+		const res = await app.request("/com.jjalcloud.feed.getTrending");
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(Array.isArray(body.gifs)).toBe(true);

@@ -53,7 +53,7 @@ mock.module("../../lib/search", () => ({
 
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import * as searchLib from "../../lib/search";
-import { tenor } from "./index";
+import app from "./index";
 
 // ---------------------------------------------------------------------------
 // Shared mock data
@@ -128,7 +128,7 @@ describe("GET /search", () => {
 		);
 		mockDb.query.gifs.findMany.mockImplementation(() => Promise.resolve([mockGif]));
 
-		const res = await tenor.request("/search?q=funny");
+		const res = await app.request("/search?q=funny");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -154,7 +154,7 @@ describe("GET /search", () => {
 	});
 
 	it("returns empty results for empty query string", async () => {
-		const res = await tenor.request("/search?q=");
+		const res = await app.request("/search?q=");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -163,7 +163,7 @@ describe("GET /search", () => {
 	});
 
 	it("returns empty results when query is omitted", async () => {
-		const res = await tenor.request("/search");
+		const res = await app.request("/search");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -176,7 +176,7 @@ describe("GET /search", () => {
 		);
 		mockDb.query.gifs.findMany.mockImplementation(() => Promise.resolve([mockGif]));
 
-		const res = await tenor.request("/search?q=test&limit=1");
+		const res = await app.request("/search?q=test&limit=1");
 		expect(res.status).toBe(200);
 
 		expect(searchLib.searchGifs).toHaveBeenCalledWith(expect.anything(), "test", 1, undefined);
@@ -188,7 +188,7 @@ describe("GET /search", () => {
 		);
 		mockDb.query.gifs.findMany.mockImplementation(() => Promise.resolve([mockGif, mockGif2]));
 
-		const res = await tenor.request("/search?q=test&limit=2");
+		const res = await app.request("/search?q=test&limit=2");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -203,7 +203,7 @@ describe("GET /search", () => {
 		);
 		mockDb.query.gifs.findMany.mockImplementation(() => Promise.resolve([mockGif]));
 
-		const res = await tenor.request("/search?q=test&limit=20");
+		const res = await app.request("/search?q=test&limit=20");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -223,7 +223,7 @@ describe("GET /autocomplete", () => {
 			Promise.resolve(["funny", "funnycat", "funnydog"]),
 		);
 
-		const res = await tenor.request("/autocomplete?q=fun");
+		const res = await app.request("/autocomplete?q=fun");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -231,7 +231,7 @@ describe("GET /autocomplete", () => {
 	});
 
 	it("returns empty array for no matches", async () => {
-		const res = await tenor.request("/autocomplete?q=zzznomatch");
+		const res = await app.request("/autocomplete?q=zzznomatch");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -239,7 +239,7 @@ describe("GET /autocomplete", () => {
 	});
 
 	it("returns empty array when query is omitted", async () => {
-		const res = await tenor.request("/autocomplete");
+		const res = await app.request("/autocomplete");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -259,7 +259,7 @@ describe("GET /search_suggestions", () => {
 			Promise.resolve(["cat", "dog", "animal"]),
 		);
 
-		const res = await tenor.request("/search_suggestions?q=funny");
+		const res = await app.request("/search_suggestions?q=funny");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -267,7 +267,7 @@ describe("GET /search_suggestions", () => {
 	});
 
 	it("returns empty array for no related tags", async () => {
-		const res = await tenor.request("/search_suggestions?q=zzznomatch");
+		const res = await app.request("/search_suggestions?q=zzznomatch");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -275,7 +275,7 @@ describe("GET /search_suggestions", () => {
 	});
 
 	it("returns empty array when query is omitted", async () => {
-		const res = await tenor.request("/search_suggestions");
+		const res = await app.request("/search_suggestions");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -295,7 +295,7 @@ describe("GET /featured", () => {
 			Promise.resolve([mockGif]),
 		);
 
-		const res = await tenor.request("/featured");
+		const res = await app.request("/featured");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -306,7 +306,7 @@ describe("GET /featured", () => {
 	});
 
 	it("returns empty results when no trending GIFs exist", async () => {
-		const res = await tenor.request("/featured");
+		const res = await app.request("/featured");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -314,7 +314,7 @@ describe("GET /featured", () => {
 	});
 
 	it("passes limit parameter to getTrending", async () => {
-		const res = await tenor.request("/featured?limit=5");
+		const res = await app.request("/featured?limit=5");
 		expect(res.status).toBe(200);
 
 		expect(searchLib.getTrending).toHaveBeenCalledWith(expect.anything(), 5);
@@ -349,7 +349,7 @@ describe("GET /categories", () => {
 			Promise.resolve(mockCategories),
 		);
 
-		const res = await tenor.request("/categories");
+		const res = await app.request("/categories");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -367,7 +367,7 @@ describe("GET /categories", () => {
 			Promise.resolve([]),
 		);
 
-		const res = await tenor.request("/categories");
+		const res = await app.request("/categories");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -382,7 +382,7 @@ describe("GET /categories", () => {
 			Promise.resolve(mockCategories),
 		);
 
-		const res = await tenor.request("/categories");
+		const res = await app.request("/categories");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -400,7 +400,7 @@ describe("GET /posts", () => {
 	it("returns GIFs by single rkey ID", async () => {
 		mockDb.query.gifs.findMany.mockImplementation(() => Promise.resolve([mockGif]));
 
-		const res = await tenor.request("/posts?ids=abc123");
+		const res = await app.request("/posts?ids=abc123");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -411,7 +411,7 @@ describe("GET /posts", () => {
 	it("returns multiple GIFs for comma-separated IDs", async () => {
 		mockDb.query.gifs.findMany.mockImplementation(() => Promise.resolve([mockGif, mockGif2]));
 
-		const res = await tenor.request("/posts?ids=abc123,def456");
+		const res = await app.request("/posts?ids=abc123,def456");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -419,7 +419,7 @@ describe("GET /posts", () => {
 	});
 
 	it("returns empty results when ids param is omitted", async () => {
-		const res = await tenor.request("/posts");
+		const res = await app.request("/posts");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -429,7 +429,7 @@ describe("GET /posts", () => {
 	it("includes media_formats in posts results", async () => {
 		mockDb.query.gifs.findMany.mockImplementation(() => Promise.resolve([mockGif]));
 
-		const res = await tenor.request("/posts?ids=abc123");
+		const res = await app.request("/posts?ids=abc123");
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
@@ -449,7 +449,7 @@ describe("POST /registershare", () => {
 	it("records share event for valid GIF id", async () => {
 		mockDb.query.gifs.findFirst.mockImplementation(() => Promise.resolve(mockGif));
 
-		const res = await tenor.request("/registershare", {
+		const res = await app.request("/registershare", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ id: "abc123", key: "myapp" }),
@@ -467,7 +467,7 @@ describe("POST /registershare", () => {
 	it("records share event without client key (null)", async () => {
 		mockDb.query.gifs.findFirst.mockImplementation(() => Promise.resolve(mockGif));
 
-		const res = await tenor.request("/registershare", {
+		const res = await app.request("/registershare", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ id: "abc123" }),
@@ -483,7 +483,7 @@ describe("POST /registershare", () => {
 	});
 
 	it("returns 400 for missing id", async () => {
-		const res = await tenor.request("/registershare", {
+		const res = await app.request("/registershare", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ key: "myapp" }),
@@ -497,7 +497,7 @@ describe("POST /registershare", () => {
 	it("returns 404 for non-existent GIF", async () => {
 		mockDb.query.gifs.findFirst.mockImplementation(() => Promise.resolve(null));
 
-		const res = await tenor.request("/registershare", {
+		const res = await app.request("/registershare", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ id: "notexist" }),

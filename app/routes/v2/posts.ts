@@ -27,4 +27,4 @@ posts.post("/registershare", async (c) => {
 	return c.json({ status: "ok" });
 });
 
-export { posts };
+export default posts;

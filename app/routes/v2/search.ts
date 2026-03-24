@@ -40,4 +40,4 @@ search.get("/search_suggestions", async (c) => {
 	return c.json({ results });
 });
 
-export { search };
+export default search;

@@ -10,7 +10,7 @@ import { getFeed, getLikeCount } from "../../lib/search";
 
 type AuthEnv = { Variables: { did: string; session: OAuthSession } };
 
-const api = new Hono<AuthEnv>();
+const app = new Hono<AuthEnv>();
 
 const requireAuth = createMiddleware<AuthEnv>(async (c, next) => {
 	const did = getCookie(c, "did");
@@ -25,7 +25,7 @@ const requireAuth = createMiddleware<AuthEnv>(async (c, next) => {
 	await next();
 });
 
-api.get("/feed", async (c) => {
+app.get("/feed", async (c) => {
 	const limit = Number(c.req.query("limit") ?? 20);
 	const cursor = c.req.query("cursor");
 	const results = await getFeed(db, limit, cursor ?? undefined);
@@ -42,7 +42,7 @@ api.get("/feed", async (c) => {
 	return c.json({ gifs: withLikes, cursor: next });
 });
 
-api.post("/like", requireAuth, async (c) => {
+app.post("/like", requireAuth, async (c) => {
 	const did = c.get("did");
 	const session = c.get("session");
 	const { uri, cid } = await c.req.json();
@@ -85,7 +85,7 @@ api.post("/like", requireAuth, async (c) => {
 	return c.json({ ok: true, rkey });
 });
 
-api.delete("/like", requireAuth, async (c) => {
+app.delete("/like", requireAuth, async (c) => {
 	const did = c.get("did");
 	const session = c.get("session");
 	const { rkey } = await c.req.json();
@@ -113,4 +113,4 @@ api.delete("/like", requireAuth, async (c) => {
 	return c.json({ ok: true });
 });
 
-export { api };
+export default app;
