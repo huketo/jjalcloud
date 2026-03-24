@@ -1,11 +1,10 @@
 /**
  * Garage initialization script (Bun)
- * Sets up layout, creates API key and bucket, writes .env.test
+ * Sets up layout, creates API key and bucket, writes .env and .env.test
  */
 
 const GARAGE_ADMIN = "http://localhost:3903";
 const ADMIN_TOKEN = "jjalcloud-admin-token";
-const ENV_FILE = ".env.test";
 
 const headers = {
 	Authorization: `Bearer ${ADMIN_TOKEN}`,
@@ -75,26 +74,50 @@ async function main() {
 	});
 	console.log("Bucket 'jjalcloud-gifs' created.");
 
-	// Write .env.test
-	const envContent = `DATABASE_URL=postgres://jjalcloud:jjalcloud@localhost:5432/jjalcloud_test
-R2_ENDPOINT=http://localhost:3900
+	const s3Vars = `R2_ENDPOINT=http://localhost:3900
 R2_ACCESS_KEY_ID=${accessKey}
 R2_SECRET_ACCESS_KEY=${secretKey}
 R2_BUCKET=jjalcloud-gifs
 R2_PUBLIC_URL=http://localhost:3900/jjalcloud-gifs
-R2_REGION=garage
-OAUTH_CLIENT_ID=http://localhost:3000
-OAUTH_REDIRECT_URI=http://localhost:3000/oauth/callback
-OAUTH_PRIVATE_KEY={}
-PUBLIC_URL=http://localhost:3000
+R2_REGION=garage`;
+
+	// Write .env (local dev) — skip if already exists
+	const envFile = Bun.file(".env");
+	if (!(await envFile.exists())) {
+		await Bun.write(
+			".env",
+			`DATABASE_URL=postgres://jjalcloud:jjalcloud@localhost:5432/jjalcloud
+${s3Vars}
+OAUTH_CLIENT_ID=https://jjalcloud.dev/oauth/client-metadata.json
+OAUTH_REDIRECT_URI=https://jjalcloud.dev/oauth/callback
+OAUTH_PRIVATE_KEY=REPLACE_ME
+PUBLIC_URL=https://jjalcloud.dev
 JETSTREAM_URLS=wss://jetstream1.us-east.bsky.network/subscribe,wss://jetstream2.us-east.bsky.network/subscribe
 PDS_URL=http://localhost:2583
-`;
-	await Bun.write(ENV_FILE, envContent);
+`,
+		);
+		console.log("Written .env (run 'bun run scripts/gen-key.ts' to generate OAUTH_PRIVATE_KEY)");
+	} else {
+		console.log(".env already exists, skipping.");
+	}
+
+	// Write .env.test (always overwrite)
+	await Bun.write(
+		".env.test",
+		`DATABASE_URL=postgres://jjalcloud:jjalcloud@localhost:5432/jjalcloud_test
+${s3Vars}
+OAUTH_CLIENT_ID=https://test.example.com/oauth/client-metadata.json
+OAUTH_REDIRECT_URI=https://test.example.com/oauth/callback
+OAUTH_PRIVATE_KEY={}
+PUBLIC_URL=https://test.example.com
+JETSTREAM_URLS=wss://jetstream1.us-east.bsky.network/subscribe,wss://jetstream2.us-east.bsky.network/subscribe
+PDS_URL=http://localhost:2583
+`,
+	);
+	console.log("Written .env.test");
 
 	console.log("");
 	console.log("=== Garage initialized ===");
-	console.log(`Credentials written to ${ENV_FILE}`);
 	console.log(`S3_ENDPOINT=http://localhost:3900`);
 	console.log(`S3_ACCESS_KEY_ID=${accessKey}`);
 	console.log(`S3_SECRET_ACCESS_KEY=${secretKey}`);

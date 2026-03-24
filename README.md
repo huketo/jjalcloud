@@ -27,28 +27,69 @@ bun install
 
 ### Local Development
 
+#### 1. HTTPS 설정 (portless)
+
+AT Protocol OAuth는 기밀 클라이언트(confidential client)에 HTTPS를 요구합니다. [portless](https://github.com/vercel-labs/portless)를 사용해 로컬에서 HTTPS 개발 환경을 구성합니다.
+
 ```bash
-# Start infrastructure (PostgreSQL, PDS, Garage)
+# portless 설치 (글로벌)
+bun install -g portless
+
+# 프록시 시작 (최초 1회, HTTPS CA 자동 생성)
+portless proxy start --https --tld dev
+
+# 로컬 CA 시스템 신뢰 등록
+sudo env PATH="$PATH" portless trust
+```
+
+OAuth 서명에 사용할 개인키를 생성합니다:
+
+```bash
+bun run scripts/gen-key.ts
+```
+
+출력된 JWK를 `.env`의 `OAUTH_PRIVATE_KEY`에 설정합니다:
+
+```env
+OAUTH_CLIENT_ID=https://jjalcloud.dev/oauth/client-metadata.json
+OAUTH_REDIRECT_URI=https://jjalcloud.dev/oauth/callback
+OAUTH_PRIVATE_KEY={"kty":"EC","crv":"P-256","x":"...","y":"...","d":"...","kid":"..."}
+PUBLIC_URL=https://jjalcloud.dev
+```
+
+> **참고**: portless는 `PORT` 환경변수를 자동 주입하고, `https://jjalcloud.dev`로 리버스 프록시합니다. `--tld dev`를 사용하는 이유는 AT Protocol OAuth 라이브러리가 `localhost`, `test`, `local` 등의 TLD를 차단하기 때문입니다.
+
+#### 2. 인프라 및 서버 시작
+
+```bash
+# 인프라 시작 (PostgreSQL, PDS, Garage)
 docker compose up -d
 
-# Initialize Garage S3 storage (first time only)
+# Garage S3 초기화 + .env, .env.test 자동 생성 (최초 1회)
 bun run scripts/garage-init.ts
 
-# Seed test accounts on PDS
-bun run test:setup
+# .env의 OAUTH_PRIVATE_KEY에 생성한 키 설정
+bun run scripts/gen-key.ts
 
-# Start dev server
+# 개발 서버 시작 (portless 경유)
 bun run dev
 ```
 
+> `garage-init.ts`는 `.env`(개발용, DB: `jjalcloud`)와 `.env.test`(테스트용, DB: `jjalcloud_test`)를 자동 생성합니다. `.env`가 이미 존재하면 덮어쓰지 않습니다.
+
 ### Testing
 
-```bash
-# Unit & route tests (no infra needed)
-bun test src/
+테스트는 `.env.test`를 사용하며, 개발 DB(`jjalcloud`)와 분리된 테스트 DB(`jjalcloud_test`)에서 실행됩니다.
 
-# Integration tests (requires Docker)
-bun test tests/integration/
+```bash
+# 테스트 계정 시드 (최초 1회, Docker 필요)
+bun run test:setup
+
+# 단위 테스트
+bun run test
+
+# 통합 테스트 (Docker 필요)
+bun run test:integration
 ```
 
 ### Lexicon Codegen
