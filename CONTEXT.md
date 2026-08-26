@@ -51,6 +51,12 @@ _Avoid_: database, cache, store, mirror
 The path carrying records from the network into the Index, and the only writer to it.
 _Avoid_: sync, importer, pipeline, worker
 
+**Ingest event**:
+One thing that happened in the network, as the Ingest sees it: a record written or removed, an
+identity changed, an account's standing changed. Always about an Adopted repository, and always
+already checked against its Lexicon before the Ingest acts on it.
+_Avoid_: message, commit, firehose event, jetstream event
+
 **Adopted repository**:
 A repository the Ingest tracks. A repository is adopted because it was seen writing one of this project's Lexicons — not because its owner signed up here.
 _Avoid_: subscribed user, member, registered user
