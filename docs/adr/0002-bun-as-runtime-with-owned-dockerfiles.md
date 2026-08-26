@@ -28,8 +28,14 @@ switch is for — `Bun.serve`, `Bun.SQL`, `bun:sqlite`, `bun test` — leaving o
 - Vite and UnoCSS stay, run as `bunx --bun vite`. Bun's own bundler documents CSS via LightningCSS
   and a Tailwind plugin but says nothing about UnoCSS, and replacing the CSS engine is not on the
   route this repo is taking.
-- Playwright documents Node as its runtime and does not mention Bun, so the e2e suite is expected
-  to keep running under Node even after the switch.
+- Playwright documents Node as its runtime and does not mention Bun. Verified (issue #9): its test
+  runner fails under Bun as soon as a spec file contains TypeScript type syntax, and `bunx
+  playwright test` only appears to work because the bin shebang hands off to Node. In
+  `oven/bun:1-alpine` that handoff is a trap — the image symlinks `node` to `bun`, so Playwright
+  reports `0 tests in 0 files` instead of failing. The e2e suite therefore needs a real Node
+  alongside Bun in CI and in any image that runs it. `Bun.WebView` is real and experimental, and
+  can express the OAuth round trip, but has no assertion layer or wait-for-navigation primitive and
+  does not avoid the Chromium download on Linux, so it does not earn a suite rewrite.
 - Bun's `node:crypto` has no `secp256k1`, which AT Protocol uses for `did:key` k256. This was
   raised as a gate on the decision and has been **verified not to block it** (issue #8): every
   k256 path in this dependency surface runs on pure-JS `@noble/*` under Bun — `@atproto/crypto`
