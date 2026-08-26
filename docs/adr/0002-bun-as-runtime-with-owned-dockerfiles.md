@@ -30,6 +30,11 @@ switch is for — `Bun.serve`, `Bun.SQL`, `bun:sqlite`, `bun test` — leaving o
   route this repo is taking.
 - Playwright documents Node as its runtime and does not mention Bun, so the e2e suite is expected
   to keep running under Node even after the switch.
-- One open risk gates this decision: Bun's `node:crypto` has no `secp256k1`, which AT Protocol uses
-  for `did:key` k256. Whether any dependency here reaches that code path is being verified before
-  the switch.
+- Bun's `node:crypto` has no `secp256k1`, which AT Protocol uses for `did:key` k256. This was
+  raised as a gate on the decision and has been **verified not to block it** (issue #8): every
+  k256 path in this dependency surface runs on pure-JS `@noble/*` under Bun — `@atproto/crypto`
+  unconditionally, and `@atcute/crypto` because its `#keypairs/secp256k1` import condition lists
+  `bun` ahead of `node`. Nothing in `apps/` or `packages/` reaches a signature-verification path at
+  all. The one place an ES256K key would have been requested is DPoP key generation, and `jose`
+  already resolves the same browser build for `workerd` as for `bun`, so today's Workers deployment
+  is likewise falling back to ES256 — Bun reproduces production rather than changing it.
